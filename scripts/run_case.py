@@ -35,6 +35,13 @@ def parse_args():
     return args
 
 
+def iso_wall_duration(minutes):
+    """dnsjax expects an ISO-8601 *duration*, not an absolute timestamp."""
+    if not 1 <= minutes <= 44:
+        raise ValueError("Wall budget must be between 1 and 44 minutes")
+    return f"PT{minutes}M"
+
+
 def main():
     a = parse_args()
     root = Path(a.root) / a.run_id
@@ -48,6 +55,7 @@ def main():
         'dt': a.dt, 'preset': a.preset,
         'grid': {'nz': grid[0], 'nr': grid[1], 'ntheta': grid[2]},
         'start_utc': start.isoformat(),
+        'wall_duration_iso': iso_wall_duration(a.max_wall_minutes),
         'solver': 'dnsjax==0.1.0.1',
         'physics': 'incompressible 3D pipe, periodic z, no slip wall, constant bulk velocity',
         'github_run_url': os.getenv('GITHUB_SERVER_URL', 'https://github.com') + '/' + os.getenv('GITHUB_REPOSITORY', '') + '/actions/runs/' + os.getenv('GITHUB_RUN_ID', ''),
@@ -65,7 +73,7 @@ def main():
         '--step.dt', str(a.dt), '--step.scheme', 'iterative-cn',
         '--outs.it_stats', '100', '--outs.it_snapshot', str(max(200, round(10/a.dt))),
         '--stop.max_sim_time', str(a.t_end),
-        '--stop.max_wall_time', deadline.isoformat(),
+        '--stop.max_wall_time', iso_wall_duration(a.max_wall_minutes),
         '--dist.platform', 'cpu']
     if a.amplitude == 0:
         cmd += ['--init.start_from_laminar', 'True']
