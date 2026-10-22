@@ -3,6 +3,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Run 3D pipe DNS
+      - Initial 3D pipe DNS integration run
+    types: [completed]
 permissions:
   contents: read
   pages: write
