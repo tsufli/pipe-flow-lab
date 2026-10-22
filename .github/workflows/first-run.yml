@@ -1,0 +1,69 @@
+name: Initial 3D pipe DNS integration run
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/first-run.yml'
+permissions:
+  contents: write
+jobs:
+  first-pipe-run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      JAX_PLATFORM_NAME: cpu
+      JAX_ENABLE_X64: 'true'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '1'
+      XLA_FLAGS: '--xla_cpu_multi_thread_eigen=true intra_op_parallelism_threads=4'
+      RUN_ID: first-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install solver
+        run: |
+          uv python install 3.13
+          uv venv .venv --python 3.13
+          uv pip install --python .venv/bin/python 'dnsjax==0.1.0.1' 'matplotlib>=3.9,<4'
+      - name: Simulate Re 2500, A 0.3
+        id: dns
+        continue-on-error: true
+        run: |
+          .venv/bin/python scripts/run_case.py --run-id "$RUN_ID" --re 2500 --amplitude 0.3 --t-end 200 --preset fast --max-wall-minutes 15
+      - name: Analyze DNS output
+        id: analyze
+        if: always()
+        continue-on-error: true
+        run: |
+          .venv/bin/python scripts/analyze.py --source "work/$RUN_ID" --dest "data/runs/$RUN_ID"
+      - name: Save raw solver artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: initial-pipe-dns-${{ github.run_id }}
+          path: |
+            work/${{ env.RUN_ID }}/state*.tar
+            work/${{ env.RUN_ID }}/stats.dat
+            work/${{ env.RUN_ID }}/solver.log
+            work/${{ env.RUN_ID }}/run_metadata.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Commit compact results
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/runs
+          if ! git diff --cached --quiet; then
+            git commit -m "results: initial pipe DNS $RUN_ID"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Check simulation
+        if: always()
+        env:
+          DNS: ${{ steps.dns.outcome }}
+          ANALYSIS: ${{ steps.analyze.outcome }}
+        run: |
+          echo "DNS outcome: $DNS, analysis outcome: $ANALYSIS"
+          test "$DNS" = success && test "$ANALYSIS" = success
