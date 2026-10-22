@@ -65,7 +65,7 @@ def main():
         '--step.dt', str(a.dt), '--step.scheme', 'iterative-cn',
         '--outs.it_stats', '100', '--outs.it_snapshot', str(max(200, round(20/a.dt))),
         '--stop.max_sim_time', str(a.t_end),
-        '--stop.max_wall_time', deadline.isoformat(),
+        '--stop.max_wall_time', f'PT{a.max_wall_minutes}M',
         '--dist.platform', 'cpu']
     if a.amplitude == 0:
         cmd += ['--init.start_from_laminar', 'True']
