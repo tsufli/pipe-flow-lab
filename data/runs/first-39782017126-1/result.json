@@ -1,0 +1,277 @@
+{
+  "metadata": {
+    "id": "first-39782017126-1",
+    "re": 2500.0,
+    "amplitude": 0.3,
+    "width": 1.5,
+    "lz": 8,
+    "t_requested": 200.0,
+    "dt": 0.01,
+    "preset": "fast",
+    "grid": {
+      "nz": 24,
+      "nr": 32,
+      "ntheta": 32
+    },
+    "start_utc": "2026-10-22T12:53:00.844123+00:00",
+    "wall_duration_iso": "PT15M",
+    "solver": "dnsjax==0.1.0.1",
+    "physics": "incompressible 3D pipe, periodic z, no slip wall, constant bulk velocity",
+    "github_run_url": "https://github.com/tsufli/pipe-flow-lab/actions/runs/39782017126",
+    "command": [
+      "/home/runner/work/pipe-flow-lab/pipe-flow-lab/.venv/bin/dnsjax",
+      "--phys.system",
+      "pipe",
+      "--phys.re",
+      "2500.0",
+      "--phys.driving",
+      "constant_bulk_velocity",
+      "--geo.lz",
+      "8",
+      "--res.nz",
+      "24",
+      "--res.nr",
+      "32",
+      "--res.ntheta",
+      "32",
+      "--res.fd_order",
+      "8",
+      "--res.double_precision",
+      "True",
+      "--step.dt",
+      "0.01",
+      "--step.scheme",
+      "iterative-cn",
+      "--outs.it_stats",
+      "100",
+      "--outs.it_snapshot",
+      "1000",
+      "--stop.max_sim_time",
+      "200.0",
+      "--stop.max_wall_time",
+      "PT15M",
+      "--dist.platform",
+      "cpu",
+      "--init.localized_rolls",
+      "True",
+      "--init.localized_rolls_amplitude",
+      "0.3",
+      "--init.localized_rolls_width",
+      "1.5"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 279.31,
+    "end_utc": "2026-10-22T12:57:40.152901+00:00",
+    "status": "solver_complete",
+    "completion_marker": "FINISHED"
+  },
+  "frames": [
+    {
+      "snapshot": "state00000.tar",
+      "t": 0.0,
+      "image": "frames/energy_000.png",
+      "section_mean_energy": 0.0029903532757185876,
+      "section_max_energy": 0.04499999999818826,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00001.tar",
+      "t": 9.999999999999831,
+      "image": "frames/energy_001.png",
+      "section_mean_energy": 0.021931688751562775,
+      "section_max_energy": 0.2146534266542227,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00002.tar",
+      "t": 20.000000000000327,
+      "image": "frames/energy_002.png",
+      "section_mean_energy": 0.023927934235622197,
+      "section_max_energy": 0.18640613666522687,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00003.tar",
+      "t": 30.00000000000189,
+      "image": "frames/energy_003.png",
+      "section_mean_energy": 0.02716652031900306,
+      "section_max_energy": 0.1517367294877034,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00004.tar",
+      "t": 40.00000000000061,
+      "image": "frames/energy_004.png",
+      "section_mean_energy": 0.02378293150003221,
+      "section_max_energy": 0.21632553851677966,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00005.tar",
+      "t": 49.99999999999862,
+      "image": "frames/energy_005.png",
+      "section_mean_energy": 0.019143691584114678,
+      "section_max_energy": 0.08455230993592373,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00006.tar",
+      "t": 59.99999999999663,
+      "image": "frames/energy_006.png",
+      "section_mean_energy": 0.015441402212346828,
+      "section_max_energy": 0.0723625832041745,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00007.tar",
+      "t": 69.9999999999989,
+      "image": "frames/energy_007.png",
+      "section_mean_energy": 0.012870321445875492,
+      "section_max_energy": 0.05510673096478019,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00008.tar",
+      "t": 80.00000000000402,
+      "image": "frames/energy_008.png",
+      "section_mean_energy": 0.011088633995853532,
+      "section_max_energy": 0.050693691554113504,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00009.tar",
+      "t": 90.00000000000914,
+      "image": "frames/energy_009.png",
+      "section_mean_energy": 0.009987609655860288,
+      "section_max_energy": 0.054577577135406584,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00010.tar",
+      "t": 100.00000000001425,
+      "image": "frames/energy_010.png",
+      "section_mean_energy": 0.009475333872448257,
+      "section_max_energy": 0.04831714927309026,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00011.tar",
+      "t": 110.00000000001937,
+      "image": "frames/energy_011.png",
+      "section_mean_energy": 0.008636902696444591,
+      "section_max_energy": 0.05280227332952175,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00012.tar",
+      "t": 120.00000000002449,
+      "image": "frames/energy_012.png",
+      "section_mean_energy": 0.0077644059363755034,
+      "section_max_energy": 0.0461521414286629,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00013.tar",
+      "t": 130.00000000002674,
+      "image": "frames/energy_013.png",
+      "section_mean_energy": 0.007030103477048217,
+      "section_max_energy": 0.038546410764036775,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00014.tar",
+      "t": 140.00000000001765,
+      "image": "frames/energy_014.png",
+      "section_mean_energy": 0.006631316226315109,
+      "section_max_energy": 0.034248448588877704,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00015.tar",
+      "t": 150.00000000000855,
+      "image": "frames/energy_015.png",
+      "section_mean_energy": 0.006253206474878107,
+      "section_max_energy": 0.033526728461473906,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00016.tar",
+      "t": 159.99999999999946,
+      "image": "frames/energy_016.png",
+      "section_mean_energy": 0.006099988281818562,
+      "section_max_energy": 0.03746402684369812,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00017.tar",
+      "t": 169.99999999999037,
+      "image": "frames/energy_017.png",
+      "section_mean_energy": 0.00631782209147224,
+      "section_max_energy": 0.031308810982305924,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00018.tar",
+      "t": 179.99999999998127,
+      "image": "frames/energy_018.png",
+      "section_mean_energy": 0.006781493211353061,
+      "section_max_energy": 0.042345966484396334,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00019.tar",
+      "t": 189.99999999997218,
+      "image": "frames/energy_019.png",
+      "section_mean_energy": 0.007520818122329677,
+      "section_max_energy": 0.05648112087493558,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00020.tar",
+      "t": 199.99999999996308,
+      "image": "frames/energy_020.png",
+      "section_mean_energy": 0.008573936743991827,
+      "section_max_energy": 0.0518169099166349,
+      "z_index": 12,
+      "z_value": 4.0
+    },
+    {
+      "snapshot": "state00021.tar",
+      "t": 200.00999999996307,
+      "image": "frames/energy_021.png",
+      "section_mean_energy": 0.008575089992555187,
+      "section_max_energy": 0.05175139994641512,
+      "z_index": 12,
+      "z_value": 4.0
+    }
+  ],
+  "movie": {
+    "gif": "fluctuation_energy.gif",
+    "fps": 3,
+    "n_frames": 22,
+    "vmax": 0.21632553851677966
+  },
+  "errors": [],
+  "status": "processed",
+  "field_definition": "k'(x,t)=1/2 |u-u_lam|^2 on a pipe cross-section, using the dnsjax perturbation field."
+}
