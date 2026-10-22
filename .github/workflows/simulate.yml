@@ -1,0 +1,127 @@
+name: Run 3D pipe DNS
+on:
+  workflow_dispatch:
+    inputs:
+      re:
+        description: Reynolds number (bulk velocity x diameter / nu)
+        required: true
+        default: '2500'
+        type: string
+      amplitude:
+        description: Localized-roll peak amplitude (0 = exact laminar initial state)
+        required: true
+        default: '0.30'
+        type: string
+      width:
+        description: Initial roll axial half-width, in pipe radii
+        required: true
+        default: '1.5'
+        type: string
+      length:
+        description: Periodic axial length in pipe radii (8 = 4 diameters)
+        required: true
+        default: '8'
+        type: string
+      t_end:
+        description: Desired simulated duration (advective time units)
+        required: true
+        default: '200'
+        type: string
+      preset:
+        description: Numerical resolution (refined can be slower)
+        required: true
+        default: fast
+        type: choice
+        options:
+          - fast
+          - refined
+      wall_minutes:
+        description: Wall-clock solver budget in minutes (max 44)
+        required: true
+        default: '42'
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: pipe-simulation-serial
+  cancel-in-progress: false
+jobs:
+  dns:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 58
+    env:
+      JAX_PLATFORM_NAME: cpu
+      JAX_ENABLE_X64: 'true'
+      OMP_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '1'
+      XLA_FLAGS: '--xla_cpu_multi_thread_eigen=true intra_op_parallelism_threads=4'
+      RUN_ID: run-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install Python and DNS solver
+        run: |
+          uv python install 3.13
+          uv venv .venv --python 3.13
+          uv pip install --python .venv/bin/python 'dnsjax==0.1.0.1' 'matplotlib>=3.9,<4'
+      - name: Execute bounded 3D simulation
+        id: simulate
+        continue-on-error: true
+        env:
+          RE: ${{ inputs.re }}
+          AMP: ${{ inputs.amplitude }}
+          WIDTH: ${{ inputs.width }}
+          LENGTH: ${{ inputs.length }}
+          T_END: ${{ inputs.t_end }}
+          PRESET: ${{ inputs.preset }}
+          WALL: ${{ inputs.wall_minutes }}
+        run: |
+          .venv/bin/python scripts/run_case.py \
+            --run-id "$RUN_ID" --re "$RE" --amplitude "$AMP" \
+            --width "$WIDTH" --length "$LENGTH" --t-end "$T_END" \
+            --preset "$PRESET" --max-wall-minutes "$WALL"
+      - name: Analyze compact results and flow structures
+        id: analyze
+        continue-on-error: true
+        if: always()
+        run: |
+          .venv/bin/python scripts/analyze.py \
+            --source "work/$RUN_ID" --dest "data/runs/$RUN_ID"
+      - name: Upload restart snapshots and raw logs (temporary archive)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-raw-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            work/${{ env.RUN_ID }}/state*.tar
+            work/${{ env.RUN_ID }}/stats.dat
+            work/${{ env.RUN_ID }}/solver.log
+            work/${{ env.RUN_ID }}/run_metadata.json
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Save processed results permanently to repository
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/runs/
+          if ! git diff --cached --quiet; then
+            git commit -m "results: save $RUN_ID"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          else
+            echo 'No processed results to commit'
+          fi
+      - name: Fail if solver or analysis failed
+        if: always()
+        env:
+          SOLVER_OUTCOME: ${{ steps.simulate.outcome }}
+          ANALYSIS_OUTCOME: ${{ steps.analyze.outcome }}
+        run: |
+          echo "Solver: $SOLVER_OUTCOME / Analysis: $ANALYSIS_OUTCOME"
+          test "$SOLVER_OUTCOME" = success
+          test "$ANALYSIS_OUTCOME" = success
