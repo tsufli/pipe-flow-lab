@@ -67,3 +67,4 @@ jobs:
         run: |
           echo "DNS outcome: $DNS, analysis outcome: $ANALYSIS"
           test "$DNS" = success && test "$ANALYSIS" = success
+# Retry after fixing dnsjax ISO 8601 wall-time duration.
