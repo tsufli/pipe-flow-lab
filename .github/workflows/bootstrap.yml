@@ -24,7 +24,7 @@ jobs:
           echo "7f3cf73faafa56e9d6391cc35aff052425ac43fa42f0906f1da75c73ea09eade  .bootstrap/seed.tar.xz" | sha256sum -c -
           tar -xJf .bootstrap/seed.tar.xz
           rm -rf .bootstrap
-          rm -f .github/workflows/bootstrap.yml
+          echo 'Bootstrap workflow removal is performed separately by the GitHub connector'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
