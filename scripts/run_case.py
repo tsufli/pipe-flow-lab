@@ -63,9 +63,9 @@ def main():
         '--res.ntheta', str(grid[2]), '--res.fd_order', '8',
         '--res.double_precision', 'True',
         '--step.dt', str(a.dt), '--step.scheme', 'iterative-cn',
-        '--outs.it_stats', '100', '--outs.it_snapshot', str(max(200, round(20/a.dt))),
+        '--outs.it_stats', '100', '--outs.it_snapshot', str(max(200, round(10/a.dt))),
         '--stop.max_sim_time', str(a.t_end),
-        '--stop.max_wall_time', f'PT{a.max_wall_minutes}M',
+        '--stop.max_wall_time', deadline.isoformat(),
         '--dist.platform', 'cpu']
     if a.amplitude == 0:
         cmd += ['--init.start_from_laminar', 'True']

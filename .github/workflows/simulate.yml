@@ -84,7 +84,7 @@ jobs:
             --run-id "$RUN_ID" --re "$RE" --amplitude "$AMP" \
             --width "$WIDTH" --length "$LENGTH" --t-end "$T_END" \
             --preset "$PRESET" --max-wall-minutes "$WALL"
-      - name: Analyze compact results and flow structures
+      - name: Analyze snapshots into fluctuation-energy movie
         id: analyze
         continue-on-error: true
         if: always()
