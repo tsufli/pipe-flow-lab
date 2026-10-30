@@ -125,3 +125,13 @@ jobs:
           echo "Solver: $SOLVER_OUTCOME / Analysis: $ANALYSIS_OUTCOME"
           test "$SOLVER_OUTCOME" = success
           test "$ANALYSIS_OUTCOME" = success
+
+  publish:
+    name: Publish movie to GitHub Pages
+    needs: dns
+    if: ${{ needs.dns.result == 'success' }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
