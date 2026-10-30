@@ -1,4 +1,4 @@
-# Pipe Flow Laboratory — fluctuation-energy movies from 3D DNS
+# Pipe Flow Laboratory — longitudinal fluctuation-energy movies from 3D DNS
 
 A reproducible 3D pipe-flow experiment run by GitHub Actions and published to GitHub Pages. The solver is **[dnsjax](https://github.com/gokhanyalniz/dnsjax)** (version `0.1.0.1`, Apache-2.0).
 
@@ -11,7 +11,7 @@ This repository is centered on **one primary visualization**:
 
   `k′ = 1/2 |u - u_lam|² = 1/2[(u_z-u_{z,lam})² + u_r² + u_θ²]`,
 
-- render a **2D pipe cross-section** at the axial mid-plane,
+- render a **longitudinal diametral section** along the pipe axis,
 - and assemble those frames into a **movie through time**.
 
 **White means `k′ = 0`**, i.e. perfectly laminar flow. Colored regions indicate where fluctuation energy is present.
@@ -21,7 +21,7 @@ This repository is centered on **one primary visualization**:
 Each processed run in `data/runs/<run-id>/` contains:
 
 - `result.json`: metadata and per-frame information
-- `frames/*.png`: individual cross-sectional fluctuation-energy frames
+- `frames/*.png`: individual longitudinal fluctuation-energy frames
 - `fluctuation_energy.gif`: animation across saved times
 
 Raw solver outputs (`state*.tar`, `stats.dat`, `solver.log`) are uploaded as temporary GitHub Actions artifacts and are **not** committed permanently to the repository.

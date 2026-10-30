@@ -59,23 +59,27 @@ def section_mean_energy(k, r):
     return float(np.dot(radial_weights(r), by_r))
 
 
-def render_energy_frame(k_section, r, theta, output_path, title, vmax=None):
-    x = r[:, None] * np.cos(theta[None, :])
-    y = r[:, None] * np.sin(theta[None, :])
-    fig, ax = plt.subplots(figsize=(5.4, 4.9), layout='constrained')
+def longitudinal_diametral_section(k, r, theta):
+    """Lengthwise cut through the pipe axis, negative/positive sides from opposite azimuths."""
+    theta = np.asarray(theta)
+    i0 = int(np.argmin(np.abs(np.angle(np.exp(1j * theta)))))
+    ipi = int(np.argmin(np.abs(np.angle(np.exp(1j * (theta - np.pi))))))
+    signed_r = np.concatenate((-r[::-1], r))
+    section = np.concatenate((k[::-1, ipi, :], k[:, i0, :]), axis=0)
+    return signed_r, section
+
+
+def render_energy_frame(k_section, signed_r, z, output_path, title, vmax=None):
+    fig, ax = plt.subplots(figsize=(8, 4.5), layout='constrained')
     if vmax is None or not np.isfinite(vmax) or vmax <= 0:
         vmax = 1.0
-    pc = ax.scatter(
-        x.ravel(), y.ravel(), c=k_section.ravel(), s=22,
-        cmap=ENERGY_CMAP, vmin=0.0, vmax=vmax
-    )
-    circle = plt.Circle((0, 0), 1.0, color='#222222', fill=False, lw=1.0)
-    ax.add_patch(circle)
-    ax.set(
-        xlabel='x / R', ylabel='y / R', aspect='equal',
-        xlim=(-1.05, 1.05), ylim=(-1.05, 1.05), title=title
-    )
-    fig.colorbar(pc, ax=ax, label="Fluctuation kinetic energy density ½|u-u_lam|²")
+    # Plot samples at their actual nonuniform radial locations.
+    im = ax.pcolormesh(z, signed_r, k_section, shading='nearest',
+                       cmap=ENERGY_CMAP, vmin=0.0, vmax=vmax)
+    ax.set(xlabel='Axial distance z / R',
+           ylabel='Position across diameter / R',
+           title=title, ylim=(-1, 1))
+    fig.colorbar(im, ax=ax, label="Fluctuation kinetic energy density ½|u-u_lam|²")
     fig.savefig(output_path, dpi=130)
     plt.close(fig)
 
@@ -109,7 +113,8 @@ def analyze_case(source, dest):
         'movie': None,
         'errors': [],
         'status': 'failed',
-        'field_definition': "k'(x,t)=1/2 |u-u_lam|^2 on a pipe cross-section, using the dnsjax perturbation field.",
+        'field_definition': "k'(x,t)=1/2 |u-u_lam|^2 on a longitudinal diametral section, using the dnsjax perturbation field.",
+        'section_view': 'longitudinal_diametral',
     }
     try:
         from dnsjax.analysis import read_state, read_meta
@@ -132,8 +137,7 @@ def analyze_case(source, dest):
             uzp, ur, uth = [np.asarray(u, dtype=float) for u in st.physical]
             r, th, z = [np.asarray(v, dtype=float).reshape(-1) for v in st.physical_coords]
             k = fluctuation_energy_density(uzp, ur, uth)
-            z_index = k.shape[2] // 2
-            k_section = k[:, :, z_index]
+            signed_r, k_section = longitudinal_diametral_section(k, r, th)
             t = None
             try:
                 sm = read_meta(str(sn))
@@ -144,13 +148,11 @@ def analyze_case(source, dest):
             snapshot_payloads.append({
                 'snapshot': sn.name,
                 't': t,
-                'r': r,
-                'theta': th,
+                'signed_r': signed_r,
+                'z': z,
                 'k_section': k_section,
                 'section_mean_energy': section_mean_energy(k, r),
                 'section_max_energy': float(np.nanmax(k_section)),
-                'z_index': int(z_index),
-                'z_value': float(z[z_index]),
             })
             section_maxima.append(float(np.nanmax(k_section)))
         except Exception as exc:
@@ -167,11 +169,11 @@ def analyze_case(source, dest):
 
     frame_paths = []
     for i, item in enumerate(snapshot_payloads):
-        title = f"Fluctuation kinetic energy cross-section"
+        title = "Longitudinal fluctuation energy across pipe diameter"
         if item['t'] is not None:
             title += f" · t = {item['t']:.2f}"
         png_name = f"energy_{i:03d}.png"
-        render_energy_frame(item['k_section'], item['r'], item['theta'], frames_dir / png_name, title, vmax=vmax)
+        render_energy_frame(item['k_section'], item['signed_r'], item['z'], frames_dir / png_name, title, vmax=vmax)
         frame_paths.append(frames_dir / png_name)
         output['frames'].append({
             'snapshot': item['snapshot'],
@@ -179,8 +181,6 @@ def analyze_case(source, dest):
             'image': f'frames/{png_name}',
             'section_mean_energy': item['section_mean_energy'],
             'section_max_energy': item['section_max_energy'],
-            'z_index': item['z_index'],
-            'z_value': item['z_value'],
         })
 
     gif_path = dest / 'fluctuation_energy.gif'

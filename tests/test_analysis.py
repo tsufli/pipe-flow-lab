@@ -24,6 +24,15 @@ class Tests(unittest.TestCase):
         k = a.fluctuation_energy_density(uzp, ur, uth)
         np.testing.assert_allclose(k, 0.5 * (4 + 1 + 9))
 
+    def test_longitudinal_section_orientation(self):
+        r = np.array([0.2, 0.8])
+        th = np.arange(4) * np.pi / 2
+        k = np.arange(2*4*3).reshape(2,4,3)
+        signed_r, section = a.longitudinal_diametral_section(k,r,th)
+        np.testing.assert_allclose(signed_r, [-0.8,-0.2,0.2,0.8])
+        np.testing.assert_array_equal(section[:2],k[::-1,2,:])
+        np.testing.assert_array_equal(section[2:],k[:,0,:])
+
     def test_section_mean_energy(self):
         r = np.array([0.2, 0.6])
         k = np.zeros((2, 3, 4))

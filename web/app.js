@@ -35,6 +35,7 @@ async function openRun(id){
   const m = info.metadata || {}, frames = info.frames || [], movie = info.movie || {};
   const prefix = r.path.substring(0, r.path.lastIndexOf('/') + 1);
   const firstT = frames[0]?.t, lastT = frames[frames.length-1]?.t;
+  const transverseLegacy = info.section_view !== 'longitudinal_diametral';
   node.innerHTML = `
     <div class="panel">
       <h2>Re = ${number(m.re,0)} · A = ${number(m.amplitude,2)}</h2>
@@ -47,8 +48,8 @@ async function openRun(id){
       <div class="muted">${escapeHTML(r.id)} · ${escapeHTML(m.start_utc)}${m.github_run_url ? ` · <a href="${escapeHTML(m.github_run_url)}" target="_blank" rel="noopener">GitHub run ↗</a>` : ''}</div>
     </div>
     <div class="panel">
-      <h3>Fluctuation kinetic-energy movie</h3>
-      <p>The color field is <b>½|u − u<sub>lam</sub>|²</b> on a pipe cross-section at the mid-plane in <i>z</i>. White means zero fluctuation energy, i.e. locally laminar.</p>
+      <h3>${transverseLegacy ? 'Previous transverse movie (legacy run)' : 'Longitudinal fluctuation kinetic-energy movie'}</h3>
+      <p>${transverseLegacy ? 'This is an older transverse cross-section. Run a new simulation for the longitudinal view.' : 'The color field is'} <b>½|u − u<sub>lam</sub>|²</b> on a longitudinal diametral section through the pipe axis. Horizontal: pipe length; vertical: position across the diameter. White means zero fluctuation energy.</p>
       ${movie.gif ? `<img class="movie" src="${escapeHTML(prefix + movie.gif)}" alt="Fluctuation kinetic-energy movie">` : '<p class="muted">No movie available.</p>'}
       <p class="muted">${movie.n_frames ? `${movie.n_frames} frame(s)` : 'No frames'}${firstT!=null && lastT!=null ? ` · t = ${number(firstT,2)} to ${number(lastT,2)}` : ''}</p>
     </div>

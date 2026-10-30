@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pipe Flow Laboratory · fluctuation-energy movies</title>
+<title>Pipe Flow Laboratory · longitudinal fluctuation-energy movies</title>
 <link rel="stylesheet" href="styles.css">
 <script src="app.js" defer></script>
 </head><body>
@@ -10,8 +10,8 @@
 <main>
   <section class="hero">
     <div class="eyebrow">3D INCOMPRESSIBLE NAVIER–STOKES · CIRCULAR PIPE</div>
-    <h1>Fluctuation kinetic-energy movies.</h1>
-    <p>Each run is visualized by subtracting the laminar Hagen–Poiseuille profile, computing the fluctuation kinetic energy density ½|u−u<sub>lam</sub>|², and rendering a 2D pipe cross-section through time. White means perfectly laminar.</p>
+    <h1>Longitudinal fluctuation kinetic-energy movies.</h1>
+    <p>Each run is visualized by subtracting the laminar Hagen–Poiseuille profile, computing the fluctuation kinetic energy density ½|u−u<sub>lam</sub>|², and rendering a longitudinal plane spanning the pipe length and diameter through time. White means perfectly laminar.</p>
     <div class="hero-metrics"><div><span id="num-runs">0</span><small>saved runs</small></div><div><span id="num-re">—</span><small>Re values</small></div><div><span id="latest">—</span><small>latest run</small></div></div>
   </section>
   <section class="view active" id="runs">
@@ -21,10 +21,10 @@
   <section class="view active" id="about">
     <h2>What is being shown?</h2>
     <div class="prose">
-      <p>For each saved DNS snapshot, the displayed field is the fluctuation kinetic energy density on a pipe cross-section:</p>
+      <p>For each saved DNS snapshot, the displayed field is the fluctuation kinetic energy density on a longitudinal section through the pipe axis:</p>
       <p><code>k′ = ½[(u_z-u_{z,lam})² + u_r² + u_θ²]</code></p>
       <p>Here <code>u_{z,lam}(r)=1-r²</code> is the laminar Hagen–Poiseuille profile in the solver normalization. Because dnsjax stores the perturbation field for pipe flow, the analysis directly reads the fluctuation components and evaluates <code>k′</code>.</p>
-      <p>The shown section is the mid-plane in the periodic axial direction. Each run is assembled into an animated GIF so the appearance and decay of finite-amplitude structures can be followed through time.</p>
+      <p>The shown section contains the pipe axis, with axial position horizontal and signed diameter vertical. Each run is assembled into an animated GIF so the appearance and decay of finite-amplitude structures can be followed through time.</p>
     </div>
   </section>
 </main>

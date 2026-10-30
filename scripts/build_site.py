@@ -37,6 +37,7 @@ for case in sorted(DATA.iterdir()) if DATA.exists() else []:
         'wall_seconds': meta.get('wall_seconds'),
         'status': info.get('status', 'unknown'),
         'n_frames': len(frames),
+        'section_view': info.get('section_view', 'transverse_legacy'),
         'movie_gif': f"runs/{case.name}/{movie.get('gif')}" if movie.get('gif') else None,
         'mean_energy_max': max(mean_vals) if mean_vals else None,
         'path': f'runs/{case.name}/result.json',
@@ -45,7 +46,7 @@ for case in sorted(DATA.iterdir()) if DATA.exists() else []:
 index.sort(key=lambda x: x.get('start_utc') or '', reverse=True)
 (OUT / 'index.json').write_text(json.dumps({
     'generated_utc': datetime.now(timezone.utc).isoformat(),
-    'description': 'Cross-sectional fluctuation kinetic-energy movies from saved DNS snapshots.',
+    'description': 'Longitudinal fluctuation kinetic-energy movies from saved DNS snapshots.',
     'runs': index,
 }, indent=2))
 print(f'Built site with {len(index)} run(s) at {OUT}')
