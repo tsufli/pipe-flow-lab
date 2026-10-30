@@ -67,4 +67,14 @@ jobs:
         run: |
           echo "DNS outcome: $DNS, analysis outcome: $ANALYSIS"
           test "$DNS" = success && test "$ANALYSIS" = success
-# Integration recheck (2026-10-22): validate fixed duration and movie pipeline.
+# Longitudinal visualization integration recheck (2026-10-30).
+
+  publish:
+    name: Publish longitudinal movie
+    needs: first-pipe-run
+    if: ${{ needs.first-pipe-run.result == 'success' }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
