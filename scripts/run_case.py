@@ -29,7 +29,7 @@ def parse_args():
     if not 4 <= args.length <= 100: p.error('length must be 4..100 radii')
     if not 1 <= args.t_end <= 1000: p.error('t-end must be 1..1000')
     if not 0.001 <= args.dt <= 0.02: p.error('dt must be 0.001..0.02')
-    if not 1 <= args.max_wall_minutes <= 44: p.error('wall budget must be 1..52 minutes')
+    if not 1 <= args.max_wall_minutes <= 52: p.error('wall budget must be 1..52 minutes')
     if not all(c.isascii() and (c.isalnum() or c in '-_') for c in args.run_id):
         p.error('run-id must contain only ASCII letters, numbers, hyphens, underscores')
     return args
@@ -37,8 +37,8 @@ def parse_args():
 
 def iso_wall_duration(minutes):
     """dnsjax expects an ISO-8601 *duration*, not an absolute timestamp."""
-    if not 1 <= minutes <= 44:
-        raise ValueError("Wall budget must be between 1 and 44 minutes")
+    if not 1 <= minutes <= 52:
+        raise ValueError("Wall budget must be between 1 and 52 minutes")
     return f"PT{minutes}M"
 
 
