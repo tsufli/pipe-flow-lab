@@ -1,4 +1,4 @@
-name: Initial 3D pipe DNS integration run
+name: Long-pipe 3D DNS integration run
 on:
   push:
     branches: [main]
@@ -9,7 +9,7 @@ permissions:
 jobs:
   first-pipe-run:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 68
     env:
       JAX_PLATFORM_NAME: cpu
       JAX_ENABLE_X64: 'true'
@@ -25,11 +25,11 @@ jobs:
           uv python install 3.13
           uv venv .venv --python 3.13
           uv pip install --python .venv/bin/python 'dnsjax==0.1.0.1' 'matplotlib>=3.9,<4'
-      - name: Simulate Re 2500, A 0.3
+      - name: Simulate Re 2500, A 0.3, L/D 16, refined
         id: dns
         continue-on-error: true
         run: |
-          .venv/bin/python scripts/run_case.py --run-id "$RUN_ID" --re 2500 --amplitude 0.3 --t-end 200 --preset fast --max-wall-minutes 15
+          .venv/bin/python scripts/run_case.py --run-id "$RUN_ID" --re 2500 --amplitude 0.3 --length 32 --t-end 200 --preset refined --max-wall-minutes 50
       - name: Analyze DNS output
         id: analyze
         if: always()
@@ -67,7 +67,7 @@ jobs:
         run: |
           echo "DNS outcome: $DNS, analysis outcome: $ANALYSIS"
           test "$DNS" = success && test "$ANALYSIS" = success
-# Longitudinal visualization integration recheck (2026-10-30).
+# Long-pipe refined integration run (2026-10-31).
 
   publish:
     name: Publish longitudinal movie
