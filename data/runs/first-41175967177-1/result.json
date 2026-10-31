@@ -1,0 +1,12 @@
+{
+  "metadata": {},
+  "frames": [],
+  "movie": null,
+  "errors": [
+    "No readable snapshots were found"
+  ],
+  "status": "failed",
+  "field_definition": "k'(x,t)=1/2 |u-u_lam|^2 on a longitudinal diametral section, using the dnsjax perturbation field.",
+  "section_view": "longitudinal_diametral",
+  "velocity_diagnostic": "Axial velocity at r=0, extrapolated from two innermost radial nodes after azimuthal averaging."
+}
