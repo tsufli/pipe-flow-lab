@@ -16,14 +16,14 @@ spec.loader.exec_module(launcher)
 class WallDurationTests(unittest.TestCase):
     def test_iso_8601_duration_is_accepted_by_pydantic(self):
         adapter = TypeAdapter(timedelta)
-        for minutes in [1, 15, 42, 44]:
+        for minutes in [1, 15, 42, 44, 50, 52]:
             with self.subTest(minutes=minutes):
                 value = launcher.iso_wall_duration(minutes)
                 self.assertEqual(value, f"PT{minutes}M")
                 self.assertEqual(adapter.validate_python(value), timedelta(minutes=minutes))
 
     def test_invalid_wall_budgets_rejected(self):
-        for minutes in [0, 45, 100]:
+        for minutes in [0, 53, 100]:
             with self.subTest(minutes=minutes):
                 with self.assertRaises(ValueError):
                     launcher.iso_wall_duration(minutes)
