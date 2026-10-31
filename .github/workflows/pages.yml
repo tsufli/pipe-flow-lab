@@ -19,6 +19,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main # pick up result commits created inside DNS workflows
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
