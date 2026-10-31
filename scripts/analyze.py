@@ -92,8 +92,9 @@ def render_energy_frame(k_section, signed_r, z, output_path, title, vmax=None):
            ylabel='Position across diameter / R',
            title=title, ylim=(-1, 1),
            xlim=(0, float(z[-1] + (z[1] - z[0]))))
-    # Equal units in both directions: a 32R-long pipe appears 16 diameters wide.
-    ax.set_aspect('equal', adjustable='box')
+    # Display length/diameter at 16:1, compressing longer domains visually.
+    physical_length = float(z[-1] + (z[1] - z[0]))
+    ax.set_aspect(max(1.0, physical_length / 32.0), adjustable='box')
     fig.colorbar(im, ax=ax, label="Fluctuation kinetic energy density ½|u-u_lam|²")
     fig.savefig(output_path, dpi=130)
     plt.close(fig)
