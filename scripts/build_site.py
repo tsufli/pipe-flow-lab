@@ -22,6 +22,8 @@ for case in sorted(DATA.iterdir()) if DATA.exists() else []:
         info = json.loads(file.read_text())
     except json.JSONDecodeError:
         continue
+    if info.get('section_view') != 'longitudinal_diametral':
+        continue  # preserve historical files but remove transverse runs from site
     meta = info.get('metadata', {})
     movie = info.get('movie') or {}
     frames = info.get('frames') or []

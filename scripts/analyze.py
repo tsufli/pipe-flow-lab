@@ -69,6 +69,18 @@ def longitudinal_diametral_section(k, r, theta):
     return signed_r, section
 
 
+def centerline_axial_velocity(uzp, r):
+    """Approximate u_z(r=0,z) by extrapolating the two closest radial nodes.
+    Average over azimuth to reduce axis discretization noise.
+    """
+    order = np.argsort(r)[:2]
+    rr = np.asarray(r)[order]
+    v = (1 - rr[:, None]**2) + uzp[order].mean(axis=1)
+    if abs(rr[1]**2 - rr[0]**2) < 1e-14:
+        return v[0]
+    return (rr[1]**2*v[0] - rr[0]**2*v[1])/(rr[1]**2 - rr[0]**2)
+
+
 def render_energy_frame(k_section, signed_r, z, output_path, title, vmax=None):
     fig, ax = plt.subplots(figsize=(8, 4.5), layout='constrained')
     if vmax is None or not np.isfinite(vmax) or vmax <= 0:
@@ -115,6 +127,7 @@ def analyze_case(source, dest):
         'status': 'failed',
         'field_definition': "k'(x,t)=1/2 |u-u_lam|^2 on a longitudinal diametral section, using the dnsjax perturbation field.",
         'section_view': 'longitudinal_diametral',
+        'velocity_diagnostic': 'Axial velocity at r=0, extrapolated from two innermost radial nodes after azimuthal averaging.',
     }
     try:
         from dnsjax.analysis import read_state, read_meta
@@ -137,6 +150,7 @@ def analyze_case(source, dest):
             uzp, ur, uth = [np.asarray(u, dtype=float) for u in st.physical]
             r, th, z = [np.asarray(v, dtype=float).reshape(-1) for v in st.physical_coords]
             k = fluctuation_energy_density(uzp, ur, uth)
+            centerline = centerline_axial_velocity(uzp, r)
             signed_r, k_section = longitudinal_diametral_section(k, r, th)
             t = None
             try:
@@ -151,6 +165,7 @@ def analyze_case(source, dest):
                 'signed_r': signed_r,
                 'z': z,
                 'k_section': k_section,
+                'centerline_velocity': centerline,
                 'section_mean_energy': section_mean_energy(k, r),
                 'section_max_energy': float(np.nanmax(k_section)),
             })
@@ -179,6 +194,8 @@ def analyze_case(source, dest):
             'snapshot': item['snapshot'],
             't': item['t'],
             'image': f'frames/{png_name}',
+            'z': item['z'].tolist(),
+            'centerline_axial_velocity': item['centerline_velocity'].tolist(),
             'section_mean_energy': item['section_mean_energy'],
             'section_max_energy': item['section_max_energy'],
         })

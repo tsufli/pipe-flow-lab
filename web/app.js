@@ -35,6 +35,7 @@ async function openRun(id){
   const m = info.metadata || {}, frames = info.frames || [], movie = info.movie || {};
   const prefix = r.path.substring(0, r.path.lastIndexOf('/') + 1);
   const firstT = frames[0]?.t, lastT = frames[frames.length-1]?.t;
+  if(window.frameTimer){clearInterval(window.frameTimer);window.frameTimer=null;}
   const transverseLegacy = info.section_view !== 'longitudinal_diametral';
   node.innerHTML = `
     <div class="panel">
@@ -54,8 +55,8 @@ async function openRun(id){
       <p class="muted">${movie.n_frames ? `${movie.n_frames} frame(s)` : 'No frames'}${firstT!=null && lastT!=null ? ` · t = ${number(firstT,2)} to ${number(lastT,2)}` : ''}</p>
     </div>
     <div class="panel">
-      <h3>Individual frames</h3>
-      ${frames.length ? `<div class="sliderline"><label for="frame-slider">Frame</label><input id="frame-slider" type="range" min="0" max="${frames.length-1}" value="0"><strong id="frame-label"></strong></div><div id="frame-view"></div>` : '<p class="muted">No frames available.</p>'}
+      <h3>Synchronized movie and centerline axial velocity</h3>
+      ${frames.length ? `<div class="sliderline"><button id="play-movie" type="button">▶ Play</button><label for="frame-slider">Frame</label><input id="frame-slider" type="range" min="0" max="${frames.length-1}" value="0"><strong id="frame-label"></strong></div><div id="frame-view"></div><div id="velocity-view"></div>` : '<p class="muted">No frames available.</p>'}
     </div>
     ${(info.errors||[]).length ? `<div class="panel"><h3>Processing notes</h3><p class="muted">${info.errors.map(escapeHTML).join(' · ')}</p></div>` : ''}
   `;
@@ -64,13 +65,32 @@ async function openRun(id){
       const j = +$('frame-slider').value;
       const f = frames[j];
       $('frame-label').textContent = `${j+1}/${frames.length}${f.t!=null ? ` · t = ${number(f.t,2)}` : ''}`;
+      const z=f.z||[], v=f.centerline_axial_velocity||[];
+      const xs=z.map(Number), vs=v.map(Number);
+      if(xs.length>1 && xs.length===vs.length){
+        const lo=Math.min(...vs,0),hi=Math.max(...vs,1);
+        const x0=Math.min(...xs),x1=Math.max(...xs),width=690,height=220;
+        const p=xs.map((x,i)=>[48+610*(x-x0)/Math.max(1e-12,x1-x0),20+155*(hi-vs[i])/Math.max(1e-12,hi-lo)].join(',')).join(' ');
+        $('velocity-view').innerHTML='<svg viewBox="0 0 690 220" role="img" aria-label="Centerline axial velocity versus pipe length" style="width:100%;background:#fff;color:#111;border-radius:8px"><rect x="48" y="20" width="610" height="155" fill="none" stroke="#777"/><polyline points="'+p+'" fill="none" stroke="#115fb2" stroke-width="2"/><text x="280" y="209" font-size="14">Axial position z / R</text><text x="54" y="16" font-size="13">u_z at pipe centerline</text><text x="48" y="193" font-size="11">'+x0.toFixed(1)+'</text><text x="630" y="193" font-size="11">'+x1.toFixed(1)+'</text></svg>';
+      }else{$('velocity-view').textContent='Centerline velocity unavailable for this legacy run.';}
       $('frame-view').innerHTML = `
         <figure class="singleframe">
           <img loading="lazy" src="${escapeHTML(prefix + f.image)}" alt="Frame ${j+1}">
           <figcaption>Mean section energy: ${number(f.section_mean_energy,4)} · Max section energy: ${number(f.section_max_energy,4)}</figcaption>
         </figure>`;
     };
-    $('frame-slider').addEventListener('input', renderFrame);
+    $('frame-slider').addEventListener('input',renderFrame);
+    const play=$('play-movie');
+    play.addEventListener('click',()=>{
+      if(window.frameTimer){clearInterval(window.frameTimer);window.frameTimer=null;play.textContent='▶ Play';return;}
+      play.textContent='⏸ Pause';
+      window.frameTimer=setInterval(()=>{
+        const sl=$('frame-slider');
+        if(!sl){clearInterval(window.frameTimer);window.frameTimer=null;return;}
+        sl.value=(+sl.value+1)%frames.length;
+        renderFrame();
+      },333);
+    });
     renderFrame();
   }
 }

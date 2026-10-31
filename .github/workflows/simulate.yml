@@ -20,7 +20,7 @@ on:
       length:
         description: Periodic axial length in pipe radii (8 = 4 diameters)
         required: true
-        default: '8'
+        default: '32'
         type: string
       t_end:
         description: Desired simulated duration (advective time units)
@@ -30,15 +30,15 @@ on:
       preset:
         description: Numerical resolution (refined can be slower)
         required: true
-        default: fast
+        default: refined
         type: choice
         options:
           - fast
           - refined
       wall_minutes:
-        description: Wall-clock solver budget in minutes (max 44)
+        description: Wall-clock solver budget in minutes (max 52)
         required: true
-        default: '42'
+        default: '50'
         type: string
 permissions:
   contents: write
@@ -48,7 +48,7 @@ concurrency:
 jobs:
   dns:
     runs-on: ubuntu-24.04
-    timeout-minutes: 58
+    timeout-minutes: 68
     env:
       JAX_PLATFORM_NAME: cpu
       JAX_ENABLE_X64: 'true'
