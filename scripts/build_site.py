@@ -30,7 +30,9 @@ for case in sorted(DATA.iterdir()) if DATA.exists() else []:
     if not frames or not movie.get('gif'):
         continue  # hide failed or empty runs from the public archive
     mean_vals = [f.get('section_mean_energy') for f in frames if isinstance(f.get('section_mean_energy'), (int, float))]
+    title = f"Re {meta.get('re', 0):g} · L/D {meta.get('lz', 0)/2:g} · A {meta.get('amplitude', 0):.2f} · {meta.get('preset', 'unknown')} · t={meta.get('t_requested', '?')}"
     index.append({
+        'title': title,
         'id': meta.get('id', case.name),
         're': meta.get('re'),
         'amplitude': meta.get('amplitude'),
