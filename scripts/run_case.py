@@ -19,14 +19,14 @@ def parse_args():
     p.add_argument('--length', type=float, default=8)
     p.add_argument('--t-end', type=float, default=200)
     p.add_argument('--dt', type=float, default=0.01)
-    p.add_argument('--preset', choices=['fast', 'refined'], default='fast')
+    p.add_argument('--preset', choices=['fast', 'refined', 'long'], default='fast')
     p.add_argument('--max-wall-minutes', type=int, default=50)
     p.add_argument('--root', default='work')
     args = p.parse_args()
     if not 500 <= args.re <= 10000: p.error('Re must be 500..10000')
     if not 0 <= args.amplitude <= 1: p.error('amplitude must be 0..1')
     if not 0.1 <= args.width <= 15: p.error('width must be 0.1..15')
-    if not 4 <= args.length <= 100: p.error('length must be 4..100 radii')
+    if not 4 <= args.length <= 256: p.error('length must be 4..256 radii')
     if not 1 <= args.t_end <= 1000: p.error('t-end must be 1..1000')
     if not 0.001 <= args.dt <= 0.02: p.error('dt must be 0.001..0.02')
     if not 1 <= args.max_wall_minutes <= 52: p.error('wall budget must be 1..52 minutes')
@@ -46,7 +46,7 @@ def main():
     a = parse_args()
     root = Path(a.root) / a.run_id
     root.mkdir(parents=True, exist_ok=True)
-    grid = {'fast': (24, 32, 32), 'refined': (96, 48, 48)}[a.preset]
+    grid = {'fast': (24, 32, 32), 'refined': (96, 48, 48), 'long': (192, 48, 48)}[a.preset]
     start = dt.datetime.now(dt.timezone.utc)
     deadline = start + dt.timedelta(minutes=a.max_wall_minutes)
     meta = {
