@@ -51,7 +51,7 @@ async function openRun(id){
     <div class="panel">
       <h3>${transverseLegacy ? 'Previous transverse movie (legacy run)' : 'Longitudinal fluctuation kinetic-energy movie'}</h3>
       <p>${transverseLegacy ? 'This is an older transverse cross-section. Run a new simulation for the longitudinal view.' : 'The color field is'} <b>½|u − u<sub>lam</sub>|²</b> on a longitudinal diametral section through the pipe axis. Horizontal: pipe length; vertical: position across the diameter. White means zero fluctuation energy.</p>
-      ${movie.gif ? `<img class="movie" src="${escapeHTML(prefix + movie.gif)}" alt="Fluctuation kinetic-energy movie">` : '<p class="muted">No movie available.</p>'}
+      ${movie.gif ? `<a href="${escapeHTML(prefix + movie.gif)}" target="_blank" title="Open full-resolution movie"><img class="movie" src="${escapeHTML(prefix + movie.gif)}" alt="Fluctuation kinetic-energy movie"></a>` : '<p class="muted">No movie available.</p>'}
       <p class="muted">${movie.n_frames ? `${movie.n_frames} frame(s)` : 'No frames'}${firstT!=null && lastT!=null ? ` · t = ${number(firstT,2)} to ${number(lastT,2)}` : ''}</p>
     </div>
     <div class="panel">
@@ -61,6 +61,8 @@ async function openRun(id){
     ${(info.errors||[]).length ? `<div class="panel"><h3>Processing notes</h3><p class="muted">${info.errors.map(escapeHTML).join(' · ')}</p></div>` : ''}
   `;
   if(frames.length){
+    const allVelocity=frames.flatMap(f=>(f.centerline_axial_velocity||[]).map(Number)).filter(Number.isFinite);
+    if(!allVelocity.length) allVelocity.push(1);
     const renderFrame = () => {
       const j = +$('frame-slider').value;
       const f = frames[j];
@@ -68,14 +70,15 @@ async function openRun(id){
       const z=f.z||[], v=f.centerline_axial_velocity||[];
       const xs=z.map(Number), vs=v.map(Number);
       if(xs.length>1 && xs.length===vs.length){
-        const lo=Math.min(...vs,0),hi=Math.max(...vs,1);
-        const x0=Math.min(...xs),x1=Math.max(...xs),width=690,height=220;
+        const lo=Math.min(1,...allVelocity)-0.03,hi=Math.max(1,...allVelocity)+0.03;
+        const x0=0,x1=Number(m.lz)||Math.max(...xs),width=690,height=220;
         const p=xs.map((x,i)=>[48+610*(x-x0)/Math.max(1e-12,x1-x0),20+155*(hi-vs[i])/Math.max(1e-12,hi-lo)].join(',')).join(' ');
-        $('velocity-view').innerHTML='<svg viewBox="0 0 690 220" role="img" aria-label="Centerline axial velocity versus pipe length" style="width:100%;background:#fff;color:#111;border-radius:8px"><rect x="48" y="20" width="610" height="155" fill="none" stroke="#777"/><polyline points="'+p+'" fill="none" stroke="#115fb2" stroke-width="2"/><text x="280" y="209" font-size="14">Axial position z / R</text><text x="54" y="16" font-size="13">u_z at pipe centerline</text><text x="48" y="193" font-size="11">'+x0.toFixed(1)+'</text><text x="630" y="193" font-size="11">'+x1.toFixed(1)+'</text></svg>';
+        const laminarY=20+155*(hi-1)/Math.max(1e-12,hi-lo);
+        $('velocity-view').innerHTML='<svg viewBox="0 0 690 220" role="img" aria-label="Centerline axial velocity versus pipe length" style="width:100%;background:#fff;color:#111;border-radius:8px"><rect x="48" y="20" width="610" height="155" fill="none" stroke="#777"/><line x1="48" x2="658" y1="'+laminarY+'" y2="'+laminarY+'" stroke="#d45c1b" stroke-width="2" stroke-dasharray="6 5"/><polyline points="'+p+'" fill="none" stroke="#115fb2" stroke-width="2"/><text x="465" y="'+Math.max(16,laminarY-6)+'" font-size="12" fill="#a43b06">Laminar centerline = 1</text><text x="280" y="209" font-size="14">Axial position z / R</text><text x="54" y="16" font-size="13">u_z at pipe centerline</text><text x="48" y="193" font-size="11">'+x0.toFixed(1)+'</text><text x="630" y="193" font-size="11">'+x1.toFixed(1)+'</text></svg>';
       }else{$('velocity-view').textContent='Centerline velocity unavailable for this legacy run.';}
       $('frame-view').innerHTML = `
         <figure class="singleframe">
-          <img loading="lazy" src="${escapeHTML(prefix + f.image)}" alt="Frame ${j+1}">
+          <a href="${escapeHTML(prefix + f.image)}" target="_blank" title="Open full-resolution frame"><img loading="lazy" src="${escapeHTML(prefix + f.image)}" alt="Frame ${j+1}"></a>
           <figcaption>Mean section energy: ${number(f.section_mean_energy,4)} · Max section energy: ${number(f.section_max_energy,4)}</figcaption>
         </figure>`;
     };
