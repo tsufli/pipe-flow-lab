@@ -82,7 +82,7 @@ def centerline_axial_velocity(uzp, r):
 
 
 def render_energy_frame(k_section, signed_r, z, output_path, title, vmax=None):
-    fig, ax = plt.subplots(figsize=(8, 4.5), layout='constrained')
+    fig, ax = plt.subplots(figsize=(19, 3.6), layout='constrained')
     if vmax is None or not np.isfinite(vmax) or vmax <= 0:
         vmax = 1.0
     # Plot samples at their actual nonuniform radial locations.
@@ -90,7 +90,10 @@ def render_energy_frame(k_section, signed_r, z, output_path, title, vmax=None):
                        cmap=ENERGY_CMAP, vmin=0.0, vmax=vmax)
     ax.set(xlabel='Axial distance z / R',
            ylabel='Position across diameter / R',
-           title=title, ylim=(-1, 1))
+           title=title, ylim=(-1, 1),
+           xlim=(0, float(z[-1] + (z[1] - z[0]))))
+    # Equal units in both directions: a 32R-long pipe appears 16 diameters wide.
+    ax.set_aspect('equal', adjustable='box')
     fig.colorbar(im, ax=ax, label="Fluctuation kinetic energy density ½|u-u_lam|²")
     fig.savefig(output_path, dpi=130)
     plt.close(fig)
