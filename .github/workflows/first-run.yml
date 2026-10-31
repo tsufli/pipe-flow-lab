@@ -67,7 +67,7 @@ jobs:
         run: |
           echo "DNS outcome: $DNS, analysis outcome: $ANALYSIS"
           test "$DNS" = success && test "$ANALYSIS" = success
-# Long-pipe refined integration run (2026-10-31).
+# Retry long-pipe refined run after correcting wall-time validation (2026-10-31).
 
   publish:
     name: Publish longitudinal movie
