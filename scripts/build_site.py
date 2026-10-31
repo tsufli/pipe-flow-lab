@@ -27,6 +27,8 @@ for case in sorted(DATA.iterdir()) if DATA.exists() else []:
     meta = info.get('metadata', {})
     movie = info.get('movie') or {}
     frames = info.get('frames') or []
+    if not frames or not movie.get('gif'):
+        continue  # hide failed or empty runs from the public archive
     mean_vals = [f.get('section_mean_energy') for f in frames if isinstance(f.get('section_mean_energy'), (int, float))]
     index.append({
         'id': meta.get('id', case.name),
