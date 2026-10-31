@@ -9,7 +9,7 @@ function archive(){
   const list = runs.filter(r => [r.id, r.re, r.amplitude, r.status].join(' ').toLowerCase().includes(f));
   $('run-list').innerHTML = list.length ? list.map(r => `
     <button class="runcard ${current===r.id?'selected':''}" data-id="${escapeHTML(r.id)}">
-      <div class="key">Re ${number(r.re,0)} <span style="float:right" class="tag">A ${number(r.amplitude,2)}</span></div>
+      <div class="key">${escapeHTML(r.title || `Re ${number(r.re,0)} · L/D ${number(r.lz/2,0)} · A ${number(r.amplitude,2)} · ${r.preset}`)}</div>
       <div class="sub">${escapeHTML(r.id)} · ${escapeHTML(r.preset || '—')}</div>
       <div class="sub">${escapeHTML(r.status)} · ${r.n_frames || 0} frame(s)</div>
     </button>`).join('') : '<p class="muted">No matching runs yet.</p>';
