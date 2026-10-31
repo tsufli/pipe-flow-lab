@@ -1,0 +1,55 @@
+name: Reprocess long-pipe movie at physical aspect ratio
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reprocess-long-pipe.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  reprocess:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      JAX_PLATFORM_NAME: cpu
+      JAX_ENABLE_X64: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install analysis tools
+        run: |
+          uv python install 3.13
+          uv venv .venv --python 3.13
+          uv pip install --python .venv/bin/python 'dnsjax==0.1.0.1' 'matplotlib>=3.9,<4'
+      - name: Retrieve raw snapshots from successful 16-diameter DNS
+        run: |
+          gh run download 41179993581 --repo "${{ github.repository }}" --name initial-pipe-dns-41179993581 --dir tmp/raw
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          files = list(Path('tmp/raw').rglob('state*.tar'))
+          metadata = list(Path('tmp/raw').rglob('run_metadata.json'))
+          if not files or not metadata:
+              raise SystemExit(f'Raw artifact missing snapshots ({len(files)}) or metadata ({len(metadata)})')
+          out = Path('work/first-41179993581-1')
+          out.mkdir(parents=True, exist_ok=True)
+          for f in files + metadata[:1]:
+              shutil.copy2(f, out / f.name)
+          print(f'Retrieved {len(files)} snapshots for reprocessing')
+          PY
+      - name: Regenerate movie with true physical aspect ratio
+        run: |
+          .venv/bin/python scripts/analyze.py --source work/first-41179993581-1 --dest data/runs/first-41179993581-1
+      - name: Commit updated movie and frames
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/runs/first-41179993581-1
+          if ! git diff --cached --quiet; then
+            git commit -m "visualization: physical 16:1 pipe aspect ratio"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
