@@ -14,7 +14,7 @@ main{max-width:1700px;margin:auto;padding:20px;display:flex;flex-direction:colum
 hr{border:0;border-top:1px solid #2b3950;margin:18px 0}
 button{background:#2779b4;border:1px solid #4698d4;color:white;border-radius:8px;padding:9px 12px;font:inherit;font-size:13px;cursor:pointer}
 button.secondary{background:#263750;border-color:#3c526f}button:hover{filter:brightness(1.15)}
-.buttons{display:flex;flex-wrap:wrap;gap:7px}.plotcol{display:grid;gap:18px;align-content:start}.visual-row{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,0.7fr);gap:18px;align-items:start;min-width:0}.visual-row>.panel,.visual-row>.timegrids{min-width:0}.visual-row .timegrids{gap:18px}
+.buttons{display:flex;flex-wrap:wrap;gap:7px;align-items:center}.r-shortcut{display:flex;gap:8px;align-items:center;background:#172b46;border:1px solid #3d5577;border-radius:8px;padding:4px 9px}.r-shortcut input{width:clamp(110px,13vw,210px);accent-color:#73c4e9}.r-shortcut label{font-weight:750}.r-shortcut output{min-width:38px;color:#a6ddff;font-variant-numeric:tabular-nums}.plotcol{display:grid;gap:18px;align-content:start}.visual-row{display:grid;grid-template-columns:minmax(0,1.395fr) minmax(0,0.855fr);gap:18px;align-items:start;min-width:0}.visual-row>.panel,.visual-row>.timegrids{min-width:0}.visual-row .timegrids{gap:18px}
 .plotbox{position:relative}.plotbox canvas{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation;background:#0e192b;border-radius:8px}
 .leg{display:flex;gap:13px;flex-wrap:wrap;color:#b8c5da;font-size:12px;margin:12px 0 0}.swatch{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:4px}
 .timegrids{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}.timegrids canvas{display:block;width:100%;height:auto;background:#0e192b;border-radius:8px}.model-equations{font-family:Cambria,Georgia,serif;font-size:clamp(18px,2.1vw,27px);line-height:2.1;color:#e8f3ff;background:#0d1729;border:1px solid #405879;border-radius:10px;padding:14px 24px;margin:8px 0;text-align:center}.model-equations .eq{display:block}.small{font-size:12px}.info{background:#101b2f;border:1px solid #30435e;border-radius:8px;padding:11px;color:#c6d6e9;font-size:13px;line-height:1.6}
@@ -23,7 +23,7 @@ code{color:#95dbff}.equation{font-family:Cambria,Georgia,serif;font-size:14px;wh
 @media(max-width:1050px){.visual-row{grid-template-columns:1fr}.controls #parameters{grid-template-columns:repeat(2,minmax(0,1fr))}.controls .control-columns{grid-template-columns:1fr 1fr}.controls .control-section+ .control-section{border-left:0;padding-left:0}}@media(max-width:680px){.controls #parameters{grid-template-columns:1fr}.controls .control-columns{grid-template-columns:1fr}.panel{padding:12px}main{padding:10px}.model-equations{padding:10px;font-size:18px;overflow-wrap:anywhere}}
 </style></head><body>
 <header><div class="eyebrow">Physics laboratory · Barkley 2016 · Section 8</div><h1>Excitation, recovery &amp; turbulent bistability</h1><p>Explore the spatially homogeneous two-variable pipe-flow model. Adjust parameters, click the phase plane to choose an initial state, then follow its trajectory.</p></header>
-<main><section class="plotcol"><div class="panel"><h2>Evolution equations · local two-variable model</h2><div class="model-equations"><span class="eq">dq/dt = q [ r + u − U₀ − (r + δ)(q − 1)² ]</span><span class="eq">du/dt = ε₁(U₀ − u) + ε₂(Ū − u)q</span></div><p class="small">Barkley (2016), Eq. (8.13). u is the mean centerline velocity; explore the model with the controls below the plots.</p></div><div class="visual-row"><div class="panel"><h2>Phase plane <span style="color:#91a9c5;font-weight:400">u (horizontal) vs q (vertical)</span></h2><div class="buttons" style="margin:10px 0 14px"><button id="play" class="secondary">▶ Animate</button><span id="clock" aria-live="off" class="small" style="align-self:center;color:#ffd166">t = 0</span></div>
+<main><section class="plotcol"><div class="panel"><h2>Evolution equations · local two-variable model</h2><div class="model-equations"><span class="eq">dq/dt = q [ r + u − U₀ − (r + δ)(q − 1)² ]</span><span class="eq">du/dt = ε₁(U₀ − u) + ε₂(Ū − u)q</span></div><p class="small">Barkley (2016), Eq. (8.13). u is the mean centerline velocity; explore the model with the controls below the plots.</p></div><div class="visual-row"><div class="panel"><h2>Phase plane <span style="color:#91a9c5;font-weight:400">u (horizontal) vs q (vertical)</span></h2><div class="buttons" style="margin:10px 0 14px"><button id="play" class="secondary">▶ Animate</button><div class="r-shortcut"><label for="s_r">r</label><input type="range" id="s_r" min="-0.3" max="2.3" step="0.01" value="0.6"><output id="r_display">0.60</output></div><span id="clock" aria-live="off" class="small" style="align-self:center;color:#ffd166">t = 0</span></div>
 <div class="plotbox"><canvas id="phase" width="1000" height="620" aria-label="Phase plane of the Barkley ODE"></canvas></div><div class="leg"><span><i class="swatch" style="background:#6fbefa"></i>q-nullcline: attracting fast branch</span><span><i class="swatch" style="background:#f79a83"></i>q-nullcline: repelling fast branch</span><span><i class="swatch" style="background:#6ce3bd"></i>u-nullcline</span><span><i class="swatch" style="background:#ffd166"></i>trajectory</span></div><p class="small">Click the plot to select (u₀, q₀). Solid / open circles represent stable / unstable fixed points; dotted blue line denotes q=0.</p><div class="info" id="status"></div></div><div class="timegrids"><div class="panel"><h2>Turbulence intensity q(t)</h2><canvas id="qtime" width="1000" height="410"></canvas></div><div class="panel"><h2>Centerline velocity u(t)</h2><canvas id="utime" width="1000" height="410"></canvas></div></div></div></section><aside class="panel controls"><div class="control-columns"><div class="control-section"><h2>Model parameters</h2>
 <div class="params" id="parameters"></div></div><div class="control-section"><h2>Initial condition</h2><div class="params" id="initials"></div>
 <div class="buttons" style="margin-top:12px"><button id="run">Run trajectory</button><button id="reset" class="secondary">Barkley defaults</button><button id="kick" class="secondary">Excitation test</button></div>
@@ -38,13 +38,12 @@ code{color:#95dbff}.equation{font-family:Cambria,Georgia,serif;font-size:14px;wh
 <script>
 "use strict";
 const definitions=[
-["r","Model Reynolds control",.6,-.3,2.3,.01],
 ["delta","δ · nonlinear shape",.1,.02,1.2,.01],
 ["eps1","ε₁ · laminar recovery",.1,.005,.5,.005],
 ["eps2","ε₂ · turbulent mixing",.2,.005,.7,.005],
 ["U0","U₀ · laminar centerline",2,1.2,3,.05],
 ["Ub","Ū · bulk velocity",1,.3,1.5,.05]
-],defaults=Object.fromEntries(definitions.map(x=>[x[0],x[2]]));
+],defaults={r:.6,...Object.fromEntries(definitions.map(x=>[x[0],x[2]]))};
 const p={...defaults},ic={u:2,q:.55},settings={T:80,dt:.035};
 let result=[],fixed=[],playTime=null,frameHandle=null,animationStartedAt=null;
 let cachedFrames={},plotBounds={},lastTick=0;
@@ -52,6 +51,7 @@ const $=id=>document.getElementById(id);
 function addControl(target,key,label,min,max,step,obj){let div=document.createElement("div");div.className="parameter";div.innerHTML='<label for="n_'+key+'">'+label+'</label><input type="number" id="n_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'"><input type="range" id="s_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'">';$(target).appendChild(div);
 function change(v){const n=Number(v);if(!Number.isFinite(n))return;obj[key]=n;$("n_"+key).value=n;$("s_"+key).value=Math.min(max,Math.max(min,n));compute()}$("n_"+key).addEventListener("change",e=>change(e.target.value));$("s_"+key).addEventListener("input",e=>change(e.target.value))}
 for(const [k,label,val,min,max,step] of definitions)addControl("parameters",k,label,min,max,step,p);
+$("s_r").addEventListener("input",e=>{p.r=Number(e.target.value);$("r_display").textContent=p.r.toFixed(2);compute()});
 addControl("initials","u","Initial u",0,3.2,.01,ic);addControl("initials","q","Initial q",0,2.6,.01,ic);
 addControl("numerics","T","Time horizon T",10,250,1,settings);addControl("numerics","dt","RK4 time step Δt",.005,.1,.005,settings);
 function f(q,u){return q*(p.r+u-p.U0-(p.r+p.delta)*(q-1)**2)}
@@ -123,7 +123,7 @@ function stopPlayback(){
 function compute(){stopPlayback();if(!(p.delta>0&&p.r+p.delta>0&&p.eps1>0&&p.eps2>0&&p.U0>p.Ub&&ic.q>=0&&settings.dt>0&&settings.T>0)){$("message").textContent="Require r+δ>0, δ>0, ε values>0, U₀>Ū, q₀≥0.";return}$("message").textContent="";fixed=roots();result=integrate(ic.u,ic.q,settings.T,settings.dt);let end=result[result.length-1];
 $("status").innerHTML="<strong>Full-system equilibria:</strong> "+fixed.map(x=>"(u="+x.u.toFixed(3)+", q="+x.q.toFixed(3)+") — "+x.type).join("<br>")+"<br><strong>End of integration:</strong> t="+end.t.toFixed(2)+", u="+end.u.toFixed(4)+", q="+end.q.toFixed(4)+(result.length<settings.T/settings.dt*.99?"<br>Warning: integration exited bounds. Reduce Δt.":"");playTime=null;redraw()}
 $("run").onclick=compute;$("field").onchange=redraw;$("stream").onchange=redraw;
-$("reset").onclick=()=>{Object.assign(p,defaults);Object.assign(ic,{u:2,q:.55});Object.assign(settings,{T:80,dt:.035});for(let k of Object.keys({...p,...ic,...settings})){let val=({...p,...ic,...settings})[k];$("n_"+k).value=val;$("s_"+k).value=val}compute()};
+$("reset").onclick=()=>{Object.assign(p,defaults);Object.assign(ic,{u:2,q:.55});Object.assign(settings,{T:80,dt:.035});for(let k of Object.keys({...p,...ic,...settings})){let val=({...p,...ic,...settings})[k];if($("n_"+k))$("n_"+k).value=val;$("s_"+k).value=val}$("r_display").textContent=p.r.toFixed(2);compute()};
 $("kick").onclick=()=>{ic.u=p.U0;ic.q=.65;$("n_u").value=ic.u;$("s_u").value=ic.u;$("n_q").value=ic.q;$("s_q").value=ic.q;compute()};
 $("play").onclick=()=>{
  if(frameHandle!==null){stopPlayback();redraw();return}
