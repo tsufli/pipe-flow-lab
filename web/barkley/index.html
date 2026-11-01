@@ -17,7 +17,7 @@ button.secondary{background:#263750;border-color:#3c526f}button:hover{filter:bri
 .buttons{display:flex;flex-wrap:wrap;gap:7px}.plotcol{display:grid;gap:18px;align-content:start}
 .plotbox{position:relative}.plotbox canvas{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation;background:#0e192b;border-radius:8px}
 .leg{display:flex;gap:13px;flex-wrap:wrap;color:#b8c5da;font-size:12px;margin:12px 0 0}.swatch{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:4px}
-.timegrids{display:grid;grid-template-columns:1fr 1fr;gap:14px}.small{font-size:12px}.info{background:#101b2f;border:1px solid #30435e;border-radius:8px;padding:11px;color:#c6d6e9;font-size:13px;line-height:1.6}
+.timegrids{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}.timegrids canvas{display:block;width:100%;height:auto;background:#0e192b;border-radius:8px}.model-equations{font-family:Cambria,Georgia,serif;font-size:clamp(18px,2.1vw,27px);line-height:2.1;color:#e8f3ff;background:#0d1729;border:1px solid #405879;border-radius:10px;padding:14px 24px;margin:8px 0;text-align:center}.model-equations .eq{display:block}.small{font-size:12px}.info{background:#101b2f;border:1px solid #30435e;border-radius:8px;padding:11px;color:#c6d6e9;font-size:13px;line-height:1.6}
 .info strong{color:white}.message{color:#f4cd8e;font-size:12px;min-height:20px}
 code{color:#95dbff}.equation{font-family:Cambria,Georgia,serif;font-size:14px;white-space:normal;color:#d8eaff;line-height:1.8}
 @media(max-width:920px){main{grid-template-columns:1fr}.controls{order:2}.plotcol{order:1}}@media(max-width:630px){.timegrids{grid-template-columns:1fr}.panel{padding:12px}main{padding:10px}}
@@ -31,20 +31,19 @@ code{color:#95dbff}.equation{font-family:Cambria,Georgia,serif;font-size:14px;wh
 <div class="params" id="numerics"></div>
 <label class="small"><input type="checkbox" id="field" checked> Show direction field</label>
 <label class="small" style="display:block;margin-top:8px"><input type="checkbox" id="stream" checked> Show integral curves from seed states</label>
-<div class="buttons" style="margin-top:12px"><button id="play" class="secondary">▶ Animate</button><button id="export" class="secondary">↓ Download CSV</button></div>
+<div class="buttons" style="margin-top:12px"><button id="play" class="secondary">▶ Animate</button><span id="clock" aria-live="off" class="small" style="align-self:center;color:#ffd166">t = 0</span><button id="export" class="secondary">↓ Download CSV</button></div>
 <p class="message" id="message" aria-live="polite"></p>
-<hr><h2>Equations</h2>
-<div class="equation">dq/dt = q [r + u − U₀ − (r + δ)(q − 1)²]<br>du/dt = ε₁(U₀ − u) + ε₂(Ū − u)q</div>
-<p class="small">The parameter r is a model Reynolds-number control, <em>not</em> the physical Re. The local system has no spatial coordinate, front propagation, or noise.</p>
+<p class="small">The parameter r controls turbulence excitation (it is not the physical Reynolds number). Spatial propagation and noise are omitted.</p>
 </aside>
 <section class="plotcol">
+<div class="panel"><h2>Evolution equations · local two-variable model</h2><div class="model-equations"><span class="eq">dq/dt = q [ r + u − U₀ − (r + δ)(q − 1)² ]</span><span class="eq">du/dt = ε₁(U₀ − u) + ε₂(Ū − u)q</span></div><p class="small">Barkley (2016), Eq. (8.13). Adjust the parameters on the left; u is the mean centerline velocity.</p></div>
 <div class="panel"><h2>Phase plane <span style="color:#91a9c5;font-weight:400">u (horizontal) vs q (vertical)</span></h2>
 <div class="plotbox"><canvas id="phase" width="1000" height="620" aria-label="Phase plane of the Barkley ODE"></canvas></div>
 <div class="leg"><span><i class="swatch" style="background:#6fbefa"></i>q-nullcline: attracting fast branch</span><span><i class="swatch" style="background:#f79a83"></i>q-nullcline: repelling fast branch</span><span><i class="swatch" style="background:#6ce3bd"></i>u-nullcline</span><span><i class="swatch" style="background:#ffd166"></i>trajectory</span></div>
 <p class="small">Click anywhere on the plot to set (u₀, q₀) and integrate. Solid / open circles are stable / unstable full-system fixed points. Dotted blue line: q=0, also a q-nullcline.</p>
 <div class="info" id="status"></div></div>
-<div class="timegrids"><div class="panel"><h2>Turbulence intensity q(t)</h2><canvas id="qtime" width="700" height="340"></canvas></div>
-<div class="panel"><h2>Centerline velocity u(t)</h2><canvas id="utime" width="700" height="340"></canvas></div></div>
+<div class="timegrids"><div class="panel"><h2>Turbulence intensity q(t)</h2><canvas id="qtime" width="1000" height="280"></canvas></div>
+<div class="panel"><h2>Centerline velocity u(t)</h2><canvas id="utime" width="1000" height="280"></canvas></div></div>
 <div class="panel"><h2>Numerical method and interpretation</h2><p class="small" style="margin:0">Fourth-order Runge–Kutta (RK4) with a user-controlled step size. The trajectory is computed independently on each parameter update. Results are intended for exploring smooth local dynamics; convergence can be checked by halving Δt. The vector arrows are normalized to emphasize direction, not speed. The nonnegative half-plane q ≥ 0 is invariant; calculations are not artificially clipped. The parameter defaults are from Barkley (2016), equations (8.14)–(8.16), with U₀=2 and Ū=1 in the chosen frame. For the local dynamics, advection, diffusion and stochastic forcing are omitted. Fixed points are intersections of the nullclines, with stability determined by the two-dimensional Jacobian.</p></div>
 </section></main>
 <script>
@@ -58,7 +57,8 @@ const definitions=[
 ["Ub","Ū · bulk velocity",1,.3,1.5,.05]
 ],defaults=Object.fromEntries(definitions.map(x=>[x[0],x[2]]));
 const p={...defaults},ic={u:2,q:.55},settings={T:80,dt:.035};
-let result=[],fixed=[],playTime=null,frameHandle=null;
+let result=[],fixed=[],playTime=null,frameHandle=null,animationStartedAt=null;
+let cachedFrames={},plotBounds={},lastTick=0;
 const $=id=>document.getElementById(id);
 function addControl(target,key,label,min,max,step,obj){let div=document.createElement("div");div.className="parameter";div.innerHTML='<label for="n_'+key+'">'+label+'</label><input type="number" id="n_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'"><input type="range" id="s_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'">';$(target).appendChild(div);
 function change(v){const n=Number(v);if(!Number.isFinite(n))return;obj[key]=n;$("n_"+key).value=n;$("s_"+key).value=Math.min(max,Math.max(min,n));compute()}$("n_"+key).addEventListener("change",e=>change(e.target.value));$("s_"+key).addEventListener("input",e=>change(e.target.value))}
@@ -92,16 +92,63 @@ for(let z of fixed){let x=sx(z.u),y=sy(z.q);ctx.beginPath();ctx.arc(x,y,7,0,2*Ma
 ctx.beginPath();ctx.arc(sx(ic.u),sy(ic.q),6.5,0,2*Math.PI);ctx.fillStyle=col.gold;ctx.fill();
 if(playTime!==null&&result.length){let idx=Math.min(result.length-1,Math.floor(playTime/settings.T*(result.length-1))),a=result[idx];ctx.beginPath();ctx.arc(sx(a.u),sy(a.q),10,0,2*Math.PI);ctx.fillStyle="#fff";ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=col.gold;ctx.stroke()}
 $("phase").onclick=e=>{let rect=e.target.getBoundingClientRect(),px=(e.clientX-rect.left)*W/rect.width,py=(e.clientY-rect.top)*H/rect.height;ic.u=Math.max(0,Math.min(maxu,(px-ax.L)/(W-ax.L-ax.R)*maxu));ic.q=Math.max(0,Math.min(maxq,(H-ax.B-py)/(H-ax.T-ax.B)*maxq));$("n_u").value=ic.u.toFixed(2);$("s_u").value=ic.u;$("n_q").value=ic.q.toFixed(2);$("s_q").value=ic.q;compute()}}
-function timePlot(id,key,color){let {ctx,W,H}=setupCanvas(id);let values=result.map(a=>a[key]);let ymin=Math.min(0,...values),ymax=Math.max(...values, key==="u"?p.U0:0);if(ymax-ymin<.1)ymax=ymin+.1;let pad=.12*(ymax-ymin);let ax=axes(ctx,W,H,0,settings.T,Math.max(0,ymin-pad),ymax+pad,"time t",key);
+function timePlot(id,key,color){let {ctx,W,H}=setupCanvas(id);let values=result.map(a=>a[key]);let ymin=Math.min(0,...values),ymax=Math.max(...values, key==="u"?p.U0:0);if(ymax-ymin<.1)ymax=ymin+.1;let pad=.12*(ymax-ymin);let ax=axes(ctx,W,H,0,settings.T,Math.max(0,ymin-pad),ymax+pad,"time t",key);plotBounds[id]=ax;
 line(ctx,result.map(a=>[ax.sx(a.t),ax.sy(a[key])]),color,2.8);
 if(playTime!==null&&result.length){let k=Math.min(result.length-1,Math.floor(playTime/settings.T*(result.length-1)));ctx.fillStyle=col.white;ctx.beginPath();ctx.arc(ax.sx(result[k].t),ax.sy(result[k][key]),5,0,2*Math.PI);ctx.fill()}}
-function redraw(){phase();timePlot("qtime","q",col.gold);timePlot("utime","u",col.green)}
-function compute(){if(!(p.delta>0&&p.r+p.delta>0&&p.eps1>0&&p.eps2>0&&p.U0>p.Ub&&ic.q>=0&&settings.dt>0&&settings.T>0)){$("message").textContent="Require r+δ>0, δ>0, ε values>0, U₀>Ū, q₀≥0.";return}$("message").textContent="";fixed=roots();result=integrate(ic.u,ic.q,settings.T,settings.dt);let end=result[result.length-1];
+function redraw(){
+  phase();timePlot("qtime","q",col.gold);timePlot("utime","u",col.green);
+  for(const id of ["phase","qtime","utime"]){
+    const c=$(id);cachedFrames[id]=c.getContext("2d").getImageData(0,0,c.width,c.height);
+  }
+}
+function drawPlayback(){
+  if(playTime===null||!result.length)return;
+  for(const id of ["phase","qtime","utime"]){
+    if(cachedFrames[id]) $(id).getContext("2d").putImageData(cachedFrames[id],0,0);
+  }
+  const k=Math.min(result.length-1,Math.floor((playTime/settings.T)*(result.length-1)));
+  const a=result[k],ph=$("phase"),ctx=ph.getContext("2d"),W=ph.width,H=ph.height;
+  const maxu=Math.max(2.3,p.U0+.25), maxq=2.5;
+  const sx=u=>64+u/maxu*(W-84),sy=q=>H-48-q/maxq*(H-63);
+  // Bright trace grows from the clicked initial state, accompanied by a moving marker.
+  line(ctx,result.slice(0,k+1).filter((_,i)=>i%2===0).map(z=>[sx(z.u),sy(z.q)]),"#fff1a0",5);
+  ctx.save();ctx.shadowColor="#fff4a3";ctx.shadowBlur=22;ctx.fillStyle="#ffffff";ctx.strokeStyle="#e8a432";ctx.lineWidth=5;
+  ctx.beginPath();ctx.arc(sx(a.u),sy(a.q),12,0,2*Math.PI);ctx.fill();ctx.stroke();ctx.restore();
+  for(const [id,key] of [["qtime","q"],["utime","u"]]){
+    const c=$(id),cc=c.getContext("2d"),b=plotBounds[id];
+    if(!b)continue;
+    const x=b.sx(a.t),y=b.sy(a[key]);
+    cc.save();cc.strokeStyle="#f5d47a";cc.lineWidth=2.5;cc.setLineDash([7,6]);
+    cc.beginPath();cc.moveTo(x,b.T);cc.lineTo(x,c.height-b.B);cc.stroke();cc.setLineDash([]);
+    cc.shadowColor="#fff3a3";cc.shadowBlur=12;cc.fillStyle="#ffffff";cc.beginPath();cc.arc(x,y,7,0,2*Math.PI);cc.fill();cc.restore();
+  }
+  $("clock").textContent="t = "+a.t.toFixed(2)+" / "+settings.T.toFixed(0);
+}
+function stopPlayback(){
+  if(frameHandle!==null)cancelAnimationFrame(frameHandle);
+  frameHandle=null;animationStartedAt=null;playTime=null;
+  $("play").textContent="▶ Animate";
+  $("clock").textContent="t = 0";
+}
+function compute(){stopPlayback();if(!(p.delta>0&&p.r+p.delta>0&&p.eps1>0&&p.eps2>0&&p.U0>p.Ub&&ic.q>=0&&settings.dt>0&&settings.T>0)){$("message").textContent="Require r+δ>0, δ>0, ε values>0, U₀>Ū, q₀≥0.";return}$("message").textContent="";fixed=roots();result=integrate(ic.u,ic.q,settings.T,settings.dt);let end=result[result.length-1];
 $("status").innerHTML="<strong>Full-system equilibria:</strong> "+fixed.map(x=>"(u="+x.u.toFixed(3)+", q="+x.q.toFixed(3)+") — "+x.type).join("<br>")+"<br><strong>End of integration:</strong> t="+end.t.toFixed(2)+", u="+end.u.toFixed(4)+", q="+end.q.toFixed(4)+(result.length<settings.T/settings.dt*.99?"<br>Warning: integration exited bounds. Reduce Δt.":"");playTime=null;redraw()}
 $("run").onclick=compute;$("field").onchange=redraw;$("stream").onchange=redraw;
 $("reset").onclick=()=>{Object.assign(p,defaults);Object.assign(ic,{u:2,q:.55});Object.assign(settings,{T:80,dt:.035});for(let k of Object.keys({...p,...ic,...settings})){let val=({...p,...ic,...settings})[k];$("n_"+k).value=val;$("s_"+k).value=val}compute()};
 $("kick").onclick=()=>{ic.u=p.U0;ic.q=.65;$("n_u").value=ic.u;$("s_u").value=ic.u;$("n_q").value=ic.q;$("s_q").value=ic.q;compute()};
-$("play").onclick=()=>{if(frameHandle){cancelAnimationFrame(frameHandle);frameHandle=null;playTime=null;$("play").textContent="▶ Animate";redraw();return}let start=performance.now();$("play").textContent="■ Stop";function frame(now){playTime=((now-start)/1000/12%1)*settings.T;redraw();frameHandle=requestAnimationFrame(frame)}frameHandle=requestAnimationFrame(frame)};
+$("play").onclick=()=>{
+ if(frameHandle!==null){stopPlayback();redraw();return}
+ if(!result.length)return;
+ // Animate one complete excursion across 16 seconds. No expensive recomputations per frame.
+ animationStartedAt=null;$("play").textContent="■ Stop";
+ function tick(now){
+   if(animationStartedAt===null)animationStartedAt=now;
+   playTime=Math.min(settings.T,(now-animationStartedAt)/16000*settings.T);
+   drawPlayback();
+   if(playTime>=settings.T){frameHandle=null;$("play").textContent="↻ Replay";return}
+   frameHandle=requestAnimationFrame(tick);
+ }
+ frameHandle=requestAnimationFrame(tick);
+};
 $("export").onclick=()=>{let csv="t,u,q\n"+result.map(a=>[a.t,a.u,a.q].map(v=>v.toPrecision(12)).join(",")).join("\n");let blob=new Blob([csv],{type:"text/csv"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="barkley_local_r"+p.r+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),300)};
 compute();
 </script></body></html>
