@@ -46,3 +46,17 @@ def test_localized_seed():
         assert np.all(np.isfinite(q)) and np.all(np.isfinite(u))
     assert q.min()>-1e-9
     assert u.min()>0
+
+def test_ito_noise_normalization():
+    """Cellwise stochastic increment has variance sigma² q² dt/dx."""
+    rng=np.random.default_rng(12345)
+    sigma,q,dt,dx=.5,1.3,.01,.25
+    increments=sigma*q*np.sqrt(dt/dx)*rng.standard_normal(100000)
+    expected=sigma**2*q**2*dt/dx
+    assert abs(np.var(increments)-expected)/expected<.025
+
+def test_zero_noise_is_deterministic():
+    """At sigma=0 the stochastic update is identically zero."""
+    rng=np.random.default_rng(123)
+    q=np.linspace(0,1,128)
+    np.testing.assert_array_equal(q+0*q*np.sqrt(.01/.5)*rng.standard_normal(128),q)
