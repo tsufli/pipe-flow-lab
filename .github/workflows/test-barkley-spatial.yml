@@ -1,0 +1,38 @@
+name: Test Barkley spatial model
+on:
+  push:
+    paths:
+      - 'web/barkley/**'
+      - 'scripts/barkley_spatial.py'
+      - '.github/workflows/test-barkley-spatial.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy pytest
+      - name: Verify spatial discretization and steady laminar state
+        run: python -m pytest -q scripts/barkley_spatial.py
+      - name: Validate both tabs and JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          a=Path('web/barkley/index.html').read_text()
+          b=Path('web/barkley/spatial/index.html').read_text()
+          assert 'href="./spatial/"' in a
+          assert 'href="../"' in b
+          for key in ['id="heat"', 'id="qplot"', 'id="uplot"', 'function timestep', 'function rhs', 'Download final state CSV']:
+              assert key in b, key
+          for name,html in [('local',a),('spatial',b)]:
+              script=html.split('<script>')[-1].split('</script>')[0]
+              target=Path('/tmp/'+name+'.js')
+              target.write_text(script)
+              subprocess.run(['node','--check',str(target)],check=True)
+          PY
