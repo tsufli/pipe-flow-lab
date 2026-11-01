@@ -84,7 +84,8 @@ const series=(f,a,b,n=700)=>Array.from({length:n+1},(_,i)=>{let x=a+(b-a)*i/n,y=
 line(ctx,[[sx(0),sy(0)],[sx(maxu),sy(0)]],col.blue,2,[7,7]);
 let fold=p.U0-p.r;let qp=x=>1+Math.sqrt(Math.max(0,(p.r+x-p.U0)/(p.r+p.delta))),qm=x=>1-Math.sqrt(Math.max(0,(p.r+x-p.U0)/(p.r+p.delta)));
 if(p.r+p.delta>0&&fold<maxu){line(ctx,series(qp,Math.max(fold,0),maxu),col.blue,3);line(ctx,series(qm,Math.max(fold,0),maxu),col.red,2.5,[8,6])}
-line(ctx,series(u=>{let den=p.eps2*(p.Ub-u);return Math.abs(den)<1e-7?NaN:-p.eps1*(p.U0-u)/den},0,maxu),col.green,2.6);
+// Parametrize the u-nullcline by q, avoiding the pole at u = Ubar.
+line(ctx,Array.from({length:701},(_,i)=>{let q=maxq*i/700;let u=(p.eps1*p.U0+p.eps2*p.Ub*q)/(p.eps1+p.eps2*q);return [sx(u),sy(q)]}),col.green,2.6);
 if($("stream").checked){let seeds=[[.15,.35],[.6,1.65],[1.2,.2],[1.5,1.6],[2.0,1.2],[.35,1.8],[1.8,.1]];for(const [u,q] of seeds){let arr=integrate(u,q,settings.T,Math.max(settings.dt,.045));line(ctx,arr.filter((_,i)=>i%3===0).map(a=>[sx(a.u),sy(a.q)]),"#5c6b92",1.3)}}
 line(ctx,result.filter((_,i)=>i%2===0).map(a=>[sx(a.u),sy(a.q)]),col.gold,3.3);
 for(let t of [.05,.18,.38,.65]){let a=result[Math.floor(t*(result.length-1))],b=result[Math.min(result.length-1,Math.floor(t*(result.length-1))+6)];if(!a||!b||Math.hypot(b.u-a.u,b.q-a.q)<.002)continue;let x=sx(a.u),y=sy(a.q),ang=Math.atan2(sy(b.q)-y,sx(b.u)-x);ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.fillStyle=col.gold;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-5);ctx.lineTo(-5,5);ctx.fill();ctx.restore()}
