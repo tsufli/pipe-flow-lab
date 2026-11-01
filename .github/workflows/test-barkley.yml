@@ -1,0 +1,30 @@
+name: Test Barkley local model
+on:
+  push:
+    paths:
+      - 'web/barkley/**'
+      - 'scripts/barkley_local.py'
+      - '.github/workflows/test-barkley.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy scipy pytest
+      - name: Check ODE behavior and RK4 against high accuracy integration
+        run: python -m pytest -q scripts/barkley_local.py
+      - name: Validate HTML has expected controls and canvas views
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("web/barkley/index.html").read_text()
+          for expected in ['id="phase"', 'id="qtime"', 'id="utime"', 'function rk4Step', 'function roots', 'Download CSV', 'id="field"']:
+              assert expected in s, expected
+          print("Interactive page structure OK")
+          PY
