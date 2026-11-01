@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Barkley · Local phase plane laboratory</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#e8edf6;background:#0b1120}
+*{box-sizing:border-box}body{margin:0}header{padding:23px max(22px,calc((100vw - 1450px)/2));border-bottom:1px solid #253148;background:#111b2e}
+h1{margin:5px 0 7px;font-size:clamp(25px,3vw,37px);letter-spacing:-.035em}h2{font-size:16px;margin:0 0 14px}p{color:#a5b4ca;line-height:1.55}header p{margin:0}
+.eyebrow{font-size:12px;color:#73c4e9;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+main{max-width:1500px;margin:auto;padding:20px;display:grid;grid-template-columns:312px minmax(0,1fr);gap:18px}
+.panel{background:#142037;border:1px solid #2a3953;border-radius:13px;padding:18px;min-width:0}
+.controls{align-self:start}.params{display:grid;gap:12px}.parameter{display:grid;grid-template-columns:1fr 95px;gap:4px 12px;align-items:center}
+.parameter label{font-size:14px;color:#d7e2ef}.parameter input[type=number]{width:100%;background:#0d1728;border:1px solid #3a4c68;border-radius:7px;padding:7px;color:white;font:inherit}
+.parameter input[type=range]{grid-column:1/-1;width:100%;accent-color:#6ab6ff}
+hr{border:0;border-top:1px solid #2b3950;margin:18px 0}
+button{background:#2779b4;border:1px solid #4698d4;color:white;border-radius:8px;padding:9px 12px;font:inherit;font-size:13px;cursor:pointer}
+button.secondary{background:#263750;border-color:#3c526f}button:hover{filter:brightness(1.15)}
+.buttons{display:flex;flex-wrap:wrap;gap:7px}.plotcol{display:grid;gap:18px;align-content:start}
+.plotbox{position:relative}.plotbox canvas{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation;background:#0e192b;border-radius:8px}
+.leg{display:flex;gap:13px;flex-wrap:wrap;color:#b8c5da;font-size:12px;margin:12px 0 0}.swatch{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:4px}
+.timegrids{display:grid;grid-template-columns:1fr 1fr;gap:14px}.small{font-size:12px}.info{background:#101b2f;border:1px solid #30435e;border-radius:8px;padding:11px;color:#c6d6e9;font-size:13px;line-height:1.6}
+.info strong{color:white}.message{color:#f4cd8e;font-size:12px;min-height:20px}
+code{color:#95dbff}.equation{font-family:Cambria,Georgia,serif;font-size:14px;white-space:normal;color:#d8eaff;line-height:1.8}
+@media(max-width:920px){main{grid-template-columns:1fr}.controls{order:2}.plotcol{order:1}}@media(max-width:630px){.timegrids{grid-template-columns:1fr}.panel{padding:12px}main{padding:10px}}
+</style></head><body>
+<header><div class="eyebrow">Physics laboratory · Barkley 2016 · Section 8</div><h1>Excitation, recovery &amp; turbulent bistability</h1><p>Explore the spatially homogeneous two-variable pipe-flow model. Adjust parameters, click the phase plane to choose an initial state, then follow its trajectory.</p></header>
+<main><aside class="panel controls"><h2>Model parameters</h2>
+<div class="params" id="parameters"></div><hr>
+<h2>Initial condition</h2><div class="params" id="initials"></div>
+<div class="buttons" style="margin-top:12px"><button id="run">Run trajectory</button><button id="reset" class="secondary">Barkley defaults</button><button id="kick" class="secondary">Excitation test</button></div>
+<hr><h2>Display &amp; numerical settings</h2>
+<div class="params" id="numerics"></div>
+<label class="small"><input type="checkbox" id="field" checked> Show direction field</label>
+<label class="small" style="display:block;margin-top:8px"><input type="checkbox" id="stream" checked> Show integral curves from seed states</label>
+<div class="buttons" style="margin-top:12px"><button id="play" class="secondary">▶ Animate</button><button id="export" class="secondary">↓ Download CSV</button></div>
+<p class="message" id="message" aria-live="polite"></p>
+<hr><h2>Equations</h2>
+<div class="equation">dq/dt = q [r + u − U₀ − (r + δ)(q − 1)²]<br>du/dt = ε₁(U₀ − u) + ε₂(Ū − u)q</div>
+<p class="small">The parameter r is a model Reynolds-number control, <em>not</em> the physical Re. The local system has no spatial coordinate, front propagation, or noise.</p>
+</aside>
+<section class="plotcol">
+<div class="panel"><h2>Phase plane <span style="color:#91a9c5;font-weight:400">u (horizontal) vs q (vertical)</span></h2>
+<div class="plotbox"><canvas id="phase" width="1000" height="620" aria-label="Phase plane of the Barkley ODE"></canvas></div>
+<div class="leg"><span><i class="swatch" style="background:#6fbefa"></i>q-nullcline: attracting fast branch</span><span><i class="swatch" style="background:#f79a83"></i>q-nullcline: repelling fast branch</span><span><i class="swatch" style="background:#6ce3bd"></i>u-nullcline</span><span><i class="swatch" style="background:#ffd166"></i>trajectory</span></div>
+<p class="small">Click anywhere on the plot to set (u₀, q₀) and integrate. Solid / open circles are stable / unstable full-system fixed points. Dotted blue line: q=0, also a q-nullcline.</p>
+<div class="info" id="status"></div></div>
+<div class="timegrids"><div class="panel"><h2>Turbulence intensity q(t)</h2><canvas id="qtime" width="700" height="340"></canvas></div>
+<div class="panel"><h2>Centerline velocity u(t)</h2><canvas id="utime" width="700" height="340"></canvas></div></div>
+<div class="panel"><h2>Numerical method and interpretation</h2><p class="small" style="margin:0">Fourth-order Runge–Kutta (RK4) with a user-controlled step size. The trajectory is computed independently on each parameter update. Results are intended for exploring smooth local dynamics; convergence can be checked by halving Δt. The vector arrows are normalized to emphasize direction, not speed. The nonnegative half-plane q ≥ 0 is invariant; calculations are not artificially clipped. The parameter defaults are from Barkley (2016), equations (8.14)–(8.16), with U₀=2 and Ū=1 in the chosen frame. For the local dynamics, advection, diffusion and stochastic forcing are omitted. Fixed points are intersections of the nullclines, with stability determined by the two-dimensional Jacobian.</p></div>
+</section></main>
+<script>
+"use strict";
+const definitions=[
+["r","Model Reynolds control",.6,-.3,2.3,.01],
+["delta","δ · nonlinear shape",.1,.02,1.2,.01],
+["eps1","ε₁ · laminar recovery",.1,.005,.5,.005],
+["eps2","ε₂ · turbulent mixing",.2,.005,.7,.005],
+["U0","U₀ · laminar centerline",2,1.2,3,.05],
+["Ub","Ū · bulk velocity",1,.3,1.5,.05]
+],defaults=Object.fromEntries(definitions.map(x=>[x[0],x[2]]));
+const p={...defaults},ic={u:2,q:.55},settings={T:80,dt:.035};
+let result=[],fixed=[],playTime=null,frameHandle=null;
+const $=id=>document.getElementById(id);
+function addControl(target,key,label,min,max,step,obj){let div=document.createElement("div");div.className="parameter";div.innerHTML='<label for="n_'+key+'">'+label+'</label><input type="number" id="n_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'"><input type="range" id="s_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'">';$(target).appendChild(div);
+function change(v){const n=Number(v);if(!Number.isFinite(n))return;obj[key]=n;$("n_"+key).value=n;$("s_"+key).value=Math.min(max,Math.max(min,n));compute()}$("n_"+key).addEventListener("change",e=>change(e.target.value));$("s_"+key).addEventListener("input",e=>change(e.target.value))}
+for(const [k,label,val,min,max,step] of definitions)addControl("parameters",k,label,min,max,step,p);
+addControl("initials","u","Initial u",0,3.2,.01,ic);addControl("initials","q","Initial q",0,2.6,.01,ic);
+addControl("numerics","T","Time horizon T",10,250,1,settings);addControl("numerics","dt","RK4 time step Δt",.005,.1,.005,settings);
+function f(q,u){return q*(p.r+u-p.U0-(p.r+p.delta)*(q-1)**2)}
+function g(q,u){return p.eps1*(p.U0-u)+p.eps2*(p.Ub-u)*q}
+function jac(q,u){return [[p.r+u-p.U0-(p.r+p.delta)*(q-1)**2-2*(p.r+p.delta)*q*(q-1),q],[p.eps2*(p.Ub-u),-p.eps1-p.eps2*q]]}
+function eigenType(q,u){let J=jac(q,u),tr=J[0][0]+J[1][1],det=J[0][0]*J[1][1]-J[0][1]*J[1][0];return det<0?"saddle (unstable)":det>0&&tr<0?"stable":det>0&&tr>0?"unstable":"nonhyperbolic"}
+function roots(){let roots=[{u:p.U0,q:0}];const h=q=>{let u=(p.eps1*p.U0+p.eps2*p.Ub*q)/(p.eps1+p.eps2*q);return p.r+u-p.U0-(p.r+p.delta)*(q-1)**2};
+let lo=0,prev=h(lo);for(let i=1;i<=1400;i++){let hi=i*2.8/1400,v=h(hi);if(prev*v<0){let a=lo,b=hi;for(let k=0;k<55;k++){let m=(a+b)/2;if(h(a)*h(m)<=0)b=m;else a=m}let q=(a+b)/2;roots.push({q,u:(p.eps1*p.U0+p.eps2*p.Ub*q)/(p.eps1+p.eps2*q)})}lo=hi;prev=v}return roots.map(x=>({...x,type:eigenType(x.q,x.u)}))}
+function rk4Step(u,q,h){let a=g(q,u),b=f(q,u),c=g(q+h*b/2,u+h*a/2),d=f(q+h*b/2,u+h*a/2),e=g(q+h*d/2,u+h*c/2),z=f(q+h*d/2,u+h*c/2),m=g(q+h*z,u+h*e),n=f(q+h*z,u+h*e);return [u+h*(a+2*c+2*e+m)/6,q+h*(b+2*d+2*z+n)/6]}
+function integrate(u,q,T,dt){let n=Math.ceil(T/dt),h=T/n,arr=[{t:0,u,q}];for(let i=1;i<=n;i++){[u,q]=rk4Step(u,q,h);if(!Number.isFinite(u+q)||Math.abs(q)>100)return arr;arr.push({t:i*h,u,q})}return arr}
+function setupCanvas(id){let c=$(id),ctx=c.getContext("2d");const W=c.width,H=c.height;ctx.clearRect(0,0,W,H);ctx.fillStyle="#0e192b";ctx.fillRect(0,0,W,H);return {ctx,W,H}}
+const col={axis:"#8fa2ba",grid:"#27364b",blue:"#6fbefa",red:"#f79a83",green:"#6ce3bd",gold:"#ffd166",white:"#eef6ff"};
+function line(ctx,pts,color,width=2,dashed=[]){if(pts.length<2)return;ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dashed);ctx.beginPath();let opened=false;for(const [x,y] of pts){if(!Number.isFinite(x+y)){opened=false;continue}if(!opened){ctx.moveTo(x,y);opened=true}else ctx.lineTo(x,y)}ctx.stroke();ctx.restore()}
+function axes(ctx,W,H,xmin,xmax,ymin,ymax,xlabel,ylabel){let L=64,R=20,T=15,B=48, sx=x=>L+(x-xmin)/(xmax-xmin)*(W-L-R),sy=y=>H-B-(y-ymin)/(ymax-ymin)*(H-T-B);
+ctx.save();ctx.font="17px system-ui";ctx.textAlign="center";ctx.strokeStyle=col.grid;ctx.fillStyle=col.axis;for(let i=0;i<=5;i++){let xv=xmin+(xmax-xmin)*i/5,yv=ymin+(ymax-ymin)*i/5;ctx.beginPath();ctx.moveTo(sx(xv),T);ctx.lineTo(sx(xv),H-B);ctx.moveTo(L,sy(yv));ctx.lineTo(W-R,sy(yv));ctx.stroke();ctx.fillText(xv.toFixed(1),sx(xv),H-16);ctx.textAlign="right";ctx.fillText(yv.toFixed(1),L-12,sy(yv)+6);ctx.textAlign="center"}ctx.fillStyle=col.white;ctx.fillText(xlabel,(L+W-R)/2,H-4);ctx.save();ctx.translate(17,(T+H-B)/2);ctx.rotate(-Math.PI/2);ctx.fillText(ylabel,0,0);ctx.restore();ctx.restore();return {sx,sy,L,R,T,B}}
+function phase(){const {ctx,W,H}=setupCanvas("phase");let maxu=Math.max(2.3,p.U0+.25),maxq=2.5,ax=axes(ctx,W,H,0,maxu,0,maxq,"u (centerline velocity)","q (turbulence intensity)");const {sx,sy}=ax;
+if($("field").checked){for(let u=.12;u<maxu;u+=maxu/24)for(let q=.12;q<maxq;q+=maxq/16){let vx=g(q,u),vy=f(q,u),v=Math.hypot(vx/(maxu),vy/maxq);if(v<1e-9)continue;let x=sx(u),y=sy(q),dx=18*vx/maxu/v,dy=-18*vy/maxq/v;ctx.strokeStyle="#627992";ctx.fillStyle="#627992";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x-dx*.5,y-dy*.5);ctx.lineTo(x+dx*.5,y+dy*.5);ctx.stroke();let angle=Math.atan2(dy,dx);ctx.beginPath();ctx.moveTo(x+dx*.5,y+dy*.5);ctx.lineTo(x+dx*.5-6*Math.cos(angle-.5),y+dy*.5-6*Math.sin(angle-.5));ctx.lineTo(x+dx*.5-6*Math.cos(angle+.5),y+dy*.5-6*Math.sin(angle+.5));ctx.closePath();ctx.fill()}}
+const series=(f,a,b,n=700)=>Array.from({length:n+1},(_,i)=>{let x=a+(b-a)*i/n,y=f(x);return [sx(x),sy(y)]});
+line(ctx,[[sx(0),sy(0)],[sx(maxu),sy(0)]],col.blue,2,[7,7]);
+let fold=p.U0-p.r;let qp=x=>1+Math.sqrt(Math.max(0,(p.r+x-p.U0)/(p.r+p.delta))),qm=x=>1-Math.sqrt(Math.max(0,(p.r+x-p.U0)/(p.r+p.delta)));
+if(p.r+p.delta>0&&fold<maxu){line(ctx,series(qp,Math.max(fold,0),maxu),col.blue,3);line(ctx,series(qm,Math.max(fold,0),maxu),col.red,2.5,[8,6])}
+line(ctx,series(u=>{let den=p.eps2*(p.Ub-u);return Math.abs(den)<1e-7?NaN:-p.eps1*(p.U0-u)/den},0,maxu),col.green,2.6);
+if($("stream").checked){let seeds=[[.15,.35],[.6,1.65],[1.2,.2],[1.5,1.6],[2.0,1.2],[.35,1.8],[1.8,.1]];for(const [u,q] of seeds){let arr=integrate(u,q,settings.T,Math.max(settings.dt,.045));line(ctx,arr.filter((_,i)=>i%3===0).map(a=>[sx(a.u),sy(a.q)]),"#5c6b92",1.3)}}
+line(ctx,result.filter((_,i)=>i%2===0).map(a=>[sx(a.u),sy(a.q)]),col.gold,3.3);
+for(let t of [.05,.18,.38,.65]){let a=result[Math.floor(t*(result.length-1))],b=result[Math.min(result.length-1,Math.floor(t*(result.length-1))+6)];if(!a||!b||Math.hypot(b.u-a.u,b.q-a.q)<.002)continue;let x=sx(a.u),y=sy(a.q),ang=Math.atan2(sy(b.q)-y,sx(b.u)-x);ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.fillStyle=col.gold;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-5);ctx.lineTo(-5,5);ctx.fill();ctx.restore()}
+for(let z of fixed){let x=sx(z.u),y=sy(z.q);ctx.beginPath();ctx.arc(x,y,7,0,2*Math.PI);ctx.fillStyle=z.type==="stable"?col.green:"#0e192b";ctx.fill();ctx.lineWidth=2.6;ctx.strokeStyle=col.green;ctx.stroke()}
+ctx.beginPath();ctx.arc(sx(ic.u),sy(ic.q),6.5,0,2*Math.PI);ctx.fillStyle=col.gold;ctx.fill();
+if(playTime!==null&&result.length){let idx=Math.min(result.length-1,Math.floor(playTime/settings.T*(result.length-1))),a=result[idx];ctx.beginPath();ctx.arc(sx(a.u),sy(a.q),10,0,2*Math.PI);ctx.fillStyle="#fff";ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=col.gold;ctx.stroke()}
+$("phase").onclick=e=>{let rect=e.target.getBoundingClientRect(),px=(e.clientX-rect.left)*W/rect.width,py=(e.clientY-rect.top)*H/rect.height;ic.u=Math.max(0,Math.min(maxu,(px-ax.L)/(W-ax.L-ax.R)*maxu));ic.q=Math.max(0,Math.min(maxq,(H-ax.B-py)/(H-ax.T-ax.B)*maxq));$("n_u").value=ic.u.toFixed(2);$("s_u").value=ic.u;$("n_q").value=ic.q.toFixed(2);$("s_q").value=ic.q;compute()}}
+function timePlot(id,key,color){let {ctx,W,H}=setupCanvas(id);let values=result.map(a=>a[key]);let ymin=Math.min(0,...values),ymax=Math.max(...values, key==="u"?p.U0:0);if(ymax-ymin<.1)ymax=ymin+.1;let pad=.12*(ymax-ymin);let ax=axes(ctx,W,H,0,settings.T,Math.max(0,ymin-pad),ymax+pad,"time t",key);
+line(ctx,result.map(a=>[ax.sx(a.t),ax.sy(a[key])]),color,2.8);
+if(playTime!==null&&result.length){let k=Math.min(result.length-1,Math.floor(playTime/settings.T*(result.length-1)));ctx.fillStyle=col.white;ctx.beginPath();ctx.arc(ax.sx(result[k].t),ax.sy(result[k][key]),5,0,2*Math.PI);ctx.fill()}}
+function redraw(){phase();timePlot("qtime","q",col.gold);timePlot("utime","u",col.green)}
+function compute(){if(!(p.delta>0&&p.r+p.delta>0&&p.eps1>0&&p.eps2>0&&p.U0>p.Ub&&ic.q>=0&&settings.dt>0&&settings.T>0)){$("message").textContent="Require r+δ>0, δ>0, ε values>0, U₀>Ū, q₀≥0.";return}$("message").textContent="";fixed=roots();result=integrate(ic.u,ic.q,settings.T,settings.dt);let end=result[result.length-1];
+$("status").innerHTML="<strong>Full-system equilibria:</strong> "+fixed.map(x=>"(u="+x.u.toFixed(3)+", q="+x.q.toFixed(3)+") — "+x.type).join("<br>")+"<br><strong>End of integration:</strong> t="+end.t.toFixed(2)+", u="+end.u.toFixed(4)+", q="+end.q.toFixed(4)+(result.length<settings.T/settings.dt*.99?"<br>Warning: integration exited bounds. Reduce Δt.":"");playTime=null;redraw()}
+$("run").onclick=compute;$("field").onchange=redraw;$("stream").onchange=redraw;
+$("reset").onclick=()=>{Object.assign(p,defaults);Object.assign(ic,{u:2,q:.55});Object.assign(settings,{T:80,dt:.035});for(let k of Object.keys({...p,...ic,...settings})){let val=({...p,...ic,...settings})[k];$("n_"+k).value=val;$("s_"+k).value=val}compute()};
+$("kick").onclick=()=>{ic.u=p.U0;ic.q=.65;$("n_u").value=ic.u;$("s_u").value=ic.u;$("n_q").value=ic.q;$("s_q").value=ic.q;compute()};
+$("play").onclick=()=>{if(frameHandle){cancelAnimationFrame(frameHandle);frameHandle=null;playTime=null;$("play").textContent="▶ Animate";redraw();return}let start=performance.now();$("play").textContent="■ Stop";function frame(now){playTime=((now-start)/1000/12%1)*settings.T;redraw();frameHandle=requestAnimationFrame(frame)}frameHandle=requestAnimationFrame(frame)};
+$("export").onclick=()=>{let csv="t,u,q\n"+result.map(a=>[a.t,a.u,a.q].map(v=>v.toPrecision(12)).join(",")).join("\n");let blob=new Blob([csv],{type:"text/csv"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="barkley_local_r"+p.r+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),300)};
+compute();
+</script></body></html>
