@@ -30,11 +30,13 @@ code{color:#95dbff}.equation{font-family:Cambria,Georgia,serif;font-size:14px;wh
 </div><div class="control-section"><h2>Display &amp; numerical settings</h2>
 <div class="params" id="numerics"></div>
 <label class="small"><input type="checkbox" id="field" checked> Show direction field</label>
+<label class="small" style="display:block;margin-top:8px"><input type="checkbox" id="basins"> Show basins of attraction</label>
+<p class="small" id="basin-help" style="margin:6px 0 0">Colors classify initial conditions by their attracting fixed point. Classification near separatrices is approximate.</p>
 <label class="small" style="display:block;margin-top:8px"><input type="checkbox" id="stream" checked> Show integral curves from seed states</label>
 <div class="buttons" style="margin-top:12px"><button id="export" class="secondary">↓ Download CSV</button></div>
 <p class="message" id="message" aria-live="polite"></p>
 <p class="small">The parameter r is not the physical Reynolds number. Spatial effects and noise are omitted.</p>
-</div></div></aside><div class="panel"><h2>Numerical method and interpretation</h2><p class="small" style="margin:0">Fourth-order Runge–Kutta (RK4) with a user-controlled step size. The trajectory is computed independently on each parameter update. Results are intended for exploring smooth local dynamics; convergence can be checked by halving Δt. The vector arrows are normalized to emphasize direction, not speed. The nonnegative half-plane q ≥ 0 is invariant; calculations are not artificially clipped. The parameter defaults are from Barkley (2016), equations (8.14)–(8.16), with U₀=2 and Ū=1 in the chosen frame. For the local dynamics, advection, diffusion and stochastic forcing are omitted. Fixed points are intersections of the nullclines, with stability determined by the two-dimensional Jacobian.</p></div></main>
+</div></div></aside><div class="panel"><h2>Numerical method and interpretation</h2><p class="small" style="margin:0">Fourth-order Runge–Kutta (RK4) with a user-controlled step size. The trajectory is computed independently on each parameter update. Results are intended for exploring smooth local dynamics; convergence can be checked by halving Δt. The vector arrows are normalized to emphasize direction, not speed. The nonnegative half-plane q ≥ 0 is invariant; calculations are not artificially clipped. The parameter defaults are from Barkley (2016), equations (8.14)–(8.16), with U₀=2 and Ū=1 in the chosen frame. For the local dynamics, advection, diffusion and stochastic forcing are omitted. Fixed points are intersections of the nullclines, with stability determined by the two-dimensional Jacobian. Optional attraction basins are computed using a 42 × 32 grid of initial conditions integrated by RK4 to convergence toward the stable fixed points, with a finite-time cutoff. Unresolved near-separatrix cells are shown in grey. Basin maps are cached until model parameters change.</p></div></main>
 <script>
 "use strict";
 const definitions=[
@@ -45,7 +47,7 @@ const definitions=[
 ["Ub","Ū · bulk velocity",1,.3,1.5,.05]
 ],defaults={r:.6,...Object.fromEntries(definitions.map(x=>[x[0],x[2]]))};
 const p={...defaults},ic={u:2,q:.55},settings={T:80,dt:.035};
-let result=[],fixed=[],playTime=null,frameHandle=null,animationStartedAt=null;
+let result=[],fixed=[],playTime=null,frameHandle=null,animationStartedAt=null,basinCacheKey="",basinTiles=[];
 let cachedFrames={},plotBounds={},lastTick=0;
 const $=id=>document.getElementById(id);
 function addControl(target,key,label,min,max,step,obj){let div=document.createElement("div");div.className="parameter";div.innerHTML='<label for="n_'+key+'">'+label+'</label><input type="number" id="n_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'"><input type="range" id="s_'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+obj[key]+'">';$(target).appendChild(div);
@@ -67,7 +69,48 @@ const col={axis:"#8fa2ba",grid:"#27364b",blue:"#6fbefa",red:"#f79a83",green:"#6c
 function line(ctx,pts,color,width=2,dashed=[]){if(pts.length<2)return;ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dashed);ctx.beginPath();let opened=false;for(const [x,y] of pts){if(!Number.isFinite(x+y)){opened=false;continue}if(!opened){ctx.moveTo(x,y);opened=true}else ctx.lineTo(x,y)}ctx.stroke();ctx.restore()}
 function axes(ctx,W,H,xmin,xmax,ymin,ymax,xlabel,ylabel){let L=64,R=20,T=15,B=48, sx=x=>L+(x-xmin)/(xmax-xmin)*(W-L-R),sy=y=>H-B-(y-ymin)/(ymax-ymin)*(H-T-B);
 ctx.save();ctx.font="17px system-ui";ctx.textAlign="center";ctx.strokeStyle=col.grid;ctx.fillStyle=col.axis;for(let i=0;i<=5;i++){let xv=xmin+(xmax-xmin)*i/5,yv=ymin+(ymax-ymin)*i/5;ctx.beginPath();ctx.moveTo(sx(xv),T);ctx.lineTo(sx(xv),H-B);ctx.moveTo(L,sy(yv));ctx.lineTo(W-R,sy(yv));ctx.stroke();ctx.fillText(xv.toFixed(1),sx(xv),H-16);ctx.textAlign="right";ctx.fillText(yv.toFixed(1),L-12,sy(yv)+6);ctx.textAlign="center"}ctx.fillStyle=col.white;ctx.fillText(xlabel,(L+W-R)/2,H-4);ctx.save();ctx.translate(17,(T+H-B)/2);ctx.rotate(-Math.PI/2);ctx.fillText(ylabel,0,0);ctx.restore();ctx.restore();return {sx,sy,L,R,T,B}}
+function classifyBasin(u,q,attractors){
+  const step=.16,steps=1900;
+  for(let k=0;k<steps;k++){
+    for(let j=0;j<attractors.length;j++){
+      const z=attractors[j];
+      if(Math.hypot(u-z.u,q-z.q)<.045)return j;
+    }
+    [u,q]=rk4Step(u,q,step);
+    if(!Number.isFinite(u+q)||Math.abs(q)>20||Math.abs(u)>20)return -1;
+  }
+  // A finite-time unresolved point is left unclassified rather than assigned to a wrong basin.
+  return -1;
+}
+function computeBasins(maxu,maxq){
+  const key=JSON.stringify([p.r,p.delta,p.eps1,p.eps2,p.U0,p.Ub,maxu,maxq]);
+  if(key===basinCacheKey)return;
+  basinCacheKey=key;basinTiles=[];
+  const stable=fixed.filter(z=>z.type==="stable");
+  const nx=42,ny=32;
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+    const u=(i+.5)*maxu/nx,q=(j+.5)*maxq/ny;
+    basinTiles.push({i,j,basin:classifyBasin(u,q,stable)});
+  }
+}
 function phase(){const {ctx,W,H}=setupCanvas("phase");let maxu=Math.max(2.3,p.U0+.25),maxq=2.5,ax=axes(ctx,W,H,0,maxu,0,maxq,"u (centerline velocity)","q (turbulence intensity)");const {sx,sy}=ax;
+if($("basins").checked){
+  computeBasins(maxu,maxq);
+  const stable=fixed.filter(z=>z.type==="stable"),nx=42,ny=32;
+  const colors=["#4b88df","#ec9851","#bd83e0","#6cd0ad"];
+  ctx.save();
+  for(const tile of basinTiles){
+    const x0=sx(tile.i*maxu/nx),x1=sx((tile.i+1)*maxu/nx);
+    const y0=sy((tile.j+1)*maxq/ny),y1=sy(tile.j*maxq/ny);
+    ctx.fillStyle=tile.basin<0?"rgba(165,170,181,.14)":colors[tile.basin%colors.length];
+    ctx.globalAlpha=tile.basin<0?1:.25;
+    ctx.fillRect(x0,y0,x1-x0+.7,y1-y0+.7);
+  }
+  ctx.restore();
+  $("basin-help").textContent=stable.map((z,i)=>(["Blue","Orange","Purple","Teal"][i%4]+" basin → (u="+z.u.toFixed(2)+", q="+z.q.toFixed(2)+")")).join(" · ")+". Grey = unresolved at finite integration time.";
+}else{
+  $("basin-help").textContent="Colors classify initial conditions by their attracting fixed point. Classification near separatrices is approximate.";
+}
 if($("field").checked){for(let u=.12;u<maxu;u+=maxu/24)for(let q=.12;q<maxq;q+=maxq/16){let vx=g(q,u),vy=f(q,u),v=Math.hypot(vx/(maxu),vy/maxq);if(v<1e-9)continue;let x=sx(u),y=sy(q),dx=18*vx/maxu/v,dy=-18*vy/maxq/v;ctx.strokeStyle="#627992";ctx.fillStyle="#627992";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x-dx*.5,y-dy*.5);ctx.lineTo(x+dx*.5,y+dy*.5);ctx.stroke();let angle=Math.atan2(dy,dx);ctx.beginPath();ctx.moveTo(x+dx*.5,y+dy*.5);ctx.lineTo(x+dx*.5-6*Math.cos(angle-.5),y+dy*.5-6*Math.sin(angle-.5));ctx.lineTo(x+dx*.5-6*Math.cos(angle+.5),y+dy*.5-6*Math.sin(angle+.5));ctx.closePath();ctx.fill()}}
 const series=(f,a,b,n=700)=>Array.from({length:n+1},(_,i)=>{let x=a+(b-a)*i/n,y=f(x);return [sx(x),sy(y)]});
 line(ctx,[[sx(0),sy(0)],[sx(maxu),sy(0)]],col.blue,2,[7,7]);
@@ -122,7 +165,7 @@ function stopPlayback(){
 }
 function compute(){stopPlayback();if(!(p.delta>0&&p.r+p.delta>0&&p.eps1>0&&p.eps2>0&&p.U0>p.Ub&&ic.q>=0&&settings.dt>0&&settings.T>0)){$("message").textContent="Require r+δ>0, δ>0, ε values>0, U₀>Ū, q₀≥0.";return}$("message").textContent="";fixed=roots();result=integrate(ic.u,ic.q,settings.T,settings.dt);let end=result[result.length-1];
 $("status").innerHTML="<strong>Full-system equilibria:</strong> "+fixed.map(x=>"(u="+x.u.toFixed(3)+", q="+x.q.toFixed(3)+") — "+x.type).join("<br>")+"<br><strong>End of integration:</strong> t="+end.t.toFixed(2)+", u="+end.u.toFixed(4)+", q="+end.q.toFixed(4)+(result.length<settings.T/settings.dt*.99?"<br>Warning: integration exited bounds. Reduce Δt.":"");playTime=null;redraw()}
-$("run").onclick=compute;$("field").onchange=redraw;$("stream").onchange=redraw;
+$("run").onclick=compute;$("field").onchange=redraw;$("stream").onchange=redraw;$("basins").onchange=()=>{redraw();};
 $("reset").onclick=()=>{Object.assign(p,defaults);Object.assign(ic,{u:2,q:.55});Object.assign(settings,{T:80,dt:.035});for(let k of Object.keys({...p,...ic,...settings})){let val=({...p,...ic,...settings})[k];if($("n_"+k))$("n_"+k).value=val;$("s_"+k).value=val}$("r_display").textContent=p.r.toFixed(2);compute()};
 $("kick").onclick=()=>{ic.u=p.U0;ic.q=.65;$("n_u").value=ic.u;$("s_u").value=ic.u;$("n_q").value=ic.q;$("s_q").value=ic.q;compute()};
 $("play").onclick=()=>{
