@@ -1,0 +1,17 @@
+name: Test Barkley 3D phase-space tab
+on:
+  push:
+    paths:
+      - 'web/barkley/phase-space/**'
+      - 'scripts/test_barkley_phase_space.js'
+      - '.github/workflows/test-barkley-phase-space.yml'
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/test_barkley_phase_space.js
