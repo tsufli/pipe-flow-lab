@@ -4,7 +4,7 @@ const fs=require("node:fs");
 const vm=require("node:vm");
 const assert=require("node:assert/strict");
 const html=fs.readFileSync("web/barkley/phase-space/index.html","utf8");
-const matches=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
+const matches=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].filter(m=>m[1].trim());
 assert.equal(matches.length,1,"Expected one inline physics program");
 const script=matches[0][1];
 new vm.Script(script,{filename:"phase-space-inline.js"});
