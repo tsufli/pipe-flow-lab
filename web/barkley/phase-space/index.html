@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Barkley · 3D traveling-wave phase space</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1120;color:#edf4ff}*{box-sizing:border-box}body{margin:0}
+header{background:#111b2e;border-bottom:1px solid #30405c;padding:21px max(18px,calc((100vw - 1500px)/2))}
+h1{margin:3px 0 8px;font-size:clamp(24px,3vw,35px)}h2{font-size:16px;margin:0 0 10px}p{color:#b9c6d7;line-height:1.55}
+small,.small{font-size:12px;color:#a9bdd4}nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}nav a{padding:9px 13px;background:#243953;border:1px solid #3a5270;border-radius:8px;text-decoration:none;color:#cde0f8}nav a.active{background:#267eaf;color:white}
+main{max-width:1550px;margin:0 auto;padding:18px;display:grid;gap:15px}.panel{min-width:0;padding:17px;background:#142037;border:1px solid #2a3953;border-radius:12px}
+.eq{font-family:Georgia,serif;font-size:clamp(14px,1.55vw,19px);line-height:1.9;background:#0e192b;padding:12px 17px;border:1px solid #3b5475;border-radius:8px}
+.top{display:grid;grid-template-columns:1fr 1fr;gap:15px}.plots{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:15px}
+.graph{height:530px;width:100%;background:#0d1829;border-radius:8px}.ctlgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ctl{display:grid;grid-template-columns:minmax(135px,1fr) 93px;gap:4px 10px;align-items:center;margin:9px 0}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:#70baf5}.ctl input[type=number]{background:#0d1729;border:1px solid #4b6483;color:white;border-radius:6px;padding:6px;width:100%;font:inherit;font-size:13px}
+button{color:white;background:#2779b4;border:1px solid #4698d4;font:inherit;font-size:13px;border-radius:7px;padding:9px 12px;cursor:pointer}.secondary{background:#263b55}
+.buttons{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}.label{font-size:13px;color:#dce8f7}.status{font-size:13px;line-height:1.6;color:#e2cf95;background:#111d32;border:1px solid #3b5371;padding:11px;border-radius:8px;min-height:42px}
+.legend{display:flex;flex-wrap:wrap;gap:11px;font-size:12px;color:#cbd8e7;margin-top:8px}.dot{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:4px}
+@media(max-width:1050px){.plots,.top{grid-template-columns:1fr}.graph{height:480px}}@media(max-width:600px){main{padding:9px}.panel{padding:11px}.ctlgrid{grid-template-columns:1fr}.graph{height:370px}}
+</style></head><body>
+<header><div class="small" style="color:#73c4e9;letter-spacing:.12em;font-weight:700">BARKLEY 2016 · SPATIAL DYNAMICS</div>
+<h1>3D traveling-wave phase space</h1>
+<p style="margin:0">Numerically integrated orbits in (u, q, p), where p = dq/dz and z = x − ct. Rotate the 3D plot; compare with the (u,q) projection and its nullclines.</p>
+<nav><a href="../">Local ODE</a><a href="../spatial/">Spatial PDE</a><a class="active" href="./">3D phase space</a></nav></header>
+<main>
+<section class="panel"><h2>Full spatial ODE (not the local time-evolution ODE)</h2>
+<div class="eq">dq/dz = p &nbsp; ; &nbsp; D dp/dz = (u − ζ − c)p − f(q,u) &nbsp; ; &nbsp; (u − c)du/dz = εG(q,u)<br>
+f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U₀ − u) + κ(Ū − u)q</div>
+<p class="small" style="margin-bottom:0">Default constants: U₀ = 2, Ū = 1, ζ = 0.8, δ = 0.1, D = 0.5, κ = 2. No noise. ε is the slow-evolution parameter. Here r is a model Reynolds parameter, not the physical Reynolds number.</p></section>
+<section class="panel"><div class="ctlgrid">
+<div><h2>Model and wave speed</h2>
+<div class="ctl"><label for="r">Model Reynolds parameter r</label><input id="rnumber" type="number" min="0.05" max="2.5" step="0.01" value="0.70"><input id="r" type="range" min="0.05" max="2.5" step="0.01" value="0.70"></div>
+<div class="ctl"><label for="eps">Slow parameter ε</label><input id="epsnumber" type="number" min="0.02" max="0.2" step="0.01" value="0.10"><input id="eps" type="range" min="0.02" max="0.2" step="0.01" value="0.10"></div>
+<div class="ctl"><label for="c">Wave speed c (shooting parameter)</label><input id="cnumber" type="number" min="-1.5" max="1.5" step="0.000001" value="0.4"><input id="c" type="range" min="-1.5" max="1.5" step="0.0005" value="0.4"></div>
+</div><div><h2>What to draw</h2>
+<label class="label"><input id="nearby" type="checkbox" checked> Nearby trajectories at c ± 0.01 (not the same vector field)</label><br>
+<label class="label"><input id="plane" type="checkbox" checked> Show p = 0 reference plane with nullclines</label><br>
+<label class="label"><input id="show2d" type="checkbox" checked> Show (u,q) projection with nullclines</label>
+<div class="buttons"><button id="shoot">Auto-shoot from L</button><button id="integrate" class="secondary">Integrate at chosen c</button><button id="reset" class="secondary">Defaults</button></div>
+<p class="small">Auto-shoot brackets trajectories that diverge on opposite sides and bisects in c. It is a numerical separatrix search, <em>not</em> a verified homoclinic boundary-value solver. Adjust c to see the true integral curves change. The neighboring lines illustrate sensitivity.</p></div></div>
+<div id="status" class="status" aria-live="polite">Calculating…</div>
+</section>
+<section class="plots">
+<div class="panel"><h2>3D spatial-dynamics orbits</h2><div id="phase3d" class="graph" role="img" aria-label="Interactive 3D trajectories of the traveling-wave ODE"></div><p class="small">Axes: u, q, p=dq/dz. All solid trajectories are directly integrated with RK4 from the 3D ODE. They generally do <strong>not</strong> connect fixed points at arbitrary c.</p></div>
+<div class="panel" id="projectionpanel"><h2>(u, q) projection and local nullclines</h2><div id="projection" class="graph" role="img" aria-label="2D projection with q and u nullclines"></div>
+<div class="legend"><span><i class="dot" style="background:#65b6ee"></i>f=0, upper q-branch</span><span><i class="dot" style="background:#fc9b86"></i>f=0, lower q-branch</span><span><i class="dot" style="background:#58dbac"></i>G=0, u-nullcline</span><span><i class="dot" style="background:#f3d26d"></i>Integrated orbit</span></div>
+<p class="small">These are the <em>local</em> (u,q) nullclines f=0 and G=0, drawn on the p=0 reference plane in 3D. They are not the complete three-dimensional spatial nullcline surfaces. The q=0 laminar branch is also shown.</p></div>
+</section>
+<section class="panel"><h2>Interpretation and numerical caveats</h2><p class="small" style="margin:0">
+The laminar fixed point is L=(q,p,u)=(0,0,U₀). Any turbulent fixed points T=(qₛₛ,0,uₛₛ) are intersections of f=0 and G=0. A genuine puff is a homoclinic orbit approaching L as z→±∞ at a selected c. Such a connection is sensitive to c and cannot be inferred from a visually closed projected curve. The auto-shoot routine starts along the unstable eigendirection of L and searches c using numerical trajectories; it reports the outcome rather than pretending an imperfect return is a true homoclinic. Slug front connections L→T and T→L, when they exist, generally occur at <em>different</em> front speeds and are not necessarily simultaneous orbits of a single fixed-c spatial system. Numerical trajectories stop if they leave the plotted physical region or approach the singular surface u=c. Step-size sensitivity can be tested by comparing runs. Fixed points and both nullclines update with r. Source: Barkley (2016), §§8–9, especially equations (9.4) and (9.6).
+</p></section>
+</main>
+<script>
+"use strict";
+const P={U0:2,Ub:1,zeta:.8,delta:.1,D:.5,kappa:2,r:.7,eps:.1,c:.4}, $=id=>document.getElementById(id);
+let timer=null,solved=[],mainSolution=null,extraSolutions=[],lastMessage="";
+const fmt=(x,n=5)=>Number.isFinite(x)?x.toFixed(n):"—";
+function f(q,u){return q*(P.r+u-P.U0-(P.r+P.delta)*(q-1)*(q-1));}
+function G(q,u){return (P.U0-u)+P.kappa*(P.Ub-u)*q;}
+function rhs(y,c){
+ const q=y[0],p=y[1],u=y[2]; return [p,((u-P.zeta-c)*p-f(q,u))/P.D,P.eps*G(q,u)/(u-c)];
+}
+function rk4(y,h,c){
+ const a=rhs(y,c);
+ const b=rhs([y[0]+.5*h*a[0],y[1]+.5*h*a[1],y[2]+.5*h*a[2]],c);
+ const d=rhs([y[0]+.5*h*b[0],y[1]+.5*h*b[1],y[2]+.5*h*b[2]],c);
+ const e=rhs([y[0]+h*d[0],y[1]+h*d[1],y[2]+h*d[2]],c);
+ return y.map((x,j)=>x+h*(a[j]+2*b[j]+2*d[j]+e[j])/6);
+}
+function unstableLambda(c){
+ const b=P.U0-P.zeta-c;
+ return (b+Math.sqrt(b*b+4*P.D*P.delta))/(2*P.D);
+}
+function orbit(c,keep=true){
+ // Seed the one-dimensional unstable eigendirection of the laminar fixed point.
+ const a=0.00001,lambda=unstableLambda(c),h=.012,steps=11000;
+ let y=[a,lambda*a,P.U0],points=[],peak=false,maxq=0,dist=Infinity,why="horizon";
+ for(let i=0;i<=steps;i++){
+  let q=y[0],pp=y[1],u=y[2];
+  if(keep && (i%6===0 || i===steps))points.push({z:i*h,q,p:pp,u});
+  maxq=Math.max(maxq,q);
+  if(maxq>.45)peak=true;
+  if(peak && q<.12 && q>=0)dist=Math.min(dist,Math.hypot(q,pp));
+  if(!Number.isFinite(q+pp+u)||q>3.25||Math.abs(pp)>8||u>P.U0+.5||u<.5){why="high";break;}
+  if(q<-.06){why="low";break;}
+  if(u-c<.04){why="singular";break;}
+  if(peak && q>=0 && q<.0002 && Math.abs(pp)<.0015 && u>1.995){why="near L";break;}
+  y=rk4(y,h,c);
+ }
+ return {c,points,why,maxq,dist,y};
+}
+function nullclineData(){
+ const low=[],upper=[],uN=[],lam=[];
+ for(let i=0;i<=220;i++){
+   const q=2.55*i/220;
+   const u=P.U0-P.r+(P.r+P.delta)*(q-1)*(q-1);
+   if(q<=1)low.push({u,q});else upper.push({u,q});
+   uN.push({u:(P.U0+P.kappa*P.Ub*q)/(1+P.kappa*q),q});
+ }
+ for(let i=0;i<=110;i++)lam.push({u:.6+1.85*i/110,q:0});
+ return {low,upper,uN,lam};
+}
+function fixedPoints(){
+ const out=[{q:0,p:0,u:P.U0,type:"L (laminar)"}];
+ const h=q=>{const u=(P.U0+P.kappa*P.Ub*q)/(1+P.kappa*q);return P.r+u-P.U0-(P.r+P.delta)*(q-1)*(q-1);};
+ let qold=0,fold=h(0);
+ for(let i=1;i<=1400;i++){
+  const q=i*2.7/1400,v=h(q);
+  if(v*fold<0){
+   let a=qold,b=q;for(let k=0;k<48;k++){const m=(a+b)/2;if(h(a)*h(m)<=0)b=m;else a=m;}
+   const qr=(a+b)/2;out.push({q:qr,p:0,u:(P.U0+P.kappa*P.Ub*qr)/(1+P.kappa*qr),type:qr<1?"lower local equilibrium":"T (turbulent)"});
+  }qold=q;fold=v;
+ }
+ return out;
+}
+function clearAndDraw(){
+ if(typeof Plotly==="undefined"){$("status").textContent="Plotly failed to load. This visualization needs access to cdn.plot.ly; check your connection.";return;}
+ const nc=nullclineData(),fixed=fixedPoints();
+ const t2=[],t3=[],DARK="#0d1829";
+ const addNC=(arr,color,name,dash)=>{
+  const xx=arr.map(v=>v.u),yy=arr.map(v=>v.q);
+  t2.push({x:xx,y:yy,type:"scatter",mode:"lines",name,hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<extra>"+name+"</extra>",line:{color,width:2.6,dash:dash||"solid"}});
+  if($("plane").checked)t3.push({x:xx,y:yy,z:xx.map(()=>0),type:"scatter3d",mode:"lines",name,showlegend:false,hoverinfo:"skip",line:{color,width:4,dash:dash||"solid"}});
+ };
+ addNC(nc.lam,"#65b6ee","f = 0: q = 0","dot");
+ addNC(nc.low,"#fc9b86","f = 0: lower branch","dash");
+ addNC(nc.upper,"#65b6ee","f = 0: upper branch");
+ addNC(nc.uN,"#58dbac","G = 0: u-nullcline");
+ if($("plane").checked)t3.unshift({type:"surface",x:[[.6,2.5],[.6,2.5]],y:[[0,0],[2.55,2.55]],z:[[0,0],[0,0]],opacity:.1,showscale:false,hoverinfo:"skip",colorscale:[[0,"#9cb9df"],[1,"#9cb9df"]],name:"p = 0"});
+ const starts=fixed.filter(v=>v.type.startsWith("T")||v.type.startsWith("L")||v.type.startsWith("lower"));
+ t2.push({x:starts.map(v=>v.u),y:starts.map(v=>v.q),type:"scatter",mode:"markers+text",name:"Local equilibria",text:starts.map(v=>v.type.startsWith("L")?"L":v.type.startsWith("T")?"T":"edge"),textposition:"top right",marker:{size:10,color:starts.map(v=>v.type.startsWith("L")?"#ffffff":v.type.startsWith("T")?"#f1af85":"#ca8be9"),line:{width:1,color:"#0b1120"}},hovertemplate:"%{text}<br>u=%{x:.3f}<br>q=%{y:.3f}<extra></extra>"});
+ t3.push({x:starts.map(v=>v.u),y:starts.map(v=>v.q),z:starts.map(()=>0),type:"scatter3d",mode:"markers+text",text:starts.map(v=>v.type.startsWith("L")?"L":v.type.startsWith("T")?"T":"edge"),textposition:"top center",name:"Fixed points",marker:{size:5,color:starts.map(v=>v.type.startsWith("L")?"#ffffff":v.type.startsWith("T")?"#f1af85":"#ca8be9")},hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<br>p=0<extra>%{text}</extra>"});
+ const trajectories=[...extraSolutions.map((v,i)=>({v,color:i?"#a4a4e4":"#ee8498",name:i?"c + 0.01":"c − 0.01",width:3,dash:"dot"})),{v:mainSolution,color:"#f3d26d",name:"Integrated orbit (c = "+fmt(P.c,6)+")",width:7,dash:"solid"}];
+ for(const tr of trajectories){
+  if(!tr.v||!tr.v.points.length)continue;
+  const a=tr.v.points;
+  t3.push({x:a.map(v=>v.u),y:a.map(v=>v.q),z:a.map(v=>v.p),type:"scatter3d",mode:"lines",name:tr.name,showlegend:true,line:{color:tr.color,width:tr.width,dash:tr.dash},hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<br>p=%{z:.3f}<extra>"+tr.name+"</extra>"});
+  t2.push({x:a.map(v=>v.u),y:a.map(v=>v.q),type:"scatter",mode:"lines",name:tr.name,showlegend:false,line:{color:tr.color,width:tr.width===7?3.5:1.7,dash:tr.dash},hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<extra>"+tr.name+"</extra>"});
+ }
+ const base={paper_bgcolor:DARK,plot_bgcolor:DARK,font:{color:"#dce9fc",size:12},margin:{l:44,r:15,t:24,b:48},showlegend:true,legend:{orientation:"h",y:-.18,font:{size:10}}};
+ const layout3={...base,margin:{l:0,r:0,b:15,t:8},scene:{bgcolor:DARK,xaxis:{title:"u",range:[.6,2.45],color:"#b9c7de",gridcolor:"#344763",zerolinecolor:"#344763",backgroundcolor:DARK},yaxis:{title:"q",range:[-.1,2.65],color:"#b9c7de",gridcolor:"#344763",backgroundcolor:DARK},zaxis:{title:"p = dq/dz",range:[-2.3,2.3],color:"#b9c7de",gridcolor:"#344763",backgroundcolor:DARK},aspectmode:"manual",aspectratio:{x:1.05,y:1.1,z:.8},camera:{eye:{x:1.6,y:-1.75,z:1.1}}},legend:{x:0,y:0,font:{size:10},bgcolor:"rgba(17,29,50,.8)"},uirevision:"preserve-camera"};
+ const layout2={...base,xaxis:{title:"u",range:[.58,2.5],gridcolor:"#26384e",zeroline:false},yaxis:{title:"q",range:[-.1,2.7],gridcolor:"#26384e",zeroline:false},uirevision:"fixed"};
+ Plotly.react("phase3d",t3,layout3,{responsive:true,displaylogo:false});
+ if($("show2d").checked){$("projectionpanel").style.display="";Plotly.react("projection",t2,layout2,{responsive:true,displaylogo:false});}else{$("projectionpanel").style.display="none";}
+ const note=mainSolution?("Last integration: "+mainSolution.why+"; max q="+fmt(mainSolution.maxq,3)+", closest (q,p) approach to (0,0) after excitation="+(Number.isFinite(mainSolution.dist)?fmt(mainSolution.dist,3):"not reached")+"."):"";
+ $("status").textContent=lastMessage+" "+note+" A small projected loop does not establish a true homoclinic connection.";
+}
+function trajectoriesAt(c,message){
+ P.c=c;$("cnumber").value=fmt(c,8);$("c").value=c;
+ mainSolution=orbit(c,true);extraSolutions=$("nearby").checked?[orbit(c-.01,true),orbit(c+.01,true)]:[];
+ lastMessage=message;clearAndDraw();
+}
+function shoot(){
+ const guess=P.U0-P.zeta+Math.sqrt(P.D/2)*(Math.sqrt(P.r+P.delta)-3*Math.sqrt(P.r));
+ const samples=[];
+ for(let i=-20;i<=20;i++){let c=guess+i*.015;if(c>P.U0-.15)continue;const o=orbit(c,false);if(o.why==="low"||o.why==="high")samples.push({c,sign:o.why});}
+ let bracket=null;
+ for(let i=1;i<samples.length;i++)if(samples[i].sign!==samples[i-1].sign){bracket=[samples[i-1],samples[i]];break;}
+ if(!bracket){trajectoriesAt(guess,"No usable overshoot/undershoot bracket for this r. Plotting the leading-order upstream-front speed c="+fmt(guess,5)+" instead.");return;}
+ let a=bracket[0].c,b=bracket[1].c,sa=bracket[0].sign,iterations=0;
+ for(let i=0;i<44;i++){
+  let m=(a+b)/2,v=orbit(m,false);
+  if(v.why!=="low"&&v.why!=="high")break;
+  if(v.why===sa)a=m;else b=m;
+  iterations=i+1;
+  if(b-a<2e-13)break;
+ }
+ const selected=(a+b)/2;
+ trajectoriesAt(selected,"Auto-shoot: separated divergent orbits using "+iterations+" bisections; c≈"+fmt(selected,10)+". This is a separatrix estimate, not a certified homoclinic.");
+}
+function bindNumber(key,min,max){
+ const num=$(key+"number"),slider=$(key);
+ function changed(v,fromNumber){
+  let n=Number(v);if(!Number.isFinite(n))return;
+  n=Math.max(min,Math.min(max,n));P[key]=n;
+  num.value=n;slider.value=n;
+  if(timer)clearTimeout(timer);
+  timer=setTimeout(()=>{if(key==="c")trajectoriesAt(P.c,"Direct integration at manually selected speed c="+fmt(P.c,6)+".");else shoot();},180);
+ }
+ num.addEventListener("change",()=>changed(num.value,true));
+ slider.addEventListener("input",()=>changed(slider.value,false));
+}
+bindNumber("r",.05,2.5);bindNumber("eps",.02,.2);bindNumber("c",-1.5,1.5);
+$("shoot").onclick=shoot;
+$("integrate").onclick=()=>trajectoriesAt(P.c,"Direct integration at c="+fmt(P.c,6)+".");
+$("reset").onclick=()=>{P.r=.7;P.eps=.1;$("r").value=$("rnumber").value=P.r;$("eps").value=$("epsnumber").value=P.eps;shoot();};
+$("nearby").onchange=()=>trajectoriesAt(P.c,lastMessage);
+$("plane").onchange=clearAndDraw;$("show2d").onchange=clearAndDraw;
+if(typeof Plotly==="undefined"){$("status").textContent="The graph library could not be loaded; connect to the internet and reload.";}else{shoot();}
+</script></body></html>
