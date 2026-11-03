@@ -30,10 +30,11 @@ f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U�
 <div><h2>Model and wave speed</h2>
 <div class="ctl"><label for="r">Model Reynolds parameter r</label><input id="rnumber" type="number" min="0.05" max="2.5" step="0.01" value="0.70"><input id="r" type="range" min="0.05" max="2.5" step="0.01" value="0.70"></div>
 <div class="ctl"><label for="eps">Slow parameter ε</label><input id="epsnumber" type="number" min="0.02" max="0.2" step="0.01" value="0.10"><input id="eps" type="range" min="0.02" max="0.2" step="0.01" value="0.10"></div>
+<div class="ctl"><label for="pSlice">3D slice: p = dq/dz</label><input id="pSlicenumber" type="number" min="-1.5" max="1.5" step="0.05" value="0"><input id="pSlice" type="range" min="-1.5" max="1.5" step="0.05" value="0"></div>
 <div class="ctl"><label for="c">Wave speed c (shooting parameter)</label><input id="cnumber" type="number" min="-1.5" max="1.5" step="0.000001" value="0.4"><input id="c" type="range" min="-1.5" max="1.5" step="0.0005" value="0.4"></div>
 </div><div><h2>What to draw</h2>
 <label class="label"><input id="nearby" type="checkbox" checked> Nearby trajectories at c ± 0.01 (not the same vector field)</label><br>
-<label class="label"><input id="plane" type="checkbox" checked> Show p = 0 reference plane with nullclines</label><br>
+<label class="label"><input id="plane" type="checkbox" checked> Show selected p-slice with nullclines</label><br>
 <label class="label"><input id="show2d" type="checkbox" checked> Show (u,q) projection with nullclines</label>
 <div class="buttons"><button id="shoot">Auto-shoot from L</button><button id="integrate" class="secondary">Integrate at chosen c</button><button id="reset" class="secondary">Defaults</button></div>
 <p class="small">Auto-shoot brackets trajectories that diverge on opposite sides and bisects in c. It is a numerical separatrix search, <em>not</em> a verified homoclinic boundary-value solver. Adjust c to see the true integral curves change. The neighboring lines illustrate sensitivity.</p></div></div>
@@ -41,17 +42,17 @@ f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U�
 </section>
 <section class="plots">
 <div class="panel"><h2>3D spatial-dynamics orbits</h2><div id="phase3d" class="graph" role="img" aria-label="Interactive 3D trajectories of the traveling-wave ODE"></div><p class="small">Axes: u, q, p=dq/dz. All solid trajectories are directly integrated with RK4 from the 3D ODE. They generally do <strong>not</strong> connect fixed points at arbitrary c.</p></div>
-<div class="panel" id="projectionpanel"><h2>(u, q) projection and local nullclines</h2><div id="projection" class="graph" role="img" aria-label="2D projection with q and u nullclines"></div>
+<div class="panel" id="projectionpanel"><h2>(u, q) projection and nullcline slice</h2><div id="projection" class="graph" role="img" aria-label="2D projection with q and u nullclines"></div>
 <div class="legend"><span><i class="dot" style="background:#65b6ee"></i>f=0, upper q-branch</span><span><i class="dot" style="background:#fc9b86"></i>f=0, lower q-branch</span><span><i class="dot" style="background:#58dbac"></i>G=0, u-nullcline</span><span><i class="dot" style="background:#f3d26d"></i>Integrated orbit</span></div>
-<p class="small">These are the <em>local</em> (u,q) nullclines f=0 and G=0, drawn on the p=0 reference plane in 3D. They are not the complete three-dimensional spatial nullcline surfaces. The q=0 laminar branch is also shown.</p></div>
+<p class="small">Blue/red: local f=0 nullclines (independent of p). Green: G=0, also u′=0 away from u=c. For p≠0, purple shows the true <b>spatial</b> p′=0 cross-section, different from f=0. At p=0, p′=0 coincides with f=0. Orbit curves in 2D are projections; orange circles mark their actual intersections with the selected p-slice. The q′=0 spatial nullcline is the entire p=0 plane.</p></div>
 </section>
 <section class="panel"><h2>Interpretation and numerical caveats</h2><p class="small" style="margin:0">
-The laminar fixed point is L=(q,p,u)=(0,0,U₀). Any turbulent fixed points T=(qₛₛ,0,uₛₛ) are intersections of f=0 and G=0. A genuine puff is a homoclinic orbit approaching L as z→±∞ at a selected c. Such a connection is sensitive to c and cannot be inferred from a visually closed projected curve. The auto-shoot routine starts along the unstable eigendirection of L and searches c using numerical trajectories; it reports the outcome rather than pretending an imperfect return is a true homoclinic. Slug front connections L→T and T→L, when they exist, generally occur at <em>different</em> front speeds and are not necessarily simultaneous orbits of a single fixed-c spatial system. Numerical trajectories stop if they leave the plotted physical region or approach the singular surface u=c. Step-size sensitivity can be tested by comparing runs. Fixed points and both nullclines update with r. Source: Barkley (2016), §§8–9, especially equations (9.4) and (9.6).
+The selected p-slice shows f=0 and G=0 (local reaction nullclines), plus the true spatial p′=0 cross-section whenever p≠0. Spatial q′=0 means p=0. The laminar fixed point is L=(q,p,u)=(0,0,U₀). Any turbulent fixed points T=(qₛₛ,0,uₛₛ) are intersections of f=0 and G=0. A genuine puff is a homoclinic orbit approaching L as z→±∞ at a selected c. Such a connection is sensitive to c and cannot be inferred from a visually closed projected curve. The auto-shoot routine starts along the unstable eigendirection of L and searches c using numerical trajectories; it reports the outcome rather than pretending an imperfect return is a true homoclinic. Slug front connections L→T and T→L, when they exist, generally occur at <em>different</em> front speeds and are not necessarily simultaneous orbits of a single fixed-c spatial system. Numerical trajectories stop if they leave the plotted physical region or approach the singular surface u=c. Step-size sensitivity can be tested by comparing runs. Fixed points and both nullclines update with r. Source: Barkley (2016), §§8–9, especially equations (9.4) and (9.6).
 </p></section>
 </main>
 <script>
 "use strict";
-const P={U0:2,Ub:1,zeta:.8,delta:.1,D:.5,kappa:2,r:.7,eps:.1,c:.4}, $=id=>document.getElementById(id);
+const P={U0:2,Ub:1,zeta:.8,delta:.1,D:.5,kappa:2,r:.7,eps:.1,c:.4,pSlice:0}, $=id=>document.getElementById(id);
 let timer=null,solved=[],mainSolution=null,extraSolutions=[],lastMessage="";
 const fmt=(x,n=5)=>Number.isFinite(x)?x.toFixed(n):"—";
 function f(q,u){return q*(P.r+u-P.U0-(P.r+P.delta)*(q-1)*(q-1));}
@@ -119,13 +120,24 @@ function clearAndDraw(){
  const addNC=(arr,color,name,dash)=>{
   const xx=arr.map(v=>v.u),yy=arr.map(v=>v.q);
   t2.push({x:xx,y:yy,type:"scatter",mode:"lines",name,hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<extra>"+name+"</extra>",line:{color,width:2.6,dash:dash||"solid"}});
-  if($("plane").checked)t3.push({x:xx,y:yy,z:xx.map(()=>0),type:"scatter3d",mode:"lines",name,showlegend:false,hoverinfo:"skip",line:{color,width:4,dash:dash||"solid"}});
+  if($("plane").checked)t3.push({x:xx,y:yy,z:xx.map(()=>P.pSlice),type:"scatter3d",mode:"lines",name,showlegend:false,hoverinfo:"skip",line:{color,width:4,dash:dash||"solid"}});
  };
  addNC(nc.lam,"#65b6ee","f = 0: q = 0","dot");
  addNC(nc.low,"#fc9b86","f = 0: lower branch","dash");
  addNC(nc.upper,"#65b6ee","f = 0: upper branch");
- addNC(nc.uN,"#58dbac","G = 0: u-nullcline");
- if($("plane").checked)t3.unshift({type:"surface",x:[[.6,2.5],[.6,2.5]],y:[[0,0],[2.55,2.55]],z:[[0,0],[0,0]],opacity:.1,showscale:false,hoverinfo:"skip",colorscale:[[0,"#9cb9df"],[1,"#9cb9df"]],name:"p = 0"});
+ addNC(nc.uN,"#58dbac","G = 0: u′-nullcline");
+ if(Math.abs(P.pSlice)>1e-7){
+   const pp=P.pSlice,spatial=[];
+   for(let j=1;j<=350;j++){
+     const q=2.65*j/350;
+     const denom=q-pp;
+     if(Math.abs(denom)<.012){spatial.push({u:NaN,q:NaN});continue;}
+     const u=(q*(P.U0-P.r+(P.r+P.delta)*(q-1)*(q-1))-pp*(P.zeta+P.c))/denom;
+     spatial.push(u>.4&&u<2.7?{u,q}:{u:NaN,q:NaN});
+   }
+   addNC(spatial,"#bf93ed","spatial p′ = 0 at p = "+fmt(pp,2));
+ }
+ if($("plane").checked)t3.unshift({type:"surface",x:[[.6,2.5],[.6,2.5]],y:[[0,0],[2.55,2.55]],z:[[P.pSlice,P.pSlice],[P.pSlice,P.pSlice]],opacity:.1,showscale:false,hoverinfo:"skip",colorscale:[[0,"#9cb9df"],[1,"#9cb9df"]],name:"p = "+fmt(P.pSlice,2)+" slice"});
  const starts=fixed.filter(v=>v.type.startsWith("T")||v.type.startsWith("L")||v.type.startsWith("lower"));
  t2.push({x:starts.map(v=>v.u),y:starts.map(v=>v.q),type:"scatter",mode:"markers+text",name:"Local equilibria",text:starts.map(v=>v.type.startsWith("L")?"L":v.type.startsWith("T")?"T":"edge"),textposition:"top right",marker:{size:10,color:starts.map(v=>v.type.startsWith("L")?"#ffffff":v.type.startsWith("T")?"#f1af85":"#ca8be9"),line:{width:1,color:"#0b1120"}},hovertemplate:"%{text}<br>u=%{x:.3f}<br>q=%{y:.3f}<extra></extra>"});
  t3.push({x:starts.map(v=>v.u),y:starts.map(v=>v.q),z:starts.map(()=>0),type:"scatter3d",mode:"markers+text",text:starts.map(v=>v.type.startsWith("L")?"L":v.type.startsWith("T")?"T":"edge"),textposition:"top center",name:"Fixed points",marker:{size:5,color:starts.map(v=>v.type.startsWith("L")?"#ffffff":v.type.startsWith("T")?"#f1af85":"#ca8be9")},hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<br>p=0<extra>%{text}</extra>"});
@@ -135,6 +147,20 @@ function clearAndDraw(){
   const a=tr.v.points;
   t3.push({x:a.map(v=>v.u),y:a.map(v=>v.q),z:a.map(v=>v.p),type:"scatter3d",mode:"lines",name:tr.name,showlegend:true,line:{color:tr.color,width:tr.width,dash:tr.dash},hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<br>p=%{z:.3f}<extra>"+tr.name+"</extra>"});
   t2.push({x:a.map(v=>v.u),y:a.map(v=>v.q),type:"scatter",mode:"lines",name:tr.name,showlegend:false,line:{color:tr.color,width:tr.width===7?3.5:1.7,dash:tr.dash},hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<extra>"+tr.name+"</extra>"});
+ }
+ if(mainSolution && mainSolution.points.length>1){
+    const cross=[];
+    const arr=mainSolution.points;
+    for(let i=1;i<arr.length;i++){
+       const a=arr[i-1],b=arr[i];
+       if((a.p-P.pSlice)*(b.p-P.pSlice)>0 || a.p===b.p)continue;
+       const t=(P.pSlice-a.p)/(b.p-a.p);
+       if(t>=0&&t<=1)cross.push({u:a.u+t*(b.u-a.u),q:a.q+t*(b.q-a.q)});
+    }
+    if(cross.length){
+       t2.push({x:cross.map(v=>v.u),y:cross.map(v=>v.q),type:"scatter",mode:"markers",name:"Orbit ∩ p-slice",marker:{color:"#ffcc70",size:9,symbol:"circle-open",line:{width:2,color:"#ffcc70"}}});
+       t3.push({x:cross.map(v=>v.u),y:cross.map(v=>v.q),z:cross.map(()=>P.pSlice),type:"scatter3d",mode:"markers",name:"Slice intersections",marker:{size:5,color:"#ffcc70",symbol:"diamond"}});
+    }
  }
  const base={paper_bgcolor:DARK,plot_bgcolor:DARK,font:{color:"#dce9fc",size:12},margin:{l:44,r:15,t:24,b:48},showlegend:true,legend:{orientation:"h",y:-.18,font:{size:10}}};
  const layout3={...base,margin:{l:0,r:0,b:15,t:8},scene:{bgcolor:DARK,xaxis:{title:"u",range:[.6,2.45],color:"#b9c7de",gridcolor:"#344763",zerolinecolor:"#344763",backgroundcolor:DARK},yaxis:{title:"q",range:[-.1,2.65],color:"#b9c7de",gridcolor:"#344763",backgroundcolor:DARK},zaxis:{title:"p = dq/dz",range:[-2.3,2.3],color:"#b9c7de",gridcolor:"#344763",backgroundcolor:DARK},aspectmode:"manual",aspectratio:{x:1.05,y:1.1,z:.8},camera:{eye:{x:1.6,y:-1.75,z:1.1}}},legend:{x:0,y:0,font:{size:10},bgcolor:"rgba(17,29,50,.8)"},uirevision:"preserve-camera"};
@@ -174,15 +200,15 @@ function bindNumber(key,min,max){
   n=Math.max(min,Math.min(max,n));P[key]=n;
   num.value=n;slider.value=n;
   if(timer)clearTimeout(timer);
-  timer=setTimeout(()=>{if(key==="c")trajectoriesAt(P.c,"Direct integration at manually selected speed c="+fmt(P.c,6)+".");else shoot();},180);
+  timer=setTimeout(()=>{if(key==="c")trajectoriesAt(P.c,"Direct integration at manually selected speed c="+fmt(P.c,6)+".");else if(key==="pSlice"){lastMessage="Showing cross-section p = "+fmt(P.pSlice,2)+"; integration is unchanged.";clearAndDraw();}else shoot();},180);
  }
  num.addEventListener("change",()=>changed(num.value,true));
  slider.addEventListener("input",()=>changed(slider.value,false));
 }
-bindNumber("r",.05,2.5);bindNumber("eps",.02,.2);bindNumber("c",-1.5,1.5);
+bindNumber("r",.05,2.5);bindNumber("eps",.02,.2);bindNumber("c",-1.5,1.5);bindNumber("pSlice",-1.5,1.5);
 $("shoot").onclick=shoot;
 $("integrate").onclick=()=>trajectoriesAt(P.c,"Direct integration at c="+fmt(P.c,6)+".");
-$("reset").onclick=()=>{P.r=.7;P.eps=.1;$("r").value=$("rnumber").value=P.r;$("eps").value=$("epsnumber").value=P.eps;shoot();};
+$("reset").onclick=()=>{P.r=.7;P.eps=.1;P.pSlice=0;$("pSlice").value=$("pSlicenumber").value=0;$("r").value=$("rnumber").value=P.r;$("eps").value=$("epsnumber").value=P.eps;shoot();};
 $("nearby").onchange=()=>trajectoriesAt(P.c,lastMessage);
 $("plane").onchange=clearAndDraw;$("show2d").onchange=clearAndDraw;
 if(typeof Plotly==="undefined"){$("status").textContent="The graph library could not be loaded; connect to the internet and reload.";}else{shoot();}
