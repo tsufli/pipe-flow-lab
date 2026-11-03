@@ -243,7 +243,8 @@ function clearAndDraw(){
  const layout2={...base,xaxis:{title:"u",range:[.58,2.5],gridcolor:"#26384e",zeroline:false},yaxis:{title:"q",range:[-.1,2.7],gridcolor:"#26384e",zeroline:false},uirevision:"fixed"};
  Plotly.react("phase3d",t3,layout3,{responsive:true,displaylogo:false});
  if($("show2d").checked){$("projectionpanel").style.display="";Plotly.react("projection",t2,layout2,{responsive:true,displaylogo:false});}else{$("projectionpanel").style.display="none";}
- const quality=mainSolution&&Number.isFinite(mainSolution.dist)?(mainSolution.dist<.01?"Return approached q=p=0, but the full homoclinic connection remains unverified.":"The trajectory did not approach q=p=0 closely; no homoclinic was resolved for this r."):"No close return to the laminar branch was resolved.";const note=mainSolution?("Integrated orbit: +mainSolution.why+"; max q="+fmt(mainSolution.maxq,3)+", smallest return-plane distance √(q²+p²)="+(Number.isFinite(mainSolution.dist)?mainSolution.dist.toExponential(3):"not reached")+", u at that approach="+(mainSolution.turnState?fmt(mainSolution.turnState.u,4):"—")+"."):"";
+ const quality=mainSolution&&Number.isFinite(mainSolution.dist)?(mainSolution.dist<.01?"Return approached q=p=0, but the full homoclinic connection remains unverified.":"The trajectory did not approach q=p=0 closely; no homoclinic was resolved for this r."):"No close return to the laminar branch was resolved.";
+ const note=mainSolution?("Integrated orbit: "+mainSolution.why+"; max q="+fmt(mainSolution.maxq,3)+", smallest return-plane distance √(q²+p²)="+(Number.isFinite(mainSolution.dist)?mainSolution.dist.toExponential(3):"not reached")+", u at that approach="+(mainSolution.turnState?fmt(mainSolution.turnState.u,4):"—")+"."):"";
  $("status").textContent=lastMessage+" "+note+" "+quality+" A small projected loop does not establish a true homoclinic connection.";
 }
 function trajectoriesAt(c,message){
