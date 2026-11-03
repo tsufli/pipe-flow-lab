@@ -28,7 +28,7 @@ f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U�
 <p class="small" style="margin-bottom:0">Default constants: U₀ = 2, Ū = 1, ζ = 0.8, δ = 0.1, D = 0.5, κ = 2. No noise. ε is the slow-evolution parameter. Here r is a model Reynolds parameter, not the physical Reynolds number.</p></section>
 <section class="panel"><div class="ctlgrid">
 <div><h2>Model and wave speed</h2>
-<div class="ctl"><label for="r">Model Reynolds parameter r</label><input id="rnumber" type="number" min="0.05" max="2.5" step="0.01" value="0.70"><input id="r" type="range" min="0.05" max="2.5" step="0.01" value="0.70"></div>
+<div class="ctl"><label for="r">Model Reynolds parameter r</label><input id="rnumber" type="number" min="0.05" max="2.5" step="0.01" value="0.60"><input id="r" type="range" min="0.05" max="2.5" step="0.01" value="0.70"></div>
 <div class="ctl"><label for="eps">Slow parameter ε</label><input id="epsnumber" type="number" min="0.02" max="0.2" step="0.01" value="0.10"><input id="eps" type="range" min="0.02" max="0.2" step="0.01" value="0.10"></div>
 <div class="ctl"><label for="pSlice">3D slice: p = dq/dz</label><input id="pSlicenumber" type="number" min="-1.5" max="1.5" step="0.05" value="0"><input id="pSlice" type="range" min="-1.5" max="1.5" step="0.05" value="0"></div>
 <div class="ctl"><label for="c">Wave speed c (shooting parameter)</label><input id="cnumber" type="number" min="-1.5" max="1.5" step="0.000001" value="0.4"><input id="c" type="range" min="-1.5" max="1.5" step="0.0005" value="0.4"></div>
@@ -53,7 +53,7 @@ The selected p-slice shows f=0 and G=0 (local reaction nullclines), plus the tru
 </main>
 <script>
 "use strict";
-const P={U0:2,Ub:1,zeta:.8,delta:.1,D:.5,kappa:2,r:.7,eps:.1,c:.4,pSlice:0}, $=id=>document.getElementById(id);
+const P={U0:2,Ub:1,zeta:.8,delta:.1,D:.5,kappa:2,r:.6,eps:.1,c:.4,pSlice:0}, $=id=>document.getElementById(id);
 let timer=null,solved=[],mainSolution=null,extraSolutions=[],lastMessage="";
 const fmt=(x,n=5)=>Number.isFinite(x)?x.toFixed(n):"—";
 function f(q,u){return q*(P.r+u-P.U0-(P.r+P.delta)*(q-1)*(q-1));}
@@ -243,8 +243,8 @@ function clearAndDraw(){
  const layout2={...base,xaxis:{title:"u",range:[.58,2.5],gridcolor:"#26384e",zeroline:false},yaxis:{title:"q",range:[-.1,2.7],gridcolor:"#26384e",zeroline:false},uirevision:"fixed"};
  Plotly.react("phase3d",t3,layout3,{responsive:true,displaylogo:false});
  if($("show2d").checked){$("projectionpanel").style.display="";Plotly.react("projection",t2,layout2,{responsive:true,displaylogo:false});}else{$("projectionpanel").style.display="none";}
- const note=mainSolution?("Integrated orbit: "+mainSolution.why+"; max q="+fmt(mainSolution.maxq,3)+", smallest return-plane distance √(q²+p²)="+(Number.isFinite(mainSolution.dist)?mainSolution.dist.toExponential(3):"not reached")+", u at that approach="+(mainSolution.turnState?fmt(mainSolution.turnState.u,4):"—")+"."):"";
- $("status").textContent=lastMessage+" "+note+" A small projected loop does not establish a true homoclinic connection.";
+ const quality=mainSolution&&Number.isFinite(mainSolution.dist)?(mainSolution.dist<.01?"Return approached q=p=0, but the full homoclinic connection remains unverified.":"The trajectory did not approach q=p=0 closely; no homoclinic was resolved for this r."):"No close return to the laminar branch was resolved.";const note=mainSolution?("Integrated orbit: +mainSolution.why+"; max q="+fmt(mainSolution.maxq,3)+", smallest return-plane distance √(q²+p²)="+(Number.isFinite(mainSolution.dist)?mainSolution.dist.toExponential(3):"not reached")+", u at that approach="+(mainSolution.turnState?fmt(mainSolution.turnState.u,4):"—")+"."):"";
+ $("status").textContent=lastMessage+" "+note+" "+quality+" A small projected loop does not establish a true homoclinic connection.";
 }
 function trajectoriesAt(c,message){
  P.c=c;$("cnumber").value=fmt(c,8);$("c").value=c;
@@ -272,7 +272,7 @@ function bindNumber(key,min,max){
 bindNumber("r",.05,2.5);bindNumber("eps",.02,.2);bindNumber("c",-1.5,1.5);bindNumber("pSlice",-1.5,1.5);
 $("shoot").onclick=shoot;
 $("integrate").onclick=()=>trajectoriesAt(P.c,"Direct integration at c="+fmt(P.c,6)+".");
-$("reset").onclick=()=>{P.r=.7;P.eps=.1;P.pSlice=0;$("pSlice").value=$("pSlicenumber").value=0;$("r").value=$("rnumber").value=P.r;$("eps").value=$("epsnumber").value=P.eps;shoot();};
+$("reset").onclick=()=>{P.r=.6;P.eps=.1;P.pSlice=0;$("pSlice").value=$("pSlicenumber").value=0;$("r").value=$("rnumber").value=P.r;$("eps").value=$("epsnumber").value=P.eps;shoot();};
 $("nearby").onchange=()=>trajectoriesAt(P.c,lastMessage);
 $("plane").onchange=clearAndDraw;$("show2d").onchange=clearAndDraw;$("recovery").onchange=clearAndDraw;
 if(typeof Plotly==="undefined"){$("status").textContent="The graph library could not be loaded; connect to the internet and reload.";}else{shoot();}
