@@ -11,7 +11,7 @@ new vm.Script(script,{filename:"phase-space-inline.js"});
 const start=script.indexOf('bindNumber("r",');
 assert.ok(start>0,"Expected client UI setup after numerical functions");
 const sandbox={};
-vm.runInNewContext(script.slice(0,start)+"\n globalThis.api={P,rhs,f,G,orbit,unstableLambda,fixedPoints,nullclineData};",sandbox,{timeout:1000});
+vm.runInNewContext(script.slice(0,start)+"\n globalThis.api={P,rhs,f,G,orbit,unstableLambda,unstableSeed,selectSpeed,fixedPoints,nullclineData};",sandbox,{timeout:1000});
 const a=sandbox.api;
 const near=(x,y,tol)=>assert.ok(Math.abs(x-y)<=tol,String(x)+" not near "+String(y));
 const lam=a.rhs([0,0,a.P.U0],0.4);
@@ -27,4 +27,17 @@ const curve=a.orbit(.4,true);
 assert.ok(curve.points.length>10);
 assert.ok(curve.maxq>.1,"Trajectory never excites");
 assert.ok(curve.points.every(p=>Number.isFinite(p.u+p.q+p.p+p.z)));
-console.log("Barkley phase-space physics and syntax checks passed",curve.why,curve.points.length);
+// Validate the full 3D unstable eigenvector, not only its q-p projection.
+const waveSpeed=0.48993465,seed=a.unstableSeed(waveSpeed),lambda=a.unstableLambda(waveSpeed);
+const seedField=a.rhs(seed,waveSpeed);
+for(let j=0;j<3;j++)near(seedField[j],lambda*(seed[j]-(j===2?a.P.U0:0)),2e-8);
+// For r=0.6, a localized puff-like separatrix is expected.
+a.P.r=.6;
+const selected=a.selectSpeed();
+assert.ok(selected.ok,"Expected a return/crossing shooting bracket for r=0.6");
+near(selected.c,0.48993465,0.00002);
+assert.ok(selected.uncertainty<1e-5,"Unexpected step-size sensitivity in selected speed");
+const pulse=a.orbit(selected.c,true,.008);
+assert.ok(pulse.maxq>1,"Expected a substantial puff excursion");
+assert.ok(pulse.dist<0.005,"The shot orbit does not approach the laminar (q,p) plane closely");
+console.log("Barkley phase-space checks passed, r=0.6 shooting c:",selected.c,"return residual:",pulse.dist);
