@@ -34,6 +34,7 @@ f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U�
 <div class="ctl"><label for="c">Wave speed c (shooting parameter)</label><input id="cnumber" type="number" min="-1.5" max="1.5" step="0.000001" value="0.4"><input id="c" type="range" min="-1.5" max="1.5" step="0.0005" value="0.4"></div>
 </div><div><h2>What to draw</h2>
 <label class="label"><input id="nearby" type="checkbox" checked> Nearby trajectories at c ± 0.01 (not the same vector field)</label><br>
+<label class="label"><input id="recovery" type="checkbox" checked> Show exact laminar recovery trajectory (separate from shooting orbit)</label><br>
 <label class="label"><input id="plane" type="checkbox" checked> Show selected p-slice with nullclines</label><br>
 <label class="label"><input id="show2d" type="checkbox" checked> Show (u,q) projection with nullclines</label>
 <div class="buttons"><button id="shoot">Auto-shoot from L</button><button id="integrate" class="secondary">Integrate at chosen c</button><button id="reset" class="secondary">Defaults</button></div>
@@ -47,7 +48,7 @@ f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U�
 <p class="small">Blue/red: local f=0 nullclines (independent of p). Green: G=0, also u′=0 away from u=c. For p≠0, purple shows the true <b>spatial</b> p′=0 cross-section, different from f=0. At p=0, p′=0 coincides with f=0. Orbit curves and fixed-point markers in 2D are projections; orange circles mark actual intersections with the selected p-slice. All fixed points themselves lie at p=0. The q′=0 spatial nullcline is the entire p=0 plane.</p></div>
 </section>
 <section class="panel"><h2>Interpretation and numerical caveats</h2><p class="small" style="margin:0">
-The selected p-slice shows f=0 and G=0 (local reaction nullclines), plus the true spatial p′=0 cross-section whenever p≠0. Spatial q′=0 means p=0. The laminar fixed point is L=(q,p,u)=(0,0,U₀). Any turbulent fixed points T=(qₛₛ,0,uₛₛ) are intersections of f=0 and G=0. A genuine puff is a homoclinic orbit approaching L as z→±∞ at a selected c. Such a connection is sensitive to c and cannot be inferred from a visually closed projected curve. The auto-shoot routine starts along the complete unstable eigendirection of L (including its u component) and selects c by bracketing return versus rebound, with a second integration resolution; it reports the outcome rather than pretending an imperfect return is a true homoclinic. Slug front connections L→T and T→L, when they exist, generally occur at <em>different</em> front speeds and are not necessarily simultaneous orbits of a single fixed-c spatial system. Numerical trajectories stop if they leave the plotted physical region or approach the singular surface u=c. Step-size sensitivity can be tested by comparing runs. Fixed points and both nullclines update with r. Source: Barkley (2016), §§8–9, especially equations (9.4) and (9.6).
+The selected p-slice shows f=0 and G=0 (local reaction nullclines), plus the true spatial p′=0 cross-section whenever p≠0. Spatial q′=0 means p=0. The laminar fixed point is L=(q,p,u)=(0,0,U₀). Any turbulent fixed points T=(qₛₛ,0,uₛₛ) are intersections of f=0 and G=0. A genuine puff is a homoclinic orbit approaching L as z→±∞ at a selected c. Such a connection is sensitive to c and cannot be inferred from a visually closed projected curve. The auto-shoot routine starts along the complete unstable eigendirection of L (including its u component) and selects c by bracketing return versus rebound, with a second integration resolution; the optional cyan dashed recovery trajectory lies exactly on q=p=0 and is a distinct integral curve, not a continuation of the shot orbit; it reports the outcome rather than pretending an imperfect return is a true homoclinic. Slug front connections L→T and T→L, when they exist, generally occur at <em>different</em> front speeds and are not necessarily simultaneous orbits of a single fixed-c spatial system. Numerical trajectories stop if they leave the plotted physical region or approach the singular surface u=c. Step-size sensitivity can be tested by comparing runs. Fixed points and both nullclines update with r. Source: Barkley (2016), §§8–9, especially equations (9.4) and (9.6).
 </p></section>
 </main>
 <script>
@@ -196,6 +197,26 @@ function clearAndDraw(){
  const starts=fixed.filter(v=>v.type.startsWith("T")||v.type.startsWith("L")||v.type.startsWith("lower"));
  t2.push({x:starts.map(v=>v.u),y:starts.map(v=>v.q),type:"scatter",mode:"markers+text",name:"Local equilibria",text:starts.map(v=>v.type.startsWith("L")?"L":v.type.startsWith("T")?"T":"edge"),textposition:"top right",marker:{size:10,color:starts.map(v=>v.type.startsWith("L")?"#ffffff":v.type.startsWith("T")?"#f1af85":"#ca8be9"),line:{width:1,color:"#0b1120"}},hovertemplate:"%{text}<br>u=%{x:.3f}<br>q=%{y:.3f}<extra></extra>"});
  t3.push({x:starts.map(v=>v.u),y:starts.map(v=>v.q),z:starts.map(()=>0),type:"scatter3d",mode:"markers+text",text:starts.map(v=>v.type.startsWith("L")?"L":v.type.startsWith("T")?"T":"edge"),textposition:"top center",name:"Fixed points",marker:{size:5,color:starts.map(v=>v.type.startsWith("L")?"#ffffff":v.type.startsWith("T")?"#f1af85":"#ca8be9")},hovertemplate:"u=%{x:.3f}<br>q=%{y:.3f}<br>p=0<extra>%{text}</extra>"});
+ if($("recovery").checked && mainSolution && mainSolution.turnState && mainSolution.dist<.015 && P.c < P.U0-.1){
+  // An invariant-plane (q=p=0) solution of the SAME 3D ODE, NOT a continuation
+  // of the numerically computed unstable manifold trajectory.
+  const curve=[],uStart=mainSolution.turnState.u;
+  let u=uStart;
+  for(let j=0;j<1500 && u<P.U0-1e-5;j++){
+   if(j%3===0)curve.push({u,q:0,p:0});
+   const h=.15;
+   const k1=P.eps*(P.U0-u)/(u-P.c);
+   const k2=P.eps*(P.U0-u-h*k1/2)/(u+h*k1/2-P.c);
+   const k3=P.eps*(P.U0-u-h*k2/2)/(u+h*k2/2-P.c);
+   const k4=P.eps*(P.U0-u-h*k3)/(u+h*k3-P.c);
+   u+=h*(k1+2*k2+2*k3+k4)/6;
+  }
+  if(curve.length){
+   const name="Exact laminar recovery (separate orbit)";
+   t2.push({x:curve.map(v=>v.u),y:curve.map(v=>v.q),type:"scatter",mode:"lines",name,showlegend:false,line:{color:"#a6d9dd",width:3,dash:"dash"}});
+   t3.push({x:curve.map(v=>v.u),y:curve.map(v=>v.q),z:curve.map(()=>0),type:"scatter3d",mode:"lines",name,showlegend:true,line:{color:"#a6d9dd",width:6,dash:"dash"}});
+  }
+ }
  const trajectories=[...extraSolutions.map((v,i)=>({v,color:i?"#a4a4e4":"#ee8498",name:i?"c + 0.01":"c − 0.01",width:3,dash:"dot"})),{v:mainSolution,color:"#f3d26d",name:"Integrated orbit (c = "+fmt(P.c,6)+")",width:7,dash:"solid"}];
  for(const tr of trajectories){
   if(!tr.v||!tr.v.points.length)continue;
@@ -253,6 +274,6 @@ $("shoot").onclick=shoot;
 $("integrate").onclick=()=>trajectoriesAt(P.c,"Direct integration at c="+fmt(P.c,6)+".");
 $("reset").onclick=()=>{P.r=.7;P.eps=.1;P.pSlice=0;$("pSlice").value=$("pSlicenumber").value=0;$("r").value=$("rnumber").value=P.r;$("eps").value=$("epsnumber").value=P.eps;shoot();};
 $("nearby").onchange=()=>trajectoriesAt(P.c,lastMessage);
-$("plane").onchange=clearAndDraw;$("show2d").onchange=clearAndDraw;
+$("plane").onchange=clearAndDraw;$("show2d").onchange=clearAndDraw;$("recovery").onchange=clearAndDraw;
 if(typeof Plotly==="undefined"){$("status").textContent="The graph library could not be loaded; connect to the internet and reload.";}else{shoot();}
 </script></body></html>
