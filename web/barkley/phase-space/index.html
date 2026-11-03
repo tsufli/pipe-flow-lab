@@ -37,7 +37,7 @@ f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U�
 <label class="label"><input id="plane" type="checkbox" checked> Show selected p-slice with nullclines</label><br>
 <label class="label"><input id="show2d" type="checkbox" checked> Show (u,q) projection with nullclines</label>
 <div class="buttons"><button id="shoot">Auto-shoot from L</button><button id="integrate" class="secondary">Integrate at chosen c</button><button id="reset" class="secondary">Defaults</button></div>
-<p class="small">Auto-shoot brackets trajectories that diverge on opposite sides and bisects in c. It is a numerical separatrix search, <em>not</em> a verified homoclinic boundary-value solver. Adjust c to see the true integral curves change. The neighboring lines illustrate sensitivity.</p></div></div>
+<p class="small">Auto-shoot brackets the return outcomes (q crosses zero versus p reverses sign), then bisects the speed in a coarse and a finer integration. It is a numerical separatrix search, <em>not</em> a verified homoclinic boundary-value solver. Adjust c to see the true integral curves change. The neighboring lines illustrate sensitivity.</p></div></div>
 <div id="status" class="status" aria-live="polite">Calculating…</div>
 </section>
 <section class="plots">
@@ -47,7 +47,7 @@ f(q,u) = q[r + u − U₀ − (r + δ)(q − 1)²] &nbsp; ; &nbsp; G(q,u) = (U�
 <p class="small">Blue/red: local f=0 nullclines (independent of p). Green: G=0, also u′=0 away from u=c. For p≠0, purple shows the true <b>spatial</b> p′=0 cross-section, different from f=0. At p=0, p′=0 coincides with f=0. Orbit curves and fixed-point markers in 2D are projections; orange circles mark actual intersections with the selected p-slice. All fixed points themselves lie at p=0. The q′=0 spatial nullcline is the entire p=0 plane.</p></div>
 </section>
 <section class="panel"><h2>Interpretation and numerical caveats</h2><p class="small" style="margin:0">
-The selected p-slice shows f=0 and G=0 (local reaction nullclines), plus the true spatial p′=0 cross-section whenever p≠0. Spatial q′=0 means p=0. The laminar fixed point is L=(q,p,u)=(0,0,U₀). Any turbulent fixed points T=(qₛₛ,0,uₛₛ) are intersections of f=0 and G=0. A genuine puff is a homoclinic orbit approaching L as z→±∞ at a selected c. Such a connection is sensitive to c and cannot be inferred from a visually closed projected curve. The auto-shoot routine starts along the unstable eigendirection of L and searches c using numerical trajectories; it reports the outcome rather than pretending an imperfect return is a true homoclinic. Slug front connections L→T and T→L, when they exist, generally occur at <em>different</em> front speeds and are not necessarily simultaneous orbits of a single fixed-c spatial system. Numerical trajectories stop if they leave the plotted physical region or approach the singular surface u=c. Step-size sensitivity can be tested by comparing runs. Fixed points and both nullclines update with r. Source: Barkley (2016), §§8–9, especially equations (9.4) and (9.6).
+The selected p-slice shows f=0 and G=0 (local reaction nullclines), plus the true spatial p′=0 cross-section whenever p≠0. Spatial q′=0 means p=0. The laminar fixed point is L=(q,p,u)=(0,0,U₀). Any turbulent fixed points T=(qₛₛ,0,uₛₛ) are intersections of f=0 and G=0. A genuine puff is a homoclinic orbit approaching L as z→±∞ at a selected c. Such a connection is sensitive to c and cannot be inferred from a visually closed projected curve. The auto-shoot routine starts along the complete unstable eigendirection of L (including its u component) and selects c by bracketing return versus rebound, with a second integration resolution; it reports the outcome rather than pretending an imperfect return is a true homoclinic. Slug front connections L→T and T→L, when they exist, generally occur at <em>different</em> front speeds and are not necessarily simultaneous orbits of a single fixed-c spatial system. Numerical trajectories stop if they leave the plotted physical region or approach the singular surface u=c. Step-size sensitivity can be tested by comparing runs. Fixed points and both nullclines update with r. Source: Barkley (2016), §§8–9, especially equations (9.4) and (9.6).
 </p></section>
 </main>
 <script>
@@ -71,23 +71,78 @@ function unstableLambda(c){
  const b=P.U0-P.zeta-c;
  return (b+Math.sqrt(b*b+4*P.D*P.delta))/(2*P.D);
 }
-function orbit(c,keep=true){
- // Seed the one-dimensional unstable eigendirection of the laminar fixed point.
- const a=0.00001,lambda=unstableLambda(c),h=.012,steps=11000;
- let y=[a,lambda*a,P.U0],points=[],peak=false,maxq=0,dist=Infinity,why="horizon";
+function unstableSeed(c){
+ // The genuine unstable eigenvector has a nonzero u component.
+ // The old seed (q, p, u)=(a,lambda*a,U0) was NOT an eigenvector of the 3D Jacobian.
+ const a=1e-8,lambda=unstableLambda(c);
+ const beta=P.eps*P.kappa*(P.Ub-P.U0)/((P.U0-c)*lambda+P.eps);
+ return [a,lambda*a,P.U0+beta*a];
+}
+function orbit(c,keep=true,h=.012){
+ // Follow the unstable manifold of the laminar equilibrium.
+ // Return type is determined by the FIRST event on the way back:
+ // q reaches zero ("cross") or p becomes nonnegative ("rebound").
+ // This is more precise than testing arbitrary high/low amplitude cutoffs.
+ const steps=Math.ceil(180/h),sampleEvery=Math.max(1,Math.round(.06/h));
+ let y=unstableSeed(c),points=[],maxq=0,minDist=Infinity,minTailQ=Infinity,turnState=null;
+ let pastMaximum=false,why="horizon",z=0;
  for(let i=0;i<=steps;i++){
-  let q=y[0],pp=y[1],u=y[2];
-  if(keep && (i%6===0 || i===steps))points.push({z:i*h,q,p:pp,u});
+  const [q,p,u]=y;
+  if(keep && (i%sampleEvery===0||i===steps))points.push({z,q,p,u});
+  if(!Number.isFinite(q+p+u)||q>3.5||Math.abs(p)>12||u>P.U0+.6||u<.45){why="diverged";break;}
+  if(u-c<.03){why="singular";break;}
   maxq=Math.max(maxq,q);
-  if(maxq>.45)peak=true;
-  if(peak && q<.12 && q>=0)dist=Math.min(dist,Math.hypot(q,pp));
-  if(!Number.isFinite(q+pp+u)||q>3.25||Math.abs(pp)>8||u>P.U0+.5||u<.5){why="high";break;}
-  if(q<-.06){why="low";break;}
-  if(u-c<.04){why="singular";break;}
-  if(peak && q>=0 && q<.0002 && Math.abs(pp)<.0015 && u>1.995){why="near L";break;}
-  y=rk4(y,h,c);
+  if(maxq>.45 && p<0)pastMaximum=true;
+  if(pastMaximum){
+    if(q>=0 && q<.2){
+      const d=Math.hypot(q,p);
+      if(d<minDist){minDist=d;minTailQ=q;turnState={z,q,p,u};}
+    }
+    if(q<=0){why="cross";break;}
+    if(p>=0){why="rebound";break;}
+  }
+  y=rk4(y,h,c);z=(i+1)*h;
  }
- return {c,points,why,maxq,dist,y};
+ return {c,points,why,maxq,dist:minDist,minTailQ,turnState,y,z};
+}
+function classify(c,h){
+ const o=orbit(c,false,h);
+ if(o.why==="cross")return -1;
+ if(o.why==="rebound"||o.why==="diverged")return +1;
+ return 0;
+}
+function refineBracket(lo,hi,h){
+ let sl=classify(lo,h),sh=classify(hi,h);
+ if(sl*sh!==-1)return null;
+ let i=0;
+ for(;i<56;i++){
+   const mid=(lo+hi)/2;
+   if(mid===lo||mid===hi)break;
+   const s=classify(mid,h);
+   if(s===0)break;
+   if(s===sl){lo=mid;sl=s;}else{hi=mid;sh=s;}
+   if(hi-lo<3e-14)break;
+ }
+ return {c:(lo+hi)/2,lo,hi,iterations:i};
+}
+function selectSpeed(){
+ const guess=P.U0-P.zeta+Math.sqrt(P.D/2)*(Math.sqrt(P.r+P.delta)-3*Math.sqrt(P.r));
+ const step=.015,range=.42,coarse=.02,brackets=[];
+ let prev=null;
+ for(let j=-Math.ceil(range/step);j<=Math.ceil(range/step);j++){
+   const c=guess+j*step;
+   if(c< -1.5||c>1.5||c>P.U0-.16)continue;
+   const sign=classify(c,coarse);
+   if(prev&&sign!==0&&prev.sign!==0&&sign!==prev.sign)brackets.push({a:prev.c,b:c,mid:(prev.c+c)/2});
+   if(sign!==0)prev={c,sign};else prev=null;
+ }
+ if(!brackets.length)return {ok:false,guess,message:"No clear rebound/crossing bracket found. This may indicate no puff orbit, a singularity, or insufficient range."};
+ brackets.sort((a,b)=>Math.abs(a.mid-guess)-Math.abs(b.mid-guess));
+ const bracket=brackets[0],rough=refineBracket(bracket.a,bracket.b,coarse);
+ if(!rough)return {ok:false,guess,message:"The coarse shooting bracket was inconsistent."};
+ const fine=refineBracket(bracket.a,bracket.b,.008);
+ if(!fine)return {ok:false,guess,message:"The fine shooting bracket was inconsistent."};
+ return {ok:true,c:fine.c,uncertainty:Math.abs(fine.c-rough.c),rough:rough.c,iterations:fine.iterations,bracket:[bracket.a,bracket.b]};
 }
 function nullclineData(){
  const low=[],upper=[],uN=[],lam=[];
@@ -167,7 +222,7 @@ function clearAndDraw(){
  const layout2={...base,xaxis:{title:"u",range:[.58,2.5],gridcolor:"#26384e",zeroline:false},yaxis:{title:"q",range:[-.1,2.7],gridcolor:"#26384e",zeroline:false},uirevision:"fixed"};
  Plotly.react("phase3d",t3,layout3,{responsive:true,displaylogo:false});
  if($("show2d").checked){$("projectionpanel").style.display="";Plotly.react("projection",t2,layout2,{responsive:true,displaylogo:false});}else{$("projectionpanel").style.display="none";}
- const note=mainSolution?("Last integration: "+mainSolution.why+"; max q="+fmt(mainSolution.maxq,3)+", closest (q,p) approach to (0,0) after excitation="+(Number.isFinite(mainSolution.dist)?fmt(mainSolution.dist,3):"not reached")+"."):"";
+ const note=mainSolution?("Integrated orbit: "+mainSolution.why+"; max q="+fmt(mainSolution.maxq,3)+", smallest return-plane distance √(q²+p²)="+(Number.isFinite(mainSolution.dist)?mainSolution.dist.toExponential(3):"not reached")+", u at that approach="+(mainSolution.turnState?fmt(mainSolution.turnState.u,4):"—")+"."):"";
  $("status").textContent=lastMessage+" "+note+" A small projected loop does not establish a true homoclinic connection.";
 }
 function trajectoriesAt(c,message){
@@ -176,22 +231,10 @@ function trajectoriesAt(c,message){
  lastMessage=message;clearAndDraw();
 }
 function shoot(){
- const guess=P.U0-P.zeta+Math.sqrt(P.D/2)*(Math.sqrt(P.r+P.delta)-3*Math.sqrt(P.r));
- const samples=[];
- for(let i=-20;i<=20;i++){let c=guess+i*.015;if(c>P.U0-.15)continue;const o=orbit(c,false);if(o.why==="low"||o.why==="high")samples.push({c,sign:o.why});}
- let bracket=null;
- for(let i=1;i<samples.length;i++)if(samples[i].sign!==samples[i-1].sign){bracket=[samples[i-1],samples[i]];break;}
- if(!bracket){trajectoriesAt(guess,"No usable overshoot/undershoot bracket for this r. Plotting the leading-order upstream-front speed c="+fmt(guess,5)+" instead.");return;}
- let a=bracket[0].c,b=bracket[1].c,sa=bracket[0].sign,iterations=0;
- for(let i=0;i<44;i++){
-  let m=(a+b)/2,v=orbit(m,false);
-  if(v.why!=="low"&&v.why!=="high")break;
-  if(v.why===sa)a=m;else b=m;
-  iterations=i+1;
-  if(b-a<2e-13)break;
- }
- const selected=(a+b)/2;
- trajectoriesAt(selected,"Auto-shoot: separated divergent orbits using "+iterations+" bisections; c≈"+fmt(selected,10)+". This is a separatrix estimate, not a certified homoclinic.");
+ const result=selectSpeed();
+ if(!result.ok){trajectoriesAt(result.guess,result.message+" Showing the leading-order upstream-front speed instead.");return;}
+ const c=result.c;
+ trajectoriesAt(c,"Return-based shooting: c≈"+fmt(c,9)+", coarse/fine step difference "+result.uncertainty.toExponential(2)+". Candidate separatrix from a "+result.iterations+"-step refinement; the homoclinic condition is not guaranteed at machine precision.");
 }
 function bindNumber(key,min,max){
  const num=$(key+"number"),slider=$(key);
