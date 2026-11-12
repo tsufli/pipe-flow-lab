@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic Barkley traveling-wave numerical solver for the 8-point edge scan.
-Spatial semidiscretization: 2nd-order backward q derivative, 1st-order backward u derivative, centered q Laplacian; periodic boundary.
+Spatial semidiscretization: 2nd-order backward q and u derivatives, centered q Laplacian; periodic boundary.
 Uses Newton + phase condition. These are numerical traveling waves of an approximate spatial discretization, not exact continuum eigenvalues.
 """
 import os
