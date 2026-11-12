@@ -23,14 +23,14 @@ globalThis.BarkleyRef=(()=>{
  async function compute(c,progress=()=>{},aborted=()=>false){const N=Math.round(c.N),dx=c.L/N,q0=new Float64Array(N),u0=new Float64Array(N),seedWidth=Math.min(12,.3*c.L);
  for(let i=0;i<N;i++){const x=(i+.5)*dx,dist=Math.abs(x-c.L/2);q0[i]=1.65/(1+Math.exp(Math.min(100,(dist-seedWidth/2)/Math.max(dx,1))));u0[i]=c.U0;}
  progress("Relaxing a deterministic puff…");
- const tPuff=Math.min(380,Math.max(240,15/Math.min(c.eps1,c.eps2)));
+ const tPuff=Math.min(380,Math.max(190,12/Math.min(c.eps1,c.eps2)));
  const pRun=await evolve({q:q0,u:u0},tPuff,c,aborted,tPuff-40),puff={q:pRun.q,u:pRun.u},m=activity(puff.q,dx),old=activity(pRun.saved.q,dx);
  if(m.mass<1||m.peak<.2||m.extent>.46*c.L||Math.abs(m.mass-old.mass)/Math.max(m.mass,1)>.12)throw Error("no stable, localized deterministic puff was found");
- let lo=0,hi=1;const tClass=Math.min(280,Math.max(155,14/Math.min(c.eps1,c.eps2)));
- for(let k=0;k<21;k++){const alpha=(lo+hi)/2,qi=new Float64Array(N),ui=new Float64Array(N);
+ let lo=0,hi=1;const tClass=Math.min(280,Math.max(120,11/Math.min(c.eps1,c.eps2)));
+ for(let k=0;k<18;k++){const alpha=(lo+hi)/2,qi=new Float64Array(N),ui=new Float64Array(N);
  for(let j=0;j<N;j++){qi[j]=alpha*puff.q[j];ui[j]=c.U0+alpha*(puff.u[j]-c.U0);}
  const run=await evolve({q:qi,u:ui},tClass,c,aborted),am=activity(run.q,dx).mass;
- if(am>.6*m.mass)hi=alpha;else lo=alpha;if(k%3===0)progress("Tracking decay edge (bisection "+(k+1)+"/21)…");}
+ if(am>.6*m.mass)hi=alpha;else lo=alpha;if(k%3===0)progress("Tracking decay edge (bisection "+(k+1)+"/18)…");}
  const alpha=(lo+hi)/2,qi=new Float64Array(N),ui=new Float64Array(N);
  for(let j=0;j<N;j++){qi[j]=alpha*puff.q[j];ui[j]=c.U0+alpha*(puff.u[j]-c.U0);}
  const tEdge=Math.min(65,Math.max(32,.25*tClass));
