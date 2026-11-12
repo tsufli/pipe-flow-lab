@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Barkley · Decay-edge scan, eigenmodes and manifolds</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1120;color:#e8edf6;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0}header{padding:24px max(18px,calc((100vw - 1600px)/2));background:#111b2e;border-bottom:1px solid #30405c}
+h1{margin:4px 0 9px;font-size:clamp(26px,3.2vw,39px);letter-spacing:-.03em}h2{font-size:17px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px;color:#bcd5ee}
+p,.note{color:#b2c0d3;line-height:1.55}header p{max-width:1000px;margin:0 0 6px}.small{font-size:12px}.eyebrow{color:#79c7f1;font-weight:750;font-size:12px;letter-spacing:.11em}
+nav{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0 0}nav a{padding:9px 13px;color:#d5e6f9;background:#243953;border:1px solid #3b5271;text-decoration:none;border-radius:8px;font-size:13px}nav a.active{background:#2779b4;color:white}
+main{max-width:1650px;margin:auto;display:grid;gap:17px;padding:20px}.panel{background:#142037;border:1px solid #2a3953;border-radius:13px;padding:18px;min-width:0}
+.controls{display:grid;grid-template-columns:250px 1fr;align-items:center;gap:16px}.sliderblock{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.sliderblock input{min-width:220px;flex:1;accent-color:#74bdf0}.sliderblock output{font-weight:750;color:#8bd4ff;min-width:70px;font-variant-numeric:tabular-nums}
+.badgelist{display:flex;flex-wrap:wrap;gap:8px}.pick{font:inherit;font-size:12px;border:1px solid #456281;background:#1d304b;color:#c9dbed;border-radius:6px;padding:7px 9px;cursor:pointer}.pick.selected{background:#2b7cae;border-color:#78bdef;color:white}
+.metricrow{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px}.metric{background:#0f1a2e;padding:12px;border-radius:9px;border:1px solid #2d435f}.metric .value{font-size:22px;font-weight:700;letter-spacing:-.03em;color:#eff7ff}.metric .label{color:#a9bfd6;font-size:11px;margin-bottom:5px}.metric .detail{color:#acc9dc;font-size:11px;margin-top:5px}
+.twocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.tripcol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.plot{width:100%;height:370px}.plot.tall{height:430px}.plot.short{height:310px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:#bacce2}.legend b{color:#e3f1ff}
+.labelrow{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:9px;font-size:13px}.labelrow select,.labelrow button{font:inherit;font-size:13px;border:1px solid #476381;background:#15243c;color:white;border-radius:7px;padding:7px 9px;cursor:pointer}
+input[type=range]{accent-color:#79c6ff}button{color:white;background:#2679ad;border:1px solid #469bd0;border-radius:7px;padding:8px 13px;cursor:pointer;font:inherit;font-size:13px}
+.statenote{padding:11px 14px;color:#d9e9f8;background:#102037;border:1px solid #355371;border-radius:8px;font-size:13px;line-height:1.6}
+code{color:#9cd9f9}a{color:#8ad0ff}.download{font-size:13px}.file-links{display:flex;gap:13px;flex-wrap:wrap;font-size:12px}
+@media(max-width:1000px){.metricrow{grid-template-columns:repeat(3,minmax(0,1fr))}.twocol,.tripcol{grid-template-columns:1fr}.controls{grid-template-columns:1fr}.plot{height:340px}}
+@media(max-width:580px){main{padding:9px}.panel{padding:12px}.metricrow{grid-template-columns:repeat(2,minmax(0,1fr))}.metric .value{font-size:18px}.plot{height:310px}.plot.tall{height:330px}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">BARKLEY 2016 · DETERMINISTIC TRAVELING STATES · EIGENMODE CONTINUATION</div>
+<h1>Puff, decay edge &amp; unstable manifold</h1>
+<p>Eight numerically converged traveling profiles between <strong>r = 0.43</strong> and <strong>0.72</strong>. Explore the edge's linear spectrum, left/right eigenfunctions and the two nonlinear destinations reached by perturbing its unstable mode.</p>
+<nav><a href="../">Local ODE</a><a href="../spatial/">Spatial PDE</a><a href="../phase-space/">3D phase space</a><a href="./" class="active">Edge &amp; eigenmode scan</a></nav></header>
+<main>
+<section class="panel"><div class="controls"><div><h2>Choose model parameter r</h2><p class="small">Eight equally spaced values · r is not physical Re.</p></div><div><div class="sliderblock"><input id="rindex" type="range" min="0" max="7" step="1" value="4" aria-label="Scan index"><output id="rval">r = 0.596</output></div><div id="rbuttons" class="badgelist"></div></div></div><div id="status" class="small" style="margin-top:12px;color:#f2d28e">Loading verified scan data…</div></section>
+<div class="metricrow" id="metrics"></div>
+<section class="panel"><h2>Across r · Traveling profiles and speeds</h2><div class="twocol"><div><h3>Peak turbulence amplitude, puff vs edge</h3><div class="plot" id="peakplot"></div></div><div><h3>Wave speeds in the lab frame</h3><div class="plot" id="speedplot"></div></div></div><div class="twocol"><div><h3>Edge profile q(z): r-scan heatmap</h3><div class="plot" id="edgeheat"></div></div><div><h3>Puff profile q(z): r-scan heatmap</h3><div class="plot" id="puffheat"></div></div></div><p class="small">Each profile has been translated so its q maximum is at z = 0. Width and shape are physical model coordinates. Heatmaps are display-downsampled from the N = 640 calculation.</p></section>
+<section class="panel"><h2>Across r · Real growth/decay rates and oscillation frequency</h2><div class="twocol"><div><h3>Leading eigenvalues of the edge linearization</h3><div class="plot" id="eigtrend"></div></div><div><h3>Selected stable eigenmode: |Im λ|</h3><div class="plot" id="imtrend"></div></div></div><p class="statenote"><strong>Notable transition in the computed spectrum:</strong> the selected leading stable eigenmodes are real at r = 0.43, 0.471, 0.513. Between the last of these and r = 0.554, they become a complex-conjugate pair. For those higher-r points, plots show the real component of a complex eigenfunction, not a strictly real eigenfunction. This observation belongs to the stated finite-difference discretization and needs a grid-convergence check.</p></section>
+<section class="panel"><h2>Across r · Shape and localization of left/right eigenfunctions</h2><div class="labelrow"><label for="field"><b>Field displayed:</b></label><select id="field"><option value="q">q component</option><option value="u">u component</option></select><span class="small">Modes are individually rescaled to unit maximum absolute value in the selected component for heatmap comparison.</span></div><div class="twocol"><div><h3>Unstable right eigenfunction</h3><div class="plot" id="urheat"></div></div><div><h3>Unstable left (adjoint) eigenfunction</h3><div class="plot" id="ulheat"></div></div><div><h3>Selected stable right eigenfunction (real part)</h3><div class="plot" id="srheat"></div></div><div><h3>Selected stable left eigenfunction (real part)</h3><div class="plot" id="slheat"></div></div></div><p class="small">“Right” describes the deformation of the edge profile; “left” measures sensitivity of the corresponding mode amplitude to an imposed perturbation. Each left/right pair is biorthogonally normalized: ∫L*(z)·R(z) dz = 1, including q and u.</p></section>
+<section class="panel"><h2>Selected r · Edge and puff profiles</h2><div class="twocol"><div><h3>Turbulence intensity q(z)</h3><div class="plot" id="qprofiles"></div></div><div><h3>Shear/centerline field u(z)</h3><div class="plot" id="uprofiles"></div></div></div></section>
+<section class="panel"><h2>Selected r · Linearized spectrum and eigenfunctions</h2><div class="twocol"><div><h3>Computed part of the spectrum near λ = 0</h3><div class="plot" id="spectrump"></div></div><div><h3>Right and left eigenfunctions: q component</h3><div class="plot" id="qmode"></div></div><div><h3>Right and left eigenfunctions: u component</h3><div class="plot" id="umode"></div></div><div class="statenote" id="modeinsight"></div></div><p class="small">Only <strong>shift–invert eigenpairs near the real axis</strong> are displayed; this is not the complete 1280-dimensional matrix spectrum. Mode curves are normalized individually to compare spatial structure; the raw biorthogonal normalization is retained in the data. The neutral mode is translation. Eigenvalues are reported in inverse model time units.</p></section>
+<section class="panel"><h2>Selected r · Nonlinear branches of the 1D unstable manifold</h2><p class="small">Starting from edge state E ± 0.012 (max E<sub>q</sub>) R<sub>+</sub>, integrate the deterministic equation in the edge's co-moving frame. The positive sign is oriented toward the puff basin; the negative sign toward laminar. Profiles at each time are aligned by their q maximum to visualize the shape evolution (translation removed).</p>
+<div class="labelrow"><label for="branch">Branch</label><select id="branch"><option value="1">+ unstable mode → puff</option><option value="-1">− unstable mode → laminar</option></select><button id="animate">▶ Play pathway</button><label for="timeindex">Snapshot</label><input id="timeindex" type="range" min="0" max="15" step="1" value="0" style="flex:1;min-width:160px"><output id="timeval">t = 0</output></div>
+<div class="twocol"><div><h3>Actual path of field functions: q(z,t)</h3><div class="plot tall" id="pathheat"></div></div><div><h3>Activity ∫q(z,t) dz for both branches</h3><div class="plot tall" id="massplot"></div></div><div><h3>Selected snapshot: q(z)</h3><div class="plot short" id="pathq"></div></div><div><h3>Selected snapshot: u(z)</h3><div class="plot short" id="pathu"></div></div></div><p class="statenote" id="pathnote"></p></section>
+<section class="panel"><h2>Numerics, interpretation &amp; limits</h2>
+<p>Equations: <code>qₜ + (u − ζ)qₓ = Dqₓₓ + q[r+u−U₀−(r+δ)(q−1)²]</code>; <code>uₜ + uuₓ = ε[U₀−u+κ(Ū−u)q]</code>, without stochastic forcing. Constants: <code>U₀=2, Ū=1, ζ=0.8, D=0.5, δ=0.1, ε=0.1, κ=2</code>. Periodic interval <code>L=160</code>; <code>N=640</code>; <code>Δx=0.25</code>. Second-order backward finite differences are used for both advections and centered differences for q diffusion. Profiles solve the co-moving stationary equations with a phase condition. Eigenpairs are computed from the matching discrete Jacobian, and left modes from its transpose.</p>
+<p><strong>Interpretation:</strong> the positive real eigenvalue indicates a single growing direction of the edge. The two signs leave its neighborhood for different deterministic attractors, giving a direct numerical picture of its basin-boundary role. The stable q mode has a central positive lobe and compensating opposite-sign flanks, suggesting a localized change in peak/front structure rather than uniform puff amplification. Adjoints can have extended tails: they measure receptivity, not simply the visible shape of a disturbance.</p>
+<p><strong>Important qualifications:</strong> this is a numerical scan of one periodic 1D discretization, not a proof of full continuum stability or a stochastic decay-rate calculation. Wave speed and modes may change with Δx, L, discretization and edge branch. Some stable modes become complex, so the phrase “stable real eigenfunction” ceases to apply beyond that point. The finite-time pathways establish the two destinations for the chosen perturbations; a global characterization of the entire unstable manifold needs further work.</p>
+<div class="file-links"><a href="./data/summary.json" download>Download scan summary JSON</a><a id="casefile" href="./data/r_0.595714.json" download>Download selected r data JSON</a><a href="https://github.com/tsufli/pipe-flow-lab/tree/main/scripts" target="_blank" rel="noopener">Source solver on GitHub</a></div></section>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const PLOT_BG="#142037", PAPER_BG="#142037", TEXT="#cbd9eb", GRID="#33445e";
+const COLORS={edge:"#ecaa56",puff:"#75bfff",unstable:"#ff7a85",stable:"#69d6b6",left:"#a98bfb",laminar:"#b7bacf"};
+let summary=null,cases=[],idx=4,frame=0,branch=1,timer=null,field="q";
+const filename=r=>"r_"+Number(r).toFixed(6)+".json";
+const fmt=(x,d=4)=>(x===null||!Number.isFinite(Number(x)))?"—":Number(x).toFixed(d);
+const axis=arr=>arr.map((_,i)=>(i*1-.38*160)); // each display point is 4*dx = 1 unit
+const select=()=>cases[idx];
+const LAYOUT=(title="",more={})=>({paper_bgcolor:PAPER_BG,plot_bgcolor:PLOT_BG,font:{color:TEXT,size:11},margin:{l:56,r:13,t:18,b:47},hovermode:"closest",showlegend:true,legend:{orientation:"h",y:-.23,font:{size:10}},xaxis:{gridcolor:GRID,zerolinecolor:GRID,automargin:true},yaxis:{gridcolor:GRID,zerolinecolor:GRID,automargin:true},...more});
+function draw(id,traces,layout={}){Plotly.react($(id),traces,LAYOUT("",layout),{responsive:true,displaylogo:false,modeBarButtonsToRemove:["select2d","lasso2d"]});}
+function line(x,y,name,color,dash="solid",more={}){return {type:"scatter",mode:"lines+markers",x,y,name,line:{color,width:2.2,dash},marker:{size:5},...more};}
+function profile(x,y,name,color,dash="solid"){return {type:"scatter",mode:"lines",x,y,name,line:{color,width:2.3,dash}};}
+function modeField(d,tag,side,comp){return d.eigs[tag][side][comp];}
+function normalize(arr){let mx=Math.max(1e-14,...arr.map(x=>Math.abs(x)));return arr.map(x=>x/mx);}
+function heat(id,rs,zarray,title,colorscale="Viridis",center=false){draw(id,[{type:"heatmap",x:axis(zarray[0]),y:rs,z:zarray,colorscale,zmid:center?0:undefined,showscale:true,colorbar:{thickness:10,tickfont:{size:10}},hovertemplate:"z=%{x:.2f}<br>r=%{y:.3f}<br>value=%{z:.4f}<extra></extra>"}],{showlegend:false,margin:{l:55,r:30,t:10,b:43},xaxis:{title:"z (centered)",range:[-26,38],gridcolor:GRID},yaxis:{title:"r",gridcolor:GRID,autorange:false,range:[.415,.735]}});}
+function renderTrends(){const s=summary.scan,rs=s.map(a=>a.r);
+ draw("peakplot",[line(rs,s.map(a=>a.puff_peak),"Stable puff",COLORS.puff),line(rs,s.map(a=>a.edge_peak),"Decay edge",COLORS.edge)],{xaxis:{title:"r",gridcolor:GRID},yaxis:{title:"max q",gridcolor:GRID}});
+ draw("speedplot",[line(rs,s.map(a=>a.puff_c),"Puff speed",COLORS.puff),line(rs,s.map(a=>a.edge_c),"Edge speed",COLORS.edge)],{xaxis:{title:"r",gridcolor:GRID},yaxis:{title:"c",gridcolor:GRID}});
+ heat("edgeheat",rs,cases.map(z=>z.edge.q),"edge");heat("puffheat",rs,cases.map(z=>z.puff.q),"puff");
+ const real=rs.map((r,j)=>s[j].stable_type==="real"?s[j].stable_real:null);
+ const complex=rs.map((r,j)=>s[j].stable_type==="complex"?s[j].stable_real:null);
+ draw("eigtrend",[line(rs,s.map(a=>a.unstable_real),"Unstable λ+",COLORS.unstable),line(rs,real,"Real stable λ",COLORS.stable),line(rs,complex,"Re stable complex pair",COLORS.left,"dash"),line(rs,rs.map(()=>0),"Translation λ ≈ 0",COLORS.laminar,"dot")],{xaxis:{title:"r",gridcolor:GRID},yaxis:{title:"Re λ",gridcolor:GRID}});
+ draw("imtrend",[line(rs,s.map(a=>Math.abs(a.stable_imag)),"|Im λ_s|",COLORS.left)],{xaxis:{title:"r",gridcolor:GRID},yaxis:{title:"Oscillation frequency |Im λ|",gridcolor:GRID}});
+ renderModeHeat();}
+function renderModeHeat(){if(!cases.length)return;const rs=summary.scan.map(a=>a.r);
+ for(const [id,tag,side] of [["urheat","unstable","right"],["ulheat","unstable","left"],["srheat","stable","right"],["slheat","stable","left"]]){
+  heat(id,rs,cases.map(a=>normalize(modeField(a,tag,side,field))),id,"RdBu",true);
+ }}
+function setSelected(i){idx=Math.max(0,Math.min(7,i));frame=0;$("timeindex").value="0";$("rindex").value=String(idx);$("rval").textContent="r = "+fmt(select().r,3);
+ document.querySelectorAll(".pick").forEach((b,j)=>b.classList.toggle("selected",j===idx));
+ $("casefile").href="./data/"+filename(select().r);$("status").textContent="Eight converged cases loaded · current r = "+fmt(select().r,6)+" · residual (edge) = "+Number(select().res_edge).toExponential(2);
+ renderSelected();}
+function renderSelected(){let d=select(),x=axis(d.edge.q),e=d.eigs,sm=e.stable;
+ $("metrics").innerHTML=[
+  ["Puff / edge speed",fmt(d.c_puff,4)+" / "+fmt(d.c_edge,4),"distinct traveling states"],
+  ["Unstable growth rate λ+", "+"+fmt(e.unstable.real,5),"1D unstable direction"],
+  ["Selected stable eigenvalue",fmt(sm.real,5)+(sm.type==="complex"?" ± "+fmt(sm.imag,5)+"i":""),sm.type==="real"?"real stable mode":"complex-conjugate pair"],
+  ["Peak q · puff / edge",fmt(Math.max(...d.puff.q),3)+" / "+fmt(Math.max(...d.edge.q),3),"profiles centered at q max"],
+  ["Mass ∫q dx · puff / edge",fmt(d.puff_mass,3)+" / "+fmt(d.edge_mass,3),"periodic L = "+d.L]
+ ].map(a=>'<div class="metric"><div class="label">'+a[0]+'</div><div class="value">'+a[1]+'</div><div class="detail">'+a[2]+'</div></div>').join("");
+ draw("qprofiles",[profile(x,d.edge.q,"Edge",COLORS.edge),profile(x,d.puff.q,"Puff",COLORS.puff)],{xaxis:{title:"z",range:[-23,35],gridcolor:GRID},yaxis:{title:"q",gridcolor:GRID}});
+ draw("uprofiles",[profile(x,d.edge.u,"Edge",COLORS.edge),profile(x,d.puff.u,"Puff",COLORS.puff)],{xaxis:{title:"z",range:[-23,35],gridcolor:GRID},yaxis:{title:"u",gridcolor:GRID}});
+ let spec=e.spectrum;draw("spectrump",[
+  {type:"scatter",mode:"markers",name:"Computed eigenvalues",x:spec.map(y=>y[0]),y:spec.map(y=>y[1]),marker:{size:7,color:"#7caed4",opacity:.72}},
+  {type:"scatter",mode:"markers",name:"Unstable",x:[e.unstable.real],y:[0],marker:{size:13,color:COLORS.unstable,symbol:"star"}},
+  {type:"scatter",mode:"markers",name:"Selected stable",x:[sm.real,sm.real],y:[sm.imag,-sm.imag],marker:{size:12,color:COLORS.stable,symbol:"diamond"}},
+  {type:"scatter",mode:"markers",name:"Translation",x:[e.neutral.real],y:[0],marker:{size:11,color:"#ffcf73",symbol:"x"}}
+ ],{xaxis:{title:"Re λ",range:[-.25,.23],gridcolor:GRID,zeroline:true},yaxis:{title:"Im λ",range:[-.15,.15],gridcolor:GRID,zeroline:true},legend:{orientation:"h",y:-.25,font:{size:9}}});
+ function modePlots(comp,id){let ur=e.unstable.right[comp],ul=e.unstable.left[comp],sr=sm.right[comp],sl=sm.left[comp];
+  draw(id,[profile(x,normalize(ur),"Unstable right",COLORS.unstable),profile(x,normalize(ul),"Unstable left",COLORS.left),profile(x,normalize(sr),"Stable right, Re",COLORS.stable),profile(x,normalize(sl),"Stable left, Re",COLORS.edge,"dash")],{xaxis:{title:"z",range:[-22,25],gridcolor:GRID},yaxis:{title:"relative shape (individual normalization)",gridcolor:GRID},legend:{orientation:"h",y:-.26,font:{size:9}}});}
+ modePlots("q","qmode");modePlots("u","umode");
+ $("modeinsight").innerHTML='<b>At r = '+fmt(d.r,3)+'</b><p>There is one resolved positive real growth rate, λ<sub>+</sub> = '+fmt(e.unstable.real,6)+'. The translation mode is near zero. The selected stable mode has λ = '+fmt(sm.real,6)+(sm.type==="complex"?' ± '+fmt(sm.imag,6)+'i (oscillatory)':' (real)')+'.</p><p>The unstable right mode is the deformation that grows; the left mode is the spatial susceptibility to forcing that mode. At lower r, its q component can change sign across the structure; at higher r it is dominated by a central positive lobe.</p><p>Biorthogonality validation: |⟨L,R⟩| = '+fmt(e.unstable.quality.pair,6)+'; eigenpair residual '+Number(e.unstable.quality.right_res).toExponential(1)+'.</p>';
+ renderPath();}
+function renderPath(){let d=select(),sign=Number($("branch").value),path=d.manifold.find(a=>a.sign===sign),ts=path.frames.map(f=>f.t),n=Math.max(0,Math.min(frame,ts.length-1));frame=n;
+ $("timeval").textContent="t = "+ts[n]; $("timeindex").value=String(n);
+ let x=axis(path.frames[0].q);
+ let data=path.frames.map(f=>f.q);
+ draw("pathheat",[{type:"heatmap",x,y:ts,z:data,colorscale:"YlOrRd",colorbar:{thickness:10}}],{showlegend:false,xaxis:{title:"aligned z",range:[-24,34],gridcolor:GRID},yaxis:{title:"time",gridcolor:GRID},margin:{l:50,r:32,t:15,b:50}});
+ let others=d.manifold.map(b=>line(b.frames.map(f=>f.t),b.frames.map(f=>f.mass),b.destination+(b.sign>0?" (+)":" (−)"),b.sign>0?COLORS.puff:COLORS.laminar));
+ others.push({type:"scatter",mode:"markers",x:[ts[n]],y:[path.frames[n].mass],name:"Selected time",marker:{size:11,color:COLORS.unstable,symbol:"diamond"}});
+ draw("massplot",others,{xaxis:{title:"time",gridcolor:GRID},yaxis:{title:"total q activity",gridcolor:GRID}});
+ draw("pathq",[profile(x,path.frames[0].q,"Initial near edge",COLORS.edge,"dot"),profile(x,path.frames[n].q,"Current",sign>0?COLORS.puff:COLORS.unstable)],{xaxis:{title:"aligned z",range:[-24,34],gridcolor:GRID},yaxis:{title:"q",gridcolor:GRID}});
+ draw("pathu",[profile(x,path.frames[0].u,"Initial near edge",COLORS.edge,"dot"),profile(x,path.frames[n].u,"Current",sign>0?COLORS.puff:COLORS.unstable)],{xaxis:{title:"aligned z",range:[-24,34],gridcolor:GRID},yaxis:{title:"u",gridcolor:GRID}});
+ $("pathnote").textContent=(sign>0?"Positive branch":"Negative branch")+" · current t = "+ts[n]+"; ∫q dx = "+fmt(path.frames[n].mass,5)+" · q max = "+fmt(path.frames[n].peak,5)+". By t = 600 this branch reaches the "+path.destination+" basin.";
+}
+function stop(){if(timer!==null){clearInterval(timer);timer=null;}$("animate").textContent="▶ Play pathway"}
+$("rindex").oninput=e=>{stop();if(cases.length)setSelected(Number(e.target.value));};
+$("field").onchange=e=>{field=e.target.value;renderModeHeat()};
+$("branch").onchange=()=>{stop();frame=0;renderPath()};
+$("timeindex").oninput=e=>{stop();frame=Number(e.target.value);renderPath()};
+$("animate").onclick=()=>{if(timer!==null){stop();return;}$("animate").textContent="■ Pause pathway";timer=setInterval(()=>{frame=(frame+1)%16;renderPath()},850)};
+(async()=>{try{
+ const s=await fetch("./data/summary.json");if(!s.ok)throw Error("Summary not published (HTTP "+s.status+")");summary=await s.json();
+ cases=await Promise.all(summary.scan.map(async z=>{const f=await fetch("./data/"+filename(z.r));if(!f.ok)throw Error("Missing r="+z.r);return f.json()}));
+ summary.scan.forEach((z,i)=>{let b=document.createElement("button");b.className="pick";b.textContent=fmt(z.r,3);b.onclick=()=>{stop();setSelected(i)};$("rbuttons").appendChild(b)});
+ renderTrends();setSelected(idx);
+ }catch(err){$("status").textContent="Unable to load scan: "+String(err)+". See repository data directory.";console.error(err)}})();
+</script>
+</body></html>
