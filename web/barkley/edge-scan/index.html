@@ -102,8 +102,8 @@ function overlayFamily(d,what,comp){
 function renderOverlays(){
  if(!cases.length)return;
  const kind=$("overlaytype").value,wide=$("overlayfull").checked;
- const xlabel=isBase?"x − own q-peak (model length units)":"native solver x (model length units)";
  const isBase=kind==="puff"||kind==="edge";
+ const xlabel=isBase?"x − own q-peak (model length units)":"native solver x (model length units)";
  for(const comp of ["q","u"]){
    const traces=cases.map((d,j)=>({
       type:"scatter",mode:"lines",x:isBase?centeredProfileAxis(d[kind].q,d):nativeAxis(d.edge.q,d),
