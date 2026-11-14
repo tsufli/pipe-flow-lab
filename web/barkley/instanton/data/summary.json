@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "source": "Barkley grid white noise restricted-family control",
+  "params": {
+    "0.5": {
+      "best": [
+        0.16941885,
+        1.80430834,
+        25.19210142
+      ],
+      "baseline": [
+        0.0,
+        4.0,
+        16.0
+      ]
+    },
+    "0.6": {
+      "best": [
+        0.33566619359,
+        2.07600688335,
+        17.39499921104
+      ],
+      "baseline": [
+        0.0,
+        4.0,
+        16.0
+      ]
+    }
+  },
+  "scan": [
+    {
+      "r": 0.5,
+      "bestAction": 0.38013245,
+      "baselineAction": 0.58455584,
+      "gainPct": 34.971,
+      "edgeEncounterTime": 160.0,
+      "edgeDistance": 0.022796
+    },
+    {
+      "r": 0.6,
+      "bestAction": 1.57273538,
+      "baselineAction": 2.08368524,
+      "gainPct": 24.521,
+      "edgeEncounterTime": 80.0,
+      "edgeDistance": 0.02223
+    }
+  ]
+}

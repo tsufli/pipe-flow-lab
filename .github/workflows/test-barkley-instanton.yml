@@ -1,0 +1,28 @@
+name: Validate Barkley instanton explorer
+on:
+  push:
+    paths:
+      - 'web/barkley/instanton/**'
+      - 'scripts/barkley_instanton_core.py'
+      - 'scripts/build_barkley_instanton.py'
+      - 'tests/test_barkley_instanton.py'
+      - '.github/workflows/test-barkley-instanton.yml'
+  pull_request:
+    paths:
+      - 'web/barkley/instanton/**'
+      - 'scripts/barkley_instanton_core.py'
+      - 'scripts/build_barkley_instanton.py'
+      - 'tests/test_barkley_instanton.py'
+      - '.github/workflows/test-barkley-instanton.yml'
+permissions:
+  contents: read
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate generated data and interactive viewer
+        run: python -m unittest discover -s tests -p test_barkley_instanton.py -v

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Barkley · Instanton Explorer — puff to decay edge</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--bg:#0a111e;--panel:#131e30;--inset:#0c1729;--edge:#38516d;--txt:#eef4fc;--muted:#a4b7cd;--blue:#62c8f3;--amber:#ffbc72;--mint:#71dfc1;--purple:#c0a2ff;--red:#fe8a95;color:var(--txt);background:var(--bg);color-scheme:dark}
+*{box-sizing:border-box}body{margin:0}button,select,input{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.45}button:hover:not(:disabled){filter:brightness(1.1)}
+a{color:#8ed7ff}header{padding:22px max(18px,calc((100vw - 1470px)/2));background:linear-gradient(112deg,#121e31,#0c1930 65%,#1a263f);border-bottom:1px solid #314763}
+header .overline{color:#70d8ec;text-transform:uppercase;letter-spacing:.13em;font-size:11px;font-weight:800}header h1{font-size:clamp(26px,3.1vw,42px);letter-spacing:-.04em;margin:6px 0 5px}header p{color:#bbccde;line-height:1.5;max-width:940px;margin:0 0 12px}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}nav a{border:1px solid #3a5474;border-radius:8px;padding:8px 11px;background:#1b3047;color:#d1e5fa;text-decoration:none;font-size:12px}nav a.active{background:#2475a9;color:white;border-color:#64aee5}
+main{max-width:1530px;margin:auto;display:grid;gap:17px;padding:20px}
+.panel{background:var(--panel);border:1px solid #2b4059;border-radius:13px;padding:17px;min-width:0}.caps{color:#84d8ed;text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:800}.statusline{font-size:13px;color:#e9c18d;margin-top:8px;min-height:1.2em}
+.intro{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(270px,.75fr);gap:16px}.intro h2{font-size:19px;margin:2px 0 8px}.intro p{color:var(--muted);margin:6px 0;line-height:1.6}.disclaimer{background:#0c1d30;border:1px solid #395571;border-radius:10px;padding:13px;color:#c6d8ea;font-size:13px;line-height:1.58}
+.metric-strip{display:grid;grid-template-columns:repeat(4,minmax(145px,1fr));gap:10px}.metric{padding:13px 14px;border:1px solid #2c4660;border-radius:10px;background:#0f1b2d}.metric small{font-size:11px;color:#aabed3}.metric strong{display:block;font-size:25px;letter-spacing:-.035em;margin-top:4px;font-variant-numeric:tabular-nums}.metric .sub{font-size:11px;color:#8fb8cd;margin-top:2px}
+.lab{display:grid;grid-template-columns:284px minmax(0,1fr);gap:16px;align-items:start}.rail{display:grid;gap:13px}.rail .panel{padding:15px}.rail h2{font-size:15px;margin:0 0 11px}.rail p{font-size:12px;color:var(--muted);line-height:1.52}.choice{display:flex;gap:7px;flex-wrap:wrap}.choice button{border:1px solid #3b5675;background:#1a304b;color:#cce1f5;border-radius:8px;padding:9px 12px;font-size:13px}.choice button.active{background:#2578a8;border-color:#5bafd8;color:#fff;font-weight:800}.choice .wide{flex:1}
+.sublabel{font-size:11px;color:#a7c2dd;margin:14px 0 6px;display:block}.range-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:750;margin:13px 0 5px}.range-row output{color:#8fe7ef;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#70d8e8}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{padding:9px 11px;border:1px solid #4e81a9;background:#2875a3;color:white;border-radius:8px;font-size:12px}.btn.secondary{background:#233751;border-color:#415e80}.btn.active{background:#277da4}
+select{background:#0d1e31;border:1px solid #415b77;border-radius:8px;color:#ecf7ff;padding:8px 9px;max-width:100%;width:100%;font-size:12px}.check{display:flex;align-items:center;gap:7px;font-size:12px;color:#c5d7e9;margin:10px 0}.check input{accent-color:#69bde9}.hero-plot{height:485px;min-width:0;width:100%}.plotarea{padding:14px 17px}.plotheading{display:flex;gap:15px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}.plotheading h2{font-size:17px;margin:2px 0 7px}.plotheading p{font-size:12px;color:var(--muted);margin:0}.viewtabs{display:flex;gap:6px;flex-wrap:wrap}.viewtabs button{border:1px solid #344b67;border-radius:8px;background:#1a2b42;color:#c4d6ec;padding:8px 10px;font-size:12px}.viewtabs button.active{background:#286e97;border-color:#6dbfe1;color:white;font-weight:750}
+.timeline{border-top:1px solid #2b4661;padding-top:15px;margin-top:5px}.timerow{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.timerow strong{font-size:12px;color:#b5d3ec}.timetrack{position:relative;margin:18px 4px 5px;height:6px;background:#31475e;border-radius:99px}.timetrack .pulse{position:absolute;left:0;top:0;bottom:0;background:#53b6c7;border-radius:99px}.timetrack .edge{position:absolute;top:-6px;height:18px;width:2px;background:#ffcc80}.timetrack .cursor{position:absolute;top:-4px;height:14px;width:4px;background:white;border-radius:3px;transform:translateX(-1px)}.timelegend{display:flex;gap:16px;flex-wrap:wrap;font-size:10px;color:#a1b8cf;margin-bottom:11px}.legend-line{display:inline-block;width:15px;border-top:3px solid;vertical-align:middle;margin-right:4px}
+.inspect{background:#0d1a2d;border:1px solid #304763;border-radius:10px;padding:12px;margin-top:10px}.inspect h3{font-size:13px;margin:0 0 8px}.values{display:grid;grid-template-columns:repeat(5,minmax(80px,1fr));gap:6px}.value{border-right:1px solid #273d57;padding-right:5px;font-size:12px;color:#b7cade}.value:last-child{border:0}.value strong{display:block;margin-top:3px;font-size:17px;color:#f3f7fc;font-variant-numeric:tabular-nums}
+.actionfoot{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:9px}.tiny{color:#a8bfd7;font-size:12px}.tone{color:#84d8ed}.after{color:#ffc88d}.plotnote{font-size:12px;color:#b8cce0;line-height:1.5;margin:10px 0 0}.math{color:#d4ecff;font-family:Georgia,serif;font-size:16px;background:#0a1728;padding:12px;border-radius:8px;border:1px solid #344e6a;margin:9px 0;line-height:1.8}.theory{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(270px,.8fr);gap:14px}.theory h3{margin:0 0 7px;font-size:15px}.theory p{font-size:13px;color:#b6c9dc;line-height:1.6}.theory details{border-top:1px solid #2a425b;padding:11px 0}.theory summary{cursor:pointer;color:#e7f2ff;font-size:14px;font-weight:700}
+.footer{font-size:11px;color:#8ba6c0;margin-top:5px}
+@media(max-width:1100px){.intro,.theory{grid-template-columns:1fr}.lab{grid-template-columns:235px minmax(0,1fr)}.hero-plot{height:440px}.metric-strip{grid-template-columns:repeat(2,minmax(140px,1fr))}}
+@media(max-width:720px){main{padding:10px}.panel{padding:12px}.lab{grid-template-columns:1fr}.rail{grid-template-columns:repeat(2,minmax(0,1fr))}.rail .panel{padding:12px}.plotarea{padding:10px}.hero-plot{height:355px}.values{grid-template-columns:repeat(3,minmax(80px,1fr))}.value{border:0}.actionfoot{grid-template-columns:repeat(2,minmax(120px,1fr))}}
+@media(max-width:430px){.rail{grid-template-columns:1fr}.metric-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.metric strong{font-size:21px}.hero-plot{height:330px}}
+</style>
+</head>
+<body>
+<header>
+<div class="overline">Barkley 2016 / rare-event experiment / multiplicative noise</div>
+<h1>From puff to its edge</h1>
+<p>A guided microscope for the action cost of leaving a turbulent puff. Follow one noise-driven trajectory at a time, inspect exactly where the noise acts, and compare its route through function space to the deterministic edge trajectory.</p>
+<nav><a href="../">Local ODE</a><a href="../spatial/">Spatial PDE</a><a href="../phase-space/">3D phase space</a><a href="../edge-scan/">Edge &amp; eigenmodes</a><a class="active" href="./">Instanton explorer</a></nav>
+</header>
+<main>
+<section class="intro">
+<div class="panel"><div class="caps">What has actually been minimized</div><h2>Searching for a low-action escape route</h2><p>The noise directly forces <b>q</b>; <b>u</b> evolves by its deterministic PDE. We optimize the position, spatial width and duration of a localized negative-noise pulse, then tune its amplitude to the puff/laminar basin boundary. The resulting trajectories approach the computed decay edge.</p><p>Change the parameter, switch between a baseline and lower-action pulse, and scrub along the path to understand the transition. At the edge, inspect the unstable departure in either direction.</p></div>
+<div class="disclaimer"><b>Scientific status: restricted-family candidate, not a verified global instanton.</b><p style="margin:7px 0 0">The reported cost is minimized only over the tested Gaussian pulse family; it is <b>not</b> a solution of the unrestricted minimum-action problem. Reverse deterministic paths and puff–edge linear interpolation are provided as <b>geometric references only</b> because they generally violate the unforced u equation.</p></div>
+</section>
+<div class="metric-strip">
+<div class="metric"><small>Lower-action candidate</small><strong id="mBest">—</strong><div class="sub">I, excluding 1/σ²</div></div>
+<div class="metric"><small>Baseline Gaussian</small><strong id="mBase">—</strong><div class="sub">I, same action convention</div></div>
+<div class="metric"><small>Pulse improvement</small><strong id="mGain">—</strong><div class="sub">within the restricted family</div></div>
+<div class="metric"><small>Closest edge encounter</small><strong id="mEdge">—</strong><div class="sub">phase-aligned L² distance</div></div>
+</div>
+<div class="lab">
+<aside class="rail">
+<section class="panel"><h2>Choose a model</h2><div class="choice"><button class="active wide" id="r05">r = 0.5</button><button class="wide" id="r06">r = 0.6</button></div><span class="sublabel">Escape candidate</span><div class="choice"><button class="active wide" id="best">Lower action</button><button class="wide" id="baseline">Baseline</button></div><p id="rNote" style="margin-bottom:0">Loading numerical states…</p></section>
+<section class="panel"><h2>Explore the path</h2><div class="row"><button class="btn" id="play">▶ Play evolution</button><button class="btn secondary" id="jump">Jump to edge</button></div>
+<label class="range-row" for="timeRange"><span>Saved model time</span><output id="timeValue">t = 0</output></label><input id="timeRange" type="range" min="0" max="0" step="1" value="0">
+<label class="check"><input type="checkbox" id="depart"> Include departure after edge</label>
+<p id="pathStage">First, the noise pulse acts on the puff. After the pulse, the flow evolves deterministically toward the edge.</p>
+</section>
+<section class="panel"><h2>Inside the trajectory</h2><span class="sublabel">Spatial field</span><select id="variable"><option value="q">Turbulence intensity q</option><option value="u">Centerline velocity u</option><option value="a">Noise control a</option><option value="qa">Applied forcing q a</option><option value="cost">Instantaneous action density ½a²</option></select>
+<span class="sublabel">Geometric comparison</span><select id="compare"><option value="edge">Exact edge profile (aligned)</option><option value="none">No reference overlay</option><option value="linear">Linear puff–edge interpolation (inadmissible)</option><option value="reverse">Reversed deterministic edge→puff (inadmissible)</option><option value="puff">Puff profile (aligned)</option><option value="adjoint">Noise-weighted left edge mode (shape only)</option></select>
+<label class="check"><input type="checkbox" id="follow" checked> Follow the turbulence peak visually</label>
+<label class="check"><input type="checkbox" id="full"> Show full spatial domain</label>
+<p style="margin-bottom:0">Changing the viewing coordinates does not alter the numerical path or its action. Click the curve to inspect a location.</p>
+</section>
+<section class="panel"><h2>Pulse being tested</h2><div class="values" style="grid-template-columns:repeat(2,minmax(80px,1fr))"><div class="value">Amplitude<strong id="pAmp">—</strong></div><div class="value">Duration τ<strong id="pTau">—</strong></div><div class="value">Offset x₀<strong id="pCenter">—</strong></div><div class="value">Width w<strong id="pWidth">—</strong></div></div><p style="margin-bottom:0">The pulse shape is a(x,t) = −A · Gaussian(x) · sin²(πt/τ) for 0 ≤ t ≤ τ, zero otherwise.</p></section>
+</aside>
+<section class="panel plotarea">
+<div class="plotheading"><div><div class="caps">Path microscope</div><h2 id="plotTitle">q(x, t) · moving toward the decay edge</h2><p id="plotSub">The main curve is the simulated stochastic-control trajectory; the dashed curve is a geometric comparison.</p></div><div class="viewtabs"><button class="active" data-view="profile">Profiles</button><button data-view="geometry">State space</button><button data-view="action">Action</button></div></div>
+<div id="stage" class="hero-plot"></div>
+<div class="timeline"><div class="timerow"><strong id="timeStatement">Time t = 0</strong><span id="stageDescription" class="tiny">Initial puff</span></div><div id="track" class="timetrack"><div id="pulseTrack" class="pulse"></div><div id="edgeMark" class="edge"></div><div id="timeCursor" class="cursor"></div></div><div class="timelegend"><span><span class="legend-line" style="border-color:#53b6c7"></span>noise on</span><span><span class="legend-line" style="border-color:#ffcc80"></span>closest edge encounter</span><span><span class="legend-line" style="border-color:#fff"></span>selected time</span></div>
+<div id="timelineStatus" class="tiny">All action is accumulated while the noise pulse is active. Subsequent deterministic relaxation costs zero action.</div></div>
+<div class="inspect"><div class="timerow"><h3>Local inspection · <span id="positionValue">x = 0</span></h3><span class="tiny">Move along a field by clicking the main profile</span></div><input id="xRange" type="range" min="0" max="159" step="1" value="61"><div class="values"><div class="value">q(x,t)<strong id="sQ">—</strong></div><div class="value">u(x,t)<strong id="sU">—</strong></div><div class="value">a(x,t)<strong id="sA">—</strong></div><div class="value">q · a<strong id="sQA">—</strong></div><div class="value">½a²<strong id="sCost">—</strong></div></div></div>
+<div class="actionfoot" style="margin-top:12px"><div class="metric"><small>Turbulence mass ∫q dx</small><strong id="vMass">—</strong></div><div class="metric"><small>Edge proximity d</small><strong id="vDist">—</strong></div><div class="metric"><small>Action accumulated I(t)</small><strong id="vAction">—</strong></div><div class="metric"><small>Maximum q</small><strong id="vPeak">—</strong></div></div>
+<p id="stageNote" class="plotnote"></p>
+</section>
+</div>
+<section class="panel theory"><div><h3>How to interpret what you're seeing</h3><p>The main plot shows a <b>real numerical trajectory</b> generated by adding the displayed noise control to the Barkley q equation. The u field follows the deterministic equation at every integration step. The edge shown as a reference is spatially aligned for shape comparison only.</p>
+<details open><summary>Action, with multiplicative noise</summary><div class="math">qₜ = Fq[q,u] + q a(x,t)<br>uₜ = Fu[q,u]<br>I[a] = ½ ∫₀ᵀ dt ∫ dx a(x,t)²<br>Probability ∝ exp(−I/σ²)</div><p>The displayed I excludes the overall factor 1/σ². All action values are evaluated on the N=320 numerical grid using Δx=0.5, in the puff's co-moving coordinate. The noise is spatially and temporally white under the grid discretization.</p></details>
+<details><summary>What is meant by the reversed deterministic path?</summary><p>The independently computed edge has a positive unstable eigenvalue. A perturbation along its growing eigenvector runs from the edge toward the puff without noise. Reversing that history is a useful <b>geometric</b> candidate, but it does not in general solve uₜ=Fu and therefore does not have a finite stochastic action in this degenerate-noise model. The overlay matches turbulent mass and aligns spatial peaks for shape comparison only.</p></details>
+<details><summary>How was the action optimized?</summary><p>The optimization scans Gaussian pulse centers, widths and durations, followed by local Nelder–Mead refinement. For each trial shape, its amplitude is found by bisection to the puff/laminar boundary. All retained trajectories satisfy the controlled q equation and deterministic u equation. This is a <b>restricted-family minimum</b>, not gMAM or an unrestricted Freidlin–Wentzell minimizer.</p></details>
+</div><div><h3>Numerical record</h3><p>Deterministic traveling puff and edge states were recomputed at r=0.5 and r=0.6 with the same second-order backward advection scheme and centered q diffusion, then integrated with controlled RK4 trajectories. The control-search basins were tested at t=240; near the boundary, the solution shadows the decay edge before eventually departing.</p><p id="solverDetails" class="tiny"></p><p>Visible trajectory profiles are downsampled from 320 to 160 cells for faster browsing. Action and distance diagnostics are evaluated at full grid resolution before downsampling. The end of the plotted path is <b>not</b> a certified infinite-time arrival at the edge.</p><div class="row"><a href="./data/r_0.5.json" id="dataLink">Numerical data JSON</a><a href="https://github.com/tsufli/pipe-flow-lab/blob/main/scripts/build_barkley_instanton.py" target="_blank" rel="noopener">Reproduce the calculation</a></div></div></section>
+<div class="footer">Barkley deterministic model · q-multiplicative white-noise control · candidate actions at σ-independent normalization. No global instanton or continuum extrapolation is asserted.</div>
+<div id="status" class="statusline">Loading saved numerical trajectories…</div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const BACK="#131e30",PLOT="#101a2c",GRID="#30445c",TEXT="#d6e5f3";
+let data={},r="0.5",kind="best",frame=0,view="profile",variable="q",ref="edge",following=true,full=false,depart=false,xpoint=61,timer=null,busy=false;
+const fmt=(v,n=3)=>Number.isFinite(v)?Number(v).toFixed(n):"—";
+const row=(d)=>d.candidates[kind], doc=()=>data[r], current=()=>row(doc()).frames[frame], frames=()=>row(doc()).frames;
+const basePlot={paper_bgcolor:BACK,plot_bgcolor:PLOT,font:{color:TEXT,size:12},margin:{l:65,r:15,t:12,b:52},hovermode:"closest",showlegend:true,
+  legend:{orientation:"h",y:-.23,font:{size:11}},xaxis:{gridcolor:GRID,zerolinecolor:GRID,automargin:true},yaxis:{gridcolor:GRID,automargin:true}};
+const PLOT_CONFIG={responsive:true,displaylogo:false,modeBarButtonsToRemove:["lasso2d","select2d"]};
+const peak=(arr)=>arr.reduce((acc,x,i)=>x>arr[acc]?i:acc,0);
+function xOffset(){const d=doc(),f=current();let i=peak(d.puff.q);if(following&&f.peak>.012)i=peak(f.q);return i;}
+function xAxis(){const d=doc(),n=d.raster.N_display,xo=xOffset();return Array.from({length:n},(_,i)=>(i-xo)*d.raster.dx_display);}
+function shapeAt(t){const p=row(doc());if(t<0||t>p.tau)return 0;return Math.sin(Math.PI*t/p.tau)**2;}
+function localA(i){const p=row(doc());return -p.amplitude*p.spatial_shape[i]*shapeAt(current().t);}
+function unwrappedRecenter(field,target){const n=field.length,offset=target-peak(field);return field.map((_,i)=>field[((i-offset)%n+n)%n]);}
+function referenceCurve(comp){
+ const d=doc(),f=current(),p=row(d);
+ if(ref==="none")return null;
+ if(ref==="adjoint"){
+   if(comp!=="a"&&comp!=="qa")return null;
+   const a=d.edgeMode.adjointWeightedDrive;
+   const mag=Math.max(...a.map(Math.abs),1e-14);
+   const target=comp==="cost"?Math.max(...p.spatial_shape.map(z=>.5*(p.amplitude*z)**2)):p.amplitude;
+   const forceSign=a.reduce((acc,z,j)=>acc+z*p.spatial_shape[j],0)>=0?-1:1;
+   return {name:"q_E ψ_left,q — shape only",y:unwrappedRecenter(a,peak(f.q)).map(v=>forceSign*v*target/mag)};
+ }
+ if(comp==="a"||comp==="qa"||comp==="cost")return null;
+ if(ref==="edge"||ref==="puff"){
+   const base=d[ref][comp];return {name:(ref==="edge"?"Edge":"Puff")+" (aligned)",y:unwrappedRecenter(base,peak(f.q))};
+ }
+ if(ref==="linear"){
+   const mix=Math.min(1,Math.max(0,(d.puff.mass-f.mass)/(d.puff.mass-d.edge.mass)));
+   const a=d.puff[comp],b=d.edge[comp];
+   const profile=a.map((v,i)=>v*(1-mix)+b[i]*mix);
+   return {name:"Linear interpolation (inadmissible)",y:unwrappedRecenter(profile,peak(f.q))};
+ }
+ if(ref==="reverse"){
+   let best=d.reverseDeterministic[0],dist=Infinity;
+   for(const z of d.reverseDeterministic){const diff=Math.abs(z.mass-f.mass);if(diff<dist){best=z;dist=diff;}}
+   return {name:"Reversed edge→puff (geometric)",y:unwrappedRecenter(best[comp],peak(f.q))};
+ }
+ return null;
+}
+function stageValues(){
+ const f=current(),n=doc().raster.N_display,ys=[];
+ for(let i=0;i<n;i++){
+   const a=localA(i),q=f.q[i];ys.push(variable==="q"?q:variable==="u"?f.u[i]:variable==="a"?a:variable==="qa"?q*a:.5*a*a);
+ }
+ return ys;
+}
+function labels(){return {q:"Turbulence intensity q",u:"Centerline velocity u",a:"Noise control a",qa:"Applied forcing q a",cost:"Local action rate ½a²"};}
+function drawStage(traces,layout){
+ Promise.resolve(Plotly.react($("stage"),traces,layout,PLOT_CONFIG)).then(()=>{
+   const gd=$("stage");
+   if(!gd.dataset.clickBound){gd.on("plotly_click",onStageClick);gd.dataset.clickBound="1";}
+ });
+}
+function renderProfile(){
+ const d=doc(),f=current(),x=xAxis(),y=stageValues(),comp=variable;
+ const reference=referenceCurve(comp),traces=[{
+   type:"scatter",mode:"lines",x,y,name:"Controlled trajectory · t="+fmt(f.t,1),
+   line:{color:comp==="q"?"#ffc078":comp==="u"?"#76d5eb":"#71dcb8",width:3},
+   hovertemplate:"x=%{x:.2f}<br>value=%{y:.6g}<extra>trajectory</extra>"}];
+ if(reference)traces.push({type:"scatter",mode:"lines",x,y:reference.y,name:reference.name,
+     line:{color:ref==="adjoint"?"#e7a4ff":"#99a8ff",width:2,dash:"dash"},opacity:.88});
+ const cursor=x[xpoint];
+ const layout={...basePlot,xaxis:{...basePlot.xaxis,title:following?"x − instantaneous q-peak (view only)":"x − initial puff q-peak (fixed frame)",range:full?undefined:[-26,45]},
+    yaxis:{...basePlot.yaxis,title:labels()[variable]},
+    shapes:[{type:"line",xref:"x",yref:"paper",x0:cursor,x1:cursor,y0:0,y1:1,line:{color:"#6ca9c7",width:1,dash:"dot"}}]};
+ drawStage(traces,layout);
+ $("plotTitle").textContent=labels()[variable]+" at t = "+fmt(f.t,1);
+ $("plotSub").textContent=comp==="a"||comp==="qa"||comp==="cost"?"Actual forcing from the restricted pulse; after t=τ the control is exactly zero.":"Profile from the controlled PDE, with an optional dashed geometric reference.";
+}
+function renderGeometry(){
+ const d=doc(),path=row(d).frames,other=d.candidates[kind==="best"?"baseline":"best"].frames;
+ const traces=[
+  {type:"scatter",mode:"lines+markers",x:path.map(z=>z.mass),y:path.map(z=>z.d_edge),name:"Selected: "+(kind==="best"?"lower action":"baseline"),customdata:path.map(z=>z.t),line:{color:"#f7b86e",width:2.7},marker:{size:5,color:path.map(z=>z.t),colorscale:"Turbo",showscale:false},hovertemplate:"Mass=%{x:.3f}<br>Distance=%{y:.3f}<br>t=%{customdata:.1f}<extra></extra>"},
+  {type:"scatter",mode:"lines",x:other.map(z=>z.mass),y:other.map(z=>z.d_edge),name:"Other Gaussian candidate",line:{color:"#85bdef",width:2,dash:"dash"}},
+  {type:"scatter",mode:"markers",x:[current().mass],y:[current().d_edge],name:"Current frame",marker:{symbol:"diamond",size:14,color:"#ffe8bb",line:{color:"#24182b",width:2}}},
+  {type:"scatter",mode:"markers",x:[d.edge.mass,d.puff.mass],y:[0,path[0].d_edge],name:"Edge and puff references",text:["Edge","Puff"],marker:{size:9,color:["#66dfbe","#8dc9f4"]},hoverinfo:"text"}
+ ];
+ drawStage(traces,{...basePlot,xaxis:{title:"Activity M = ∫q dx",gridcolor:GRID},yaxis:{title:"Phase-aligned distance from edge",gridcolor:GRID}});
+ $("plotTitle").textContent="The escape path in state space";
+ $("plotSub").textContent="Mass versus distance from the edge. The highlighted point is the current time. Click an orange point to scrub.";
+}
+function renderAction(){
+ const d=doc(),p=row(d),f=current(),other=d.candidates[kind==="best"?"baseline":"best"];
+ const traces=[
+  {type:"scatter",mode:"lines+markers",x:p.frames.map(z=>z.t),y:p.frames.map(z=>z.cumI),name:"Selected pulse",line:{color:"#f2bb74",width:3},marker:{size:5}},
+  {type:"scatter",mode:"lines",x:other.frames.map(z=>z.t),y:other.frames.map(z=>z.cumI),name:"Other pulse",line:{color:"#7aaef6",dash:"dash",width:2}},
+  {type:"scatter",mode:"markers",x:[f.t],y:[f.cumI],name:"Current time",marker:{color:"#fff",size:13,symbol:"diamond"}}];
+ drawStage(traces,{...basePlot,xaxis:{title:"Model time t",gridcolor:GRID},yaxis:{title:"Accumulated noise action I(t)",gridcolor:GRID},shapes:[{type:"line",x0:p.tau,x1:p.tau,yref:"paper",y0:0,y1:1,line:{dash:"dot",color:"#6fd6c3",width:1.5}}]});
+ $("plotTitle").textContent="When is the stochastic action paid?";
+ $("plotSub").textContent="The cumulative cost stops growing when the pulse ends; the later approach to the edge is deterministic.";
+}
+function showMain(){if(view==="profile")renderProfile();else if(view==="geometry")renderGeometry();else renderAction();}
+function renderNumbers(){
+ const d=doc(),p=row(d),f=current(),frames0=p.frames,tEnd=depart?frames0.at(-1).t:frames0[p.edge_frame_index].t;
+ const closest=p.edge_encounter_time;
+ $("timeValue").textContent="t = "+fmt(f.t,1);$("timeStatement").textContent="Time t = "+fmt(f.t,1);
+ $("timeRange").max=depart?frames0.length-1:p.edge_frame_index;$("timeRange").value=frame;
+ const left=Math.max(0,Math.min(100,100*f.t/tEnd));
+ $("timeCursor").style.left=left+"%";$("edgeMark").style.left=100*closest/tEnd+"%";
+ $("pulseTrack").style.width=100*Math.min(p.tau,tEnd)/tEnd+"%";
+ const stage=f.t<=p.tau?"Stochastic pulse · noise on":f.t<=closest?"Noise off · approaching the edge":"After the edge · unstable departure";
+ $("stageDescription").textContent=stage;
+ $("timelineStatus").textContent="At this frame: I(t) = "+fmt(f.cumI,5)+" of total I = "+fmt(p.action,5)+"; edge encounter at t ≈ "+fmt(closest,1)+". "+(f.t>closest?"Subsequent motion is sensitive to numerical and physical perturbations.":"");
+ $("pathStage").textContent=stage+". Peak turbulence q = "+fmt(f.peak,4)+"; mass = "+fmt(f.mass,4)+".";
+ $("vMass").textContent=fmt(f.mass,3);$("vDist").textContent=fmt(f.d_edge,3);$("vAction").textContent=fmt(f.cumI,3);$("vPeak").textContent=fmt(f.peak,3);
+ $("stageNote").textContent="The closest encounter with the decay edge is at t = "+fmt(closest,1)+" (d = "+fmt(p.min_edge_distance,4)+"). The displayed fields are exact trajectories of the controlled spatial discretization, not a linear interpolation. The distance metric removes a global translation for comparison only.";
+ updateInspector();
+}
+function updateInspector(){
+ if(!doc())return;
+ const i=xpoint,f=current(),d=doc(),a=localA(i),q=f.q[i];
+ const xx=(i-xOffset())*d.raster.dx_display;
+ $("xRange").max=d.raster.N_display-1;$("xRange").value=i;
+ $("positionValue").textContent="x = "+fmt(xx,1);
+ $("sQ").textContent=fmt(q,4);$("sU").textContent=fmt(f.u[i],4);
+ $("sA").textContent=fmt(a,4);$("sQA").textContent=fmt(a*q,4);$("sCost").textContent=fmt(.5*a*a,5);
+}
+function renderAll(){
+ if(!doc()||!row(doc()))return;
+ const d=doc(),p=row(d),base=d.candidates.baseline,best=d.candidates.best;
+ for(const id of ["r05","r06","best","baseline"])$(id).classList.toggle("active",id===(r==="0.5"?"r05":"r06")||id===kind);
+ document.querySelectorAll(".viewtabs button").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+ $("mBest").textContent=fmt(best.action,4);$("mBase").textContent=fmt(base.action,4);
+ $("mGain").textContent=fmt((1-best.action/base.action)*100,1)+"%";$("mEdge").textContent=fmt(p.min_edge_distance,4);
+ $("pAmp").textContent=fmt(p.amplitude,4);$("pTau").textContent=fmt(p.tau,2);
+ $("pCenter").textContent=fmt(p.x0,2);$("pWidth").textContent=fmt(p.width,2);
+ $("rNote").textContent="At r = "+r+", the computed puff and edge have different wave speeds: cP = "+fmt(d.puff.c,3)+", cE = "+fmt(d.edge.c,3)+".";
+ $("solverDetails").textContent="Grid N = "+d.raster.N_full+", dx = "+d.raster.dx_full+", L = "+d.raster.L+"; noise-control RK4 time step ≈ 0.09; edge unstable eigenvalue λ+ = "+fmt(d.edgeMode.lambda,5)+"; stationary residuals: puff "+d.puff.residual.toExponential(1)+", edge "+d.edge.residual.toExponential(1)+".";
+ $("dataLink").href="./data/r_"+r+".json";
+ renderNumbers();showMain();
+}
+function stop(){if(timer!==null){clearInterval(timer);timer=null;}$("play").textContent="▶ Play evolution";}
+function stepTo(n){const max=depart?frames().length-1:row(doc()).edge_frame_index;frame=Math.max(0,Math.min(max,n));renderNumbers();showMain();}
+function setCase(nextR,nextKind){stop();if(nextR)r=nextR;if(nextKind)kind=nextKind;frame=0;xpoint=peak(doc().puff.q);renderAll();}
+$("r05").onclick=()=>setCase("0.5",null);$("r06").onclick=()=>setCase("0.6",null);
+$("best").onclick=()=>setCase(null,"best");$("baseline").onclick=()=>setCase(null,"baseline");
+$("play").onclick=()=>{if(timer!==null){stop();return;}$("play").textContent="■ Pause";timer=setInterval(()=>{const max=depart?frames().length-1:row(doc()).edge_frame_index;if(frame>=max){stop();return;}stepTo(frame+1);},330);};
+$("jump").onclick=()=>{stop();stepTo(row(doc()).edge_frame_index);};
+$("timeRange").oninput=e=>{stop();stepTo(+e.target.value);};
+$("xRange").oninput=e=>{xpoint=+e.target.value;updateInspector();if(view==="profile")showMain();};
+$("depart").onchange=e=>{depart=e.target.checked;stepTo(frame);};
+$("variable").onchange=e=>{variable=e.target.value;view="profile";renderAll();};
+$("compare").onchange=e=>{ref=e.target.value;showMain();};
+$("follow").onchange=e=>{following=e.target.checked;updateInspector();showMain();};
+$("full").onchange=e=>{full=e.target.checked;showMain();};
+document.querySelectorAll(".viewtabs button").forEach(b=>b.onclick=()=>{view=b.dataset.view;renderAll();});
+function onStageClick(event){
+ if(!doc()||!event.points.length)return;
+ const point=event.points[0];
+ if(view==="profile"&&point.curveNumber===0){xpoint=Math.max(0,Math.min(doc().raster.N_display-1,point.pointNumber));updateInspector();showMain();}
+ else if(view==="geometry"&&point.curveNumber===0&&Number.isInteger(point.pointNumber)){stop();stepTo(point.pointNumber);}
+ else if(view==="action"&&point.curveNumber===0&&Number.isInteger(point.pointNumber)){stop();stepTo(point.pointNumber);}
+}
+(async()=>{try{
+  const out=await Promise.all(["0.5","0.6"].map(async r=>{const resp=await fetch("./data/r_"+r+".json");if(!resp.ok)throw Error("data file r="+r+" returned HTTP "+resp.status);return [r,await resp.json()];}));
+  data=Object.fromEntries(out);xpoint=peak(data[r].puff.q);renderAll();$("status").textContent="Verified precomputed trajectories loaded for both r = 0.5 and r = 0.6.";
+ }catch(e){$("status").textContent="Unable to load scan data: "+e.message;console.error(e);}})();
+</script>
+</body>
+</html>
