@@ -30,7 +30,7 @@ main{max-width:1580px;margin:auto;padding:16px;display:grid;gap:13px}.panel{bord
 <body>
 <header><div class="eyebrow">Barkley project · weak-noise action · two independent starts</div>
 <h1>Inside the transition path</h1>
-<p>From a localized turbulent puff to its decay edge. Optimize the entire discretized forcing field <i>a(x,t)</i> with two different initializations; inspect the state, the forcing, and the optimization itself.</p>
+<p>From a localized turbulent puff to its decay edge. Optimize the entire discretized forcing field <i>a(x,t)</i> with two different initializations; compare puff-to-edge deformations, play both paths, and inspect numerical convergence.</p>
 <nav><a href="../">Local ODE</a><a href="../spatial/">Spatial PDE</a><a href="../phase-space/">Phase space</a><a href="../edge-scan/">Edge &amp; eigenmodes</a><a href="./" class="selected">Minimum-action explorer</a></nav>
 </header>
 <main>
@@ -42,7 +42,7 @@ main{max-width:1580px;margin:auto;padding:16px;display:grid;gap:13px}.panel{bord
  <div class="control"><label>Compare initializations</label><label style="display:flex;gap:7px;align-items:center"><input id="compare" type="checkbox" checked> Show other initialization at selected time</label></div>
  </div><p class="status" id="status">Loading two finite-horizon optimal-control experiments…</p></section>
 <div class="summaryrow" id="summary"></div>
-<section class="panel"><div class="panelhead"><h2>Explore the evolution</h2><div class="tabs"><button id="tabFields" class="active">Field microscope</button><button id="tabPhase">Path through state space</button><button id="tabOptimize">Optimization &amp; convergence</button></div></div>
+<section class="panel"><div class="panelhead"><h2>Explore the evolution</h2><div class="tabs"><button id="tabFields" class="active">Profile overlays &amp; movie</button><button id="tabPhase">Path through state space</button><button id="tabOptimize">Optimization &amp; convergence</button></div></div>
  <div class="timeline" style="margin:10px 0"><button id="play">▶ Play</button><label for="timeSlider">Time</label><input id="timeSlider" type="range" min="0" max="40" value="0" step="1"><output id="clock">t = 0</output><div class="control"><label for="speed">Playback speed</label><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div><button id="jumpEdge">Closest to edge</button><label style="display:flex;gap:6px;align-items:center" for="followPeak"><input type="checkbox" id="followPeak"> Align q peaks (display only)</label></div>
  <div id="viewFields" class="profile-view">
    <p class="profile-explainer">The stationary puff and decay edge appear on both graphs. Thin colored curves are snapshots at successive times; the bright curve marks the selected playback time. The geometric initialization is a reference shape, not itself an admissible controlled-PDE path.</p>
