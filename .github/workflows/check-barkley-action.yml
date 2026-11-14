@@ -6,6 +6,7 @@ on:
       - 'web/barkley/instanton/**'
       - 'scripts/build_barkley_full_action.py'
       - 'tests/test_barkley_full_action.py'
+      - 'tests/test_barkley_lab_view.js'
       - '.github/workflows/check-barkley-action.yml'
   workflow_dispatch:
 permissions:
@@ -30,3 +31,5 @@ jobs:
           Path('/tmp/barkley-instanton-inline.js').write_text('"use strict";' + inline)
           PY
           node --check /tmp/barkley-instanton-inline.js
+      - name: Verify fixed laboratory-frame coordinates and movie synchronization
+        run: node tests/test_barkley_lab_view.js
