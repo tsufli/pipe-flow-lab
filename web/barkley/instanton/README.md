@@ -1,50 +1,110 @@
-# Barkley instanton explorer (restricted-action experiment)
+# Barkley two-start full-field minimum-action experiment
 
-The interactive website is published at the Barkley project's `/barkley/instanton/` tab.
+View at **`/barkley/instanton/`** in the existing GitHub Pages site.
 
-The two datasets, `data/r_0.5.json` and `data/r_0.6.json`, are **numerically computed restricted-family action candidates**, **not globally minimized instantons**. They contain the full-resolution solver's diagnostics plus display-downsampled profiles of the puff, edge, lower-action pulse, baseline pulse, and reversed deterministic edge-to-puff reference.
+This replaces the earlier Gaussian-pulse experiment. The primary goal is to test
+whether **two geometrically different starting guesses** for a puff→decay-edge
+transition converge toward the same numerical minimum-action trajectory.
 
-## Equations and action
+## Numerical problem
 
-The model is
-
-```
-q_t = D q_xx − (u−ζ) q_x + q[r + u − U0 − (r+δ)(q−1)^2] + q a(x,t)
-u_t = −u u_x + ε[U0−u + κ(Ubar−u)q]
-```
-
-with stochastic-control cost (excluding the factor `σ^{-2}`)
+We use the deterministic Barkley two-field PDE in the co-moving frame of the
+stable puff. The control `a(x,t)` enters the q equation multiplicatively:
 
 ```
-I = 1/2 ∫dt ∫dx a(x,t)^2.
+q_t = D q_xx -(u-zeta-c) q_x + q*[r + u-U0 -(r+delta)(q-1)^2] + q*a
+u_t = -(u-c) u_x + eps*[U0-u + kappa*(Ubar-u)*q]
 ```
 
-The restriction is a Gaussian pulse:
+With unit white-noise covariance, the control cost is
 
 ```
-a(x,t) = −A exp(−dist_periodic(x,x0)^2/(2w^2)) sin²(πt/τ)  [0 ≤ t ≤ τ],
-         = 0                                                 [t > τ].
+I[a] = (1/2) sum_{n,j} (a[n,j])^2 * dt * dx .
 ```
 
-The pulse is **multiplicative in q**, not added directly to the u equation. A coarse grid and Nelder–Mead search identified the stored `(x0,w,τ)` pulse parameters. For each shape, a bisection in `A` brackets the two deterministic outcomes. The resulting trajectory shadows the computed decay edge for finite time and later departs along its unstable direction. The source data reports both the edge proximity and amplitude bracket.
+Unlike the old experiment, **every entry of the `320 × 160` space–time
+control array is an independent optimization variable** (subject only to broad
+amplitude bounds). The optimizer is differentiable through the PDE time-stepper.
+The unforced `u` equation is enforced exactly by the forward time integration.
 
-## Reproduction
+To accommodate the fact that the decay edge is a traveling wave, the terminal
+misfit is computed against a translated edge profile; the single translation is
+estimated smoothly using the first spatial Fourier moment of `q(T)` and
+applied to **both** edge fields. No spatial translations enter the PDE or the
+stochastic action. The objective is
 
-From the repository root:
-
-```bash
-python -m pip install numpy scipy numba
-python scripts/build_barkley_instanton.py
+```
+J_rho = I[a] + rho/2 * dx * sum_j [ (qT-qE_translated)^2 + 3*(uT-uE_translated)^2 ] .
 ```
 
-This starts from the existing eight-point edge-scan JSON, uses periodic cubic interpolation to obtain a Newton seed at exactly `r=0.5` and `r=0.6`, and recomputes the converged states and controlled PDE trajectories with `N=320`, `Δx=0.5`, `L=160`, RK4 time step ~0.09. The numerical action and edge-distance diagnostics are computed before display downsampling to 160 points. Running `python scripts/build_barkley_instanton.py --optimize` repeats the **restricted-family Gaussian optimization** (slower); it does not solve the unrestricted minimum-action problem.
+This is a **soft finite-time endpoint penalty**, not an exact endpoint
+constraint or an infinite-time quasipotential.
 
-The reversed deterministic edge-to-puff curve and the linear puff–edge interpolation are strictly **geometric references**. Reversing the deterministic solution or interpolating both fields generally violates the `u_t = F_u` constraint and therefore cannot be assigned the displayed finite noise-control action.
+## Two initial conditions for the minimizer
 
-## Limitations
+1. **Linear interpolation:** interpolate the puff q profile to the edge q
+   profile with a smooth ramp in time.
+2. **Reversed edge unstable branch:** compute the deterministic unstable branch
+   from the edge toward the puff and reverse its sequence of q profiles,
+   registering the reference shapes by spatial translation before reversal.
 
-- Restricted Gaussian family only, with two values of r; this is not a converged gMAM or full optimal-control instanton.
-- Single finite-resolution periodic discretization and time step; no continuum convergence proof.
-- The displayed paths are selected by basin-threshold bracketing, not fixed-time endpoint-constrained action minimization. They approach an edge **neighborhood**, not the edge exactly at finite time.
-- Weak-noise predictions for lifetimes require independent rare-event simulations.
-- The viewer's “follow the peak” coordinate shift is presentation only; the action is computed on the unshifted PDE fields.
+Neither reference q/u history is an admissible stochastic realization, because
+u cannot be forced directly. Instead, construct a control seed by inverting
+the q equation along the reference q path while integrating u deterministically.
+For numerical stability the resulting control is damped by a factor of 0.05
+*before* the actual optimization. Thus the stored `reference` lines are
+**geometric initialization templates**, not the initial PDE rollout.
+
+Starting from each of these control seeds, the same L-BFGS-B numerical
+optimization is performed at endpoint-penalty strengths `rho = 10, 30, 100`,
+warm-starting each stage from the previous one. The website displays all of
+the resulting PDE histories, actions, endpoint errors, and convergence records.
+
+## Cases and reproducibility
+
+The two cases are `r = 0.5` and `r = 0.6`. Spatial domain `L=160`,
+`N=160`, `dx=1`, temporal horizon `T=80` with `320` controlled steps of
+`dt=.25`; the q and u states use second-order backward advection and q uses
+a centered diffusion discretization. The PDE is integrated with Heun's RK2.
+
+The exact traveling puff and edge are recomputed using Newton iteration from
+the previous edge-scan JSONs (`r=0.512857` and `r=0.595714`) and continued to
+the two target parameters.
+
+From repository root:
+
+```
+python -m pip install numpy scipy numba 'jax[cpu]'
+python scripts/build_barkley_full_action.py --r 0.5 --maxiter 350
+python scripts/build_barkley_full_action.py --r 0.6 --maxiter 350
+```
+
+The default run recomputes and replaces the two data files. These are
+computationally intensive, and different iteration budgets change the last
+unconverged checkpoint. A separate cheap data-consistency test validates the
+committed files:
+
+```
+python -m unittest discover -s tests -p 'test_barkley_full_action.py'
+```
+
+## Important limitations
+
+- The optimizer searches all **discrete** control components but can settle at
+  **local** minima; **global optimality is not certified**.
+- The last high-penalty optimization checkpoints at the two r values are not
+  all gradient-converged. The endpoint distances are nonzero.
+- This is a fixed time horizon and fixed mesh; neither convergence in `T` nor
+  the continuum limit has been established.
+- The chosen temporal boundary conditions differ from a true infinite-time
+  instanton, whose approach to a saddle is asymptotic.
+- Different final translations of the edge represent the same physical
+  traveling-wave family, so raw final-state differences should not be treated
+  as physical separation without quotienting spatial translation.
+- The actions from this experiment must **not** be directly compared with the
+  previously published Gaussian-pulse actions, which used a different grid and
+  endpoint selection procedure.
+
+All published profiles are actual controlled-PDE rollouts, not manually
+interpolated states. The no-noise u constraint is satisfied at each numerical
+time step.

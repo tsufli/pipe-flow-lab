@@ -1,0 +1,22 @@
+name: Verify Barkley full-field action datasets
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/barkley/instanton/**'
+      - 'scripts/build_barkley_full_action.py'
+      - 'tests/test_barkley_full_action.py'
+      - '.github/workflows/check-barkley-action.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate two-start numerical datasets
+        run: python -m unittest discover -s tests -p 'test_barkley_full_action.py'
