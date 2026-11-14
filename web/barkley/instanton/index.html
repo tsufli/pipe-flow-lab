@@ -48,13 +48,12 @@ main{max-width:1580px;margin:auto;padding:16px;display:grid;gap:13px}.panel{bord
 <section class="panel"><div class="panelhead"><h2>Explore the evolution</h2><div class="tabs"><button id="tabFields" class="active">Profiles &amp; two movies</button><button id="tabPhase">Path through state space</button><button id="tabOptimize">Optimization &amp; convergence</button></div></div>
  <div id="viewFields" class="profile-view">
   <div>
-   <h3>Static profile comparison</h3>
-   <p class="profile-explainer">Each graph shows the stationary <b>stable puff</b>, the <b>decay edge</b>, and a handful of intermediate states. Thick blue and orange solid curves mark the endpoints; thin gray solid curves show interpolation. These upper graphs are <b>static</b> and do not change during movie playback.</p>
+   <h3>Static profile comparison · laboratory frame</h3>
+   <p class="profile-explainer">Each graph shows the stable puff and decay edge at <b>t = 0 in a fixed laboratory coordinate</b>, together with intermediate snapshots plotted at their <b>actual lab-frame positions</b> at successive times. Thick blue and orange solid curves identify the two reference states; thin gray solid curves show the transition. Nothing is re-centered. These graphs stay static during playback.</p>
   </div>
   <div class="profile-controls">
    <div class="control"><label for="initialKind">Initial path representation</label><select id="initialKind"><option value="reference" selected>Geometric initialization (q only)</option><option value="rollout">Initial control · PDE rollout</option></select></div>
    <div class="control"><label for="curveCount">Intermediate states</label><select id="curveCount"><option value="3">3 curves</option><option value="5" selected>5 curves</option><option value="7">7 curves</option><option value="9">9 curves</option></select></div>
-   <label style="display:flex;align-items:center;gap:7px;font-size:12px" for="followPeak"><input type="checkbox" id="followPeak"> Align q peaks (display only)</label>
   </div>
   <div class="profile-key"><span><i class="profile-swatch" style="border-color:#46cfff"></i>Stable puff</span><span><i class="profile-swatch" style="border-color:#ffb068"></i>Decay edge</span><span><i class="profile-swatch" style="border-color:#a3b4c9"></i>Intermediate profiles</span></div>
   <div class="profile-pair">
@@ -62,15 +61,15 @@ main{max-width:1580px;margin:auto;padding:16px;display:grid;gap:13px}.panel{bord
    <div class="plotwrap"><h3 id="optimizedHeading">Optimized path</h3><div class="profile-plot" id="optimizedPlot"></div><p class="profile-annotation" id="optimizedNote"></p></div>
   </div>
   <div class="movie-section">
-   <div><h3>Two separate deformation movies</h3><p class="profile-explainer">Each panel shows just <b>one moving profile</b>, with the puff and edge as subdued fixed references. The two movies share the same time slider and are played in sync. The static graphs above stay unchanged.</p></div>
+   <div><h3>Two separate deformation movies · laboratory frame</h3><p class="profile-explainer">Each panel shows a single transition profile in <b>laboratory coordinates</b>. The subdued puff and edge references also propagate in the lab frame at their own wave speeds; they are not pinned in place or re-centered. The movies share one time slider and stay synchronized; the static graphs above do not change.</p></div>
    <div class="timeline"><button id="play">▶ Play both</button><label for="timeSlider">Movie time</label><input id="timeSlider" type="range" min="0" max="40" value="0" step="1"><output id="clock">t = 0</output>
     <div class="control"><label for="speed">Playback speed</label><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div><button id="jumpEdge">Closest to edge</button>
    </div>
    <div class="movie-pair">
-    <div class="movie-card"><div class="panelhead"><h3 id="initialMovieHeading">Movie 1 · initial deformation</h3><span class="status" id="initialMovieTime">t = 0</span></div><div class="movie-plot" id="initialMovie"></div><p class="profile-annotation">Initial geometric reference (q only), or initial-control PDE rollout if selected above.</p></div>
-    <div class="movie-card"><div class="panelhead"><h3 id="optimizedMovieHeading">Movie 2 · optimized deformation</h3><span class="status" id="optimizedMovieTime">t = 0</span></div><div class="movie-plot" id="optimizedMovie"></div><p class="profile-annotation">Actual controlled-PDE trajectory at the selected optimization checkpoint.</p></div>
+    <div class="movie-card"><div class="panelhead"><h3 id="initialMovieHeading">Movie 1 · initial deformation</h3><span class="status" id="initialMovieTime">t = 0</span></div><div class="movie-plot" id="initialMovie"></div><p class="profile-annotation">Initial geometric q-reference (registered during seed construction), or actual initial-control PDE rollout if selected above. Both displayed at their corresponding laboratory positions.</p></div>
+    <div class="movie-card"><div class="panelhead"><h3 id="optimizedMovieHeading">Movie 2 · optimized deformation</h3><span class="status" id="optimizedMovieTime">t = 0</span></div><div class="movie-plot" id="optimizedMovie"></div><p class="profile-annotation">Actual controlled-PDE trajectory shown in laboratory coordinates at the selected checkpoint.</p></div>
    </div>
-   <p class="profile-annotation">Each movie uses 41 saved snapshots across the same time horizon. Peak alignment, if enabled, changes only the display, not the underlying PDE solution. The geometric q-reference is not an admissible stochastic trajectory.</p>
+   <p class="profile-annotation">Each movie uses 41 saved snapshots. The lab-frame position is x<sub>lab</sub> = z + c<sub>puff</sub>t, where z is the saved puff-comoving coordinate; the origin is fixed at the initial puff peak. The independent edge reference propagates with c<sub>edge</sub>. No per-frame profile centering or time-dependent coordinate recentering is applied. The geometric q-reference was registered during seed construction and is not an admissible stochastic trajectory.</p>
   </div>
  </div>
    <div id="viewPhase" class="inspector hidden"><div class="plotwrap"><h3>Two paths through the same state space</h3><div class="plot big" id="phasePlot"></div><p class="note">Total activity ∫q dx versus peak q. Points show equal saved times, not equal progress along the path.</p></div><div class="sidebar"><div class="plotwrap"><h3>Distance to the decay edge</h3><div class="plot mini" id="edgeDistancePlot"></div></div><div id="phaseNote" class="note"></div></div></div>
@@ -97,9 +96,6 @@ const fmt=(v,k=4)=>Number.isFinite(+v)?(+v).toFixed(k):'—';
 const xOf=d=>Array.from({length:d.params.N},(_,i)=>(i-61)*d.params.dx);
 const xData=d=>xOf(d);
 const state=(id=seed)=>current.seeds[id].stages[stage];
-const peakShift=(frame,d)=>61-frame.q.reduce((i,v,j,a)=>v>a[i]?j:i,0);
-const rotateForDisplay=(arr,frame,d)=>{if(!$('followPeak').checked)return arr;const shift=peakShift(frame,d),n=arr.length;return arr.map((_,i)=>arr[(i-shift+n*4)%n]);};
-const displayField=(fr,f,d)=>rotateForDisplay(fieldArray(fr,f),fr,d);
 const frames=(id=seed)=>state(id).frames;
 const hasData=()=>Boolean(current);
 const LAYOUT=(extra={})=>({paper_bgcolor:'#102038',plot_bgcolor:'#102038',font:{color:PALETTE.text,size:11},margin:{l:57,r:16,t:13,b:48},hovermode:'closest',legend:{orientation:'h',y:-0.23,font:{size:10}},xaxis:{gridcolor:PALETTE.axis},yaxis:{gridcolor:PALETTE.axis},...extra});
@@ -125,7 +121,6 @@ function setField(){field=$('fieldSelect').value;
  drawAll();
 }
 function selectTime(i){if(!hasData())return;tidx=Math.max(0,Math.min(frames().length-1,Math.round(i)));$('timeSlider').value=String(tidx);$('clock').textContent='t = '+fmt(frames()[tidx].t,1);if(view==='fields')updateMovingProfiles();else drawActiveView();}
-function centeredX(d,f){const x=xOf(d);if(!$('followPeak').checked)return x;const q=f.q;const index=q.reduce((i,v,j,a)=>v>a[i]?j:i,0);return x.map(xi=>xi-(index-61)*d.params.dx);}
 function drawFields(){drawProfiles();}
 function drawPhase(){const d=current,colors=PALETTE,traces=[];
  for(const id of SET){const fr=frames(id);traces.push(curve(fr.map(f=>f.mass),fr.map(f=>f.peak),id==='linear'?'Linear start':'Reverse start',colors[id]));
@@ -156,7 +151,7 @@ function drawAll(){if(!hasData())return;updateMetrics();drawActiveView();}
 function chooseView(v){view=v;for(const opt of ['fields','phase','optimize']){$('view'+opt[0].toUpperCase()+opt.slice(1)).classList.toggle('hidden',opt!==v);$('tab'+opt[0].toUpperCase()+opt.slice(1)).classList.toggle('active',opt===v);}drawActiveView();}
 $('seedLinear').onclick=()=>changeSeed('linear');$('seedReverse').onclick=()=>changeSeed('reverse');
 $('stageSelect').onchange=e=>{stop();stage=e.target.value;drawAll()};
-$('fieldSelect').onchange=setField;$('followPeak').onchange=drawAll;$('initialKind').onchange=drawAll;$('curveCount').onchange=drawAll;
+$('fieldSelect').onchange=setField;$('initialKind').onchange=drawAll;$('curveCount').onchange=drawAll;
 $('rSelect').onchange=e=>selectR(e.target.value);
 $('timeSlider').oninput=e=>{stop();selectTime(+e.target.value)};
 function startPlayback(){if(!hasData())return;$('play').textContent='■ Pause both';playing=setInterval(()=>{tidx=(tidx+1)%frames().length;selectTime(tidx)},Math.round(280/Number($('speed').value)));}
