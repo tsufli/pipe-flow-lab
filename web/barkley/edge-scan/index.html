@@ -33,7 +33,14 @@ code{color:#9cd9f9}a{color:#8ad0ff}.download{font-size:13px}.file-links{display:
 <main>
 <section class="panel"><div class="controls"><div><h2>Choose model parameter r</h2><p class="small">Eight equally spaced values · r is not physical Re.</p></div><div><div class="sliderblock"><input id="rindex" type="range" min="0" max="7" step="1" value="4" aria-label="Scan index"><output id="rval">r = 0.596</output></div><div id="rbuttons" class="badgelist"></div></div></div><div id="status" class="small" style="margin-top:12px;color:#f2d28e">Loading verified scan data…</div></section>
 <div class="metricrow" id="metrics"></div>
-<section class="panel"><h2>Across r · Traveling profiles and speeds</h2><div class="twocol"><div><h3>Peak turbulence amplitude, puff vs edge</h3><div class="plot" id="peakplot"></div></div><div><h3>Wave speeds in the lab frame</h3><div class="plot" id="speedplot"></div></div></div><p class="small">Eight colored curves for each traveling profile are available in the overlay section below. Each puff and each edge is centered at its own q maximum.</p></section>
+<section class="panel"><h2>Across r · Propagation speeds</h2>
+<p class="small">The markers show the puff and decay-edge speeds of all eight numerically converged traveling waves, in the laboratory frame. The dashed line is the <b>leading-order theoretical puff-speed prediction</b> (ε → 0) from its upstream front, not an exact prediction at finite ε = 0.1.</p>
+<div class="plot" id="speedplot" style="height:455px"></div>
+<p class="statenote" id="speedDeviation">Numerical and leading-order propagation speeds.</p>
+<p class="small"><b>Theoretical puff speed:</b> c<sub>puff</sub><sup>(0)</sup>(r) = U₀ − ζ + √(D/2) [√(r + δ) − 3√r], using U₀ = 2, ζ = 0.8, D = 0.5, δ = 0.1. A stationary puff's downstream front follows the upstream front, so the formula describes the entire puff's leading-order speed. It does not predict the decay-edge speed. <a href="https://wrap.warwick.ac.uk/id/eprint/165348/" target="_blank" rel="noopener">Asymptotic derivation and discussion</a>.</p>
+</section>
+<section class="panel"><h2>Across r · Peak turbulence amplitude</h2><div class="plot" id="peakplot"></div>
+<p class="small">The overlay section below contains all eight puff and edge profiles, each centered at its own q maximum.</p></section>
 <section class="panel" id="overlaid-profiles">
 <h2>Across r · Eight overlaid profiles</h2>
 <p class="small"><b>Puff and edge:</b> plot each traveling profile with its own q-peak at x = 0; apply that same shift to its u component. <b>Eigenfunctions:</b> preserve the numerical solver's native spatial coordinates x<sub>i</sub> = iΔx (no spatial translation, centering, or interpolation). Color encodes r. Native eigenfunction coordinates depend on the traveling-wave phase gauge; their absolute x origin is not a new physical observable.</p>
@@ -143,9 +150,39 @@ function renderOverlays(){
  $("overutitle").textContent=desc+" · "+(isBase?"u(x − own peak)":"δu(x native)")+" for eight r";
 }
 
+// Leading-order (ε -> 0) upstream-front propagation speed of a stable puff.
+function theoreticalPuffSpeed(r){
+ const {U0,zeta,D,delta}=summary.params;
+ return U0-zeta+Math.sqrt(D/2)*(Math.sqrt(r+delta)-3*Math.sqrt(r));
+}
+function renderSpeedTrend(){
+ const rs=summary.scan.map(a=>a.r);
+ const predictionR=Array.from({length:240},(_,i)=>rs[0]+(rs[rs.length-1]-rs[0])*i/239);
+ const puff=line(rs,summary.scan.map(a=>a.puff_c),"Puff · numerical (8 points)",COLORS.puff);
+ const edge=line(rs,summary.scan.map(a=>a.edge_c),"Decay edge · numerical (8 points)",COLORS.edge);
+ for(const trace of [puff,edge]){
+  trace.marker.size=9;
+  trace.line.width=2.2;
+  trace.hovertemplate="r = %{x:.5f}<br>Speed c = %{y:.6f}<extra>%{fullData.name}</extra>";
+ }
+ const prediction={type:"scatter",mode:"lines",x:predictionR,y:predictionR.map(theoreticalPuffSpeed),
+  name:"Puff · theory (ε → 0)",line:{color:COLORS.stable,width:3,dash:"dash"},
+  hovertemplate:"r = %{x:.5f}<br>c (theory) = %{y:.6f}<extra>Leading-order upstream front</extra>"};
+ const selected=summary.scan[idx],approx=theoreticalPuffSpeed(selected.r);
+ draw("speedplot",[prediction,puff,edge],{
+  xaxis:{title:"Model parameter r",gridcolor:GRID,range:[rs[0]-.012,rs[rs.length-1]+.012]},
+  yaxis:{title:"Propagation speed c (lab frame)",gridcolor:GRID,automargin:true},
+  legend:{orientation:"h",y:-.21,font:{size:11}},margin:{l:72,r:18,t:18,b:76},
+  shapes:[{type:"line",xref:"x",yref:"paper",x0:selected.r,x1:selected.r,y0:0,y1:1,
+    line:{color:"#879cb7",dash:"dot",width:1}}]
+ });
+ $("speedDeviation").innerHTML="<b>Selected r = "+fmt(selected.r,5)+"</b> · numerical puff c = "+fmt(selected.puff_c,5)+
+  "; theoretical puff c ≈ "+fmt(approx,5)+" (difference "+fmt(selected.puff_c-approx,5)+
+  "); numerical edge c = "+fmt(selected.edge_c,5)+". The dotted vertical guide marks the selected r.";
+}
+
 function renderTrends(){const s=summary.scan,rs=s.map(a=>a.r);
  draw("peakplot",[line(rs,s.map(a=>a.puff_peak),"Stable puff",COLORS.puff),line(rs,s.map(a=>a.edge_peak),"Decay edge",COLORS.edge)],{xaxis:{title:"r",gridcolor:GRID},yaxis:{title:"max q",gridcolor:GRID}});
- draw("speedplot",[line(rs,s.map(a=>a.puff_c),"Puff speed",COLORS.puff),line(rs,s.map(a=>a.edge_c),"Edge speed",COLORS.edge)],{xaxis:{title:"r",gridcolor:GRID},yaxis:{title:"c",gridcolor:GRID}});
 
  const real=rs.map((r,j)=>s[j].stable_type==="real"?s[j].stable_real:null);
  const complex=rs.map((r,j)=>s[j].stable_type==="complex"?s[j].stable_real:null);
@@ -172,7 +209,7 @@ function renderModeLines(){
 function setSelected(i){idx=Math.max(0,Math.min(7,i));$("rindex").value=String(idx);$("rval").textContent="r = "+fmt(select().r,3);
  document.querySelectorAll(".pick").forEach((b,j)=>b.classList.toggle("selected",j===idx));
  $("casefile").href="./data/"+filename(select().r);$("status").textContent="Eight converged cases loaded · current r = "+fmt(select().r,6)+" · residual (edge) = "+Number(select().res_edge).toExponential(2);
- renderSelected();}
+ renderSelected();renderSpeedTrend();}
 function renderSelected(){let d=select(),xEdge=centeredProfileAxis(d.edge.q,d),xPuff=centeredProfileAxis(d.puff.q,d),xNative=nativeAxis(d.edge.q,d),e=d.eigs,sm=e.stable;
  $("metrics").innerHTML=[
   ["Puff / edge speed",fmt(d.c_puff,4)+" / "+fmt(d.c_edge,4),"distinct traveling states"],
