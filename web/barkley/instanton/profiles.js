@@ -95,7 +95,7 @@ function drawProfiles(){
   ? "Initial path · "+(seed==="linear"?"linear interpolation":"reversed unstable branch")
   : "Initial-control rollout · before minimization";
  $("initialNote").textContent=reference
-  ? "Stored q-only geometric reference (not a physical PDE trajectory). Five intermediate shapes are shown, with endpoints emphasized."
+  ? "Stored q-only geometric reference (not a physical PDE trajectory). The sampled intermediate shapes are shown in gray, with the endpoints emphasized."
   : "Unoptimized forward PDE evolution under the scaled initial control; not the geometric reference.";
  $("optimizedHeading").textContent=stage==="initial"
   ? "Before optimization · initial-control rollout"
