@@ -88,6 +88,32 @@ committed files:
 python -m unittest discover -s tests -p 'test_barkley_full_action.py'
 ```
 
+## Laboratory-frame visualization
+
+The optimizer and saved `frames` are still defined in the **puff's co-moving
+frame**, `z = x_lab - c_puff t`. Only the presentation is changed: every
+saved state at its own time `t` is plotted against
+`x_lab = (i - 61)*dx + c_puff*t`, with one fixed spatial origin at the
+**initial puff maximum** (`t=0`). The profile arrays are never rolled,
+translated or peak-aligned by the viewer. The 41 saved times map directly
+to absolute lab-frame positions. Nothing in the optimized trajectories or
+action values is recomputed.
+
+In the static overlays the puff and edge reference profiles are shown at
+`t=0`; the gray intermediate profiles retain their actual times and
+corresponding laboratory positions. In the two movies, the freely traveling
+puff reference is displayed at `x0 + c_puff*t` and the independently
+traveling edge reference at `x0 + c_edge*t`. The latter is an **independent
+reference wave in its stored phase**, not necessarily the optimally
+phase-aligned terminal edge used in the objective.
+
+The numerical domain is periodic, so absolute position should be interpreted
+with that periodicity in mind. The "reversed unstable branch" geometric
+initialization was **already spatially registered when it was constructed**
+(see `reference_q`); switching to lab coordinates does not undo this
+historical initialization choice. It only ensures the viewer does not
+independently recenter each stored frame.
+
 ## Important limitations
 
 - The optimizer searches all **discrete** control components but can settle at
@@ -105,6 +131,8 @@ python -m unittest discover -s tests -p 'test_barkley_full_action.py'
   previously published Gaussian-pulse actions, which used a different grid and
   endpoint selection procedure.
 
-All published profiles are actual controlled-PDE rollouts, not manually
-interpolated states. The no-noise u constraint is satisfied at each numerical
+The published optimized and initial-control rollout profiles are actual
+controlled-PDE trajectories; the separate geometric q-reference used to
+initialize the optimizer is **not** an admissible stochastic trajectory.
+The no-noise u constraint holds for the computed rollouts at each numerical
 time step.
