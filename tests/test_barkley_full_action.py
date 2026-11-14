@@ -33,6 +33,19 @@ class TestCommittedCases(unittest.TestCase):
     l=d['seeds']['linear']['stages']['100'];v=d['seeds']['reverse']['stages']['100']
     self.assertTrue(l['endpointDistance']<.15)
     self.assertTrue(v['endpointDistance']<.15)
+ def test_profile_view(self):
+  page=(BASE.parent/'index.html').read_text()
+  script=(BASE.parent/'profiles.js').read_text()
+  for key in ['id="initialPlot"','id="optimizedPlot"','id="deformPlot"',
+              'id="curveCount"','id="initialKind"','id="timeSlider"']:
+   self.assertIn(key,page)
+  self.assertIn('src="./profiles.js"',page)
+  self.assertNotIn('id="heat"',page)
+  self.assertIn('function drawProfiles()',script)
+  self.assertIn('function updateMovingProfiles()',script)
+  self.assertIn("current.seeds[id].reference.frames",script)
+  self.assertIn("current.seeds[id].stages.initial.frames",script)
+  self.assertIn("current.seeds[id].stages[stage].frames",script)
  def test_summary(self):
   d=json.loads((BASE/'summary.json').read_text())
   self.assertEqual(len(d['data']),2)
