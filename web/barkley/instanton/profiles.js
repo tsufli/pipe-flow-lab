@@ -19,22 +19,25 @@ function pathFrames(kind,id=seed){
   : current.seeds[id].stages[stage].frames;
 }
 function pathProfile(kind,index,id=seed){
- const f=pathFrames(kind,id)[index];
- const y=f[field];
- if(!Array.isArray(y))return [];
- return $("followPeak").checked?rotateForDisplay(y,f,current):y;
+ const frame=pathFrames(kind,id)[index];
+ return frame[field]; // Preserve the stored PDE field without shifting or peak registration.
 }
-function endpointProfile(kind){
- const obj=current[kind],y=obj[field];
- return $("followPeak").checked?rotateForDisplay(y,obj,current):y;
+function endpointProfile(kind){return current[kind][field];}
+// Stored solutions were integrated with z=x_lab-c_puff*t.
+// Transform the abscissa, NEVER the data arrays, back to one fixed lab origin.
+function labXAt(time,speed=current.puff.c){
+ return xOf(current).map(x=>x+speed*time);
 }
-function endpointTraces(){
- const x=xOf(current);
+function pathX(kind,index,id=seed){
+ return labXAt(pathFrames(kind,id)[index].t,current.puff.c);
+}
+// Reference waves are independent freely propagating solutions; edge.c differs from puff.c.
+function endpointTraces(time=0){
  return [
-  {type:"scatter",mode:"lines",x,y:endpointProfile("puff"),name:"Stable puff",
-    line:{color:PROFILE_COLORS.puff,width:4,dash:"solid"},hovertemplate:"x=%{x:.1f}<br>puff: %{y:.5f}<extra></extra>"},
-  {type:"scatter",mode:"lines",x,y:endpointProfile("edge"),name:"Decay edge",
-    line:{color:PROFILE_COLORS.edge,width:4,dash:"solid"},hovertemplate:"x=%{x:.1f}<br>edge: %{y:.5f}<extra></extra>"}
+  {type:"scatter",mode:"lines",x:labXAt(time,current.puff.c),y:endpointProfile("puff"),name:"Stable puff",
+    line:{color:PROFILE_COLORS.puff,width:4,dash:"solid"},hovertemplate:"x_lab=%{x:.1f}<br>puff: %{y:.5f}<extra></extra>"},
+  {type:"scatter",mode:"lines",x:labXAt(time,current.edge.c),y:endpointProfile("edge"),name:"Decay edge",
+    line:{color:PROFILE_COLORS.edge,width:4,dash:"solid"},hovertemplate:"x_lab=%{x:.1f}<br>edge: %{y:.5f}<extra></extra>"}
  ];
 }
 function commonYRange(){
@@ -50,9 +53,26 @@ function commonYRange(){
  const span=Math.max(0.15,hi-lo);
  return [lo-0.08*span,hi+0.08*span];
 }
+function labDisplayRange(){
+ // Determine one fixed view window covering all saved peaks in the LAB frame.
+ // Peak positions are used to choose axis limits ONLY, not to align the profiles.
+ const base=xOf(current),endTime=current.params.T;
+ const positions=[
+   base[current.puff.q.indexOf(Math.max(...current.puff.q))],
+   base[current.edge.q.indexOf(Math.max(...current.edge.q))],
+   base[current.puff.q.indexOf(Math.max(...current.puff.q))]+current.puff.c*endTime,
+   base[current.edge.q.indexOf(Math.max(...current.edge.q))]+current.edge.c*endTime
+ ];
+ for(const kind of ["initial","optimized"])
+  for(const f of pathFrames(kind)){
+   const i=f.q.indexOf(Math.max(...f.q));
+   positions.push(base[i]+current.puff.c*f.t);
+  }
+ return [Math.min(...positions)-33,Math.max(...positions)+36];
+}
 function profileLayout(showLegend=true){
  return {
-  xaxis:{title:"x − initial puff peak (comoving)",gridcolor:PALETTE.axis,range:[-42,63]},
+  xaxis:{title:"x_lab (fixed origin: initial puff peak at t = 0)",gridcolor:PALETTE.axis,range:labDisplayRange()},
   yaxis:{title:field,gridcolor:PALETTE.axis,range:commonYRange()},
   margin:{l:52,r:15,t:9,b:54},
   showlegend:showLegend,legend:{orientation:"h",y:-0.23,font:{size:11}},
@@ -60,31 +80,31 @@ function profileLayout(showLegend=true){
  };
 }
 function interpolationTraces(kind){
- const x=xOf(current),samples=sampleIndices();
+ const samples=sampleIndices();
  const shades=["#778da6","#8da0b8","#aabacc","#c5d0de","#e1e6ef"];
  return samples.map((i,j)=>{
   const t=pathFrames(kind)[i].t;
   // Neutral, thin, solid samples; the endpoints are added LAST and stand out.
-  return {type:"scatter",mode:"lines",x,y:pathProfile(kind,i),
+  return {type:"scatter",mode:"lines",x:pathX(kind,i),y:pathProfile(kind,i),
     name:"Intermediate states",showlegend:j===0,
     line:{color:shades[Math.round(4*j/Math.max(1,samples.length-1))],width:1.8,dash:"solid"},
     opacity:0.82,
-    hovertemplate:"t="+fmt(t,1)+"<br>x=%{x:.1f}<br>"+field+"=%{y:.5f}<extra>Intermediate profile</extra>"};
+    hovertemplate:"t="+fmt(t,1)+"<br>x_lab=%{x:.1f}<br>"+field+"=%{y:.5f}<extra>Intermediate profile</extra>"};
  });
 }
 function staticTraces(kind){
  return [...interpolationTraces(kind),...endpointTraces()];
 }
 function movingTrace(kind){
- return {type:"scatter",mode:"lines",x:xOf(current),y:pathProfile(kind,tidx),
+ return {type:"scatter",mode:"lines",x:pathX(kind,tidx),y:pathProfile(kind,tidx),
   name:kind==="initial"?"Initial path":"Optimized path",
   line:{color:kind==="initial"?PROFILE_COLORS.initial:PROFILE_COLORS.optimized,
         width:4.5,dash:"solid"},
-  hovertemplate:"x=%{x:.1f}<br>"+field+"=%{y:.5f}<extra>t="+fmt(frames()[tidx].t,1)+"</extra>"};
+  hovertemplate:"x_lab=%{x:.1f}<br>"+field+"=%{y:.5f}<extra>t="+fmt(frames()[tidx].t,1)+"</extra>"};
 }
 function movieTraces(kind){
  // Keep the two reference profiles secondary in the movies.
- const fixed=endpointTraces().map(t=>({
+ const fixed=endpointTraces(frames()[tidx].t).map(t=>({
    ...t,opacity:0.55,showlegend:true,line:{...t.line,width:2.6}
  }));
  return [...fixed,movingTrace(kind)];
@@ -124,6 +144,14 @@ function updateMovingProfiles(){
  if(view!=="fields"||!hasData())return;
  updateMovieLabels();
  // The upper initialPlot and optimizedPlot never change during playback.
- Plotly.restyle($("initialMovie"),{y:[pathProfile("initial",tidx)]},[2]);
- Plotly.restyle($("optimizedMovie"),{y:[pathProfile("optimized",tidx)]},[2]);
+ const t=frames()[tidx].t;
+ const puffX=labXAt(t,current.puff.c),edgeX=labXAt(t,current.edge.c);
+ for(const kind of ["initial","optimized"]){
+  // Move both free-traveling references and the controlled/geometric trajectory.
+  // Reuse their immutable field samples: no artificial centering at each frame.
+  Plotly.restyle($(kind==="initial"?"initialMovie":"optimizedMovie"),{
+   x:[puffX,edgeX,pathX(kind,tidx)],
+   y:[endpointProfile("puff"),endpointProfile("edge"),pathProfile(kind,tidx)]
+  },[0,1,2]);
+ }
 }
