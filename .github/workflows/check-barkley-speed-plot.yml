@@ -1,0 +1,31 @@
+name: Validate Barkley propagation-speed comparison
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/barkley/edge-scan/index.html'
+      - 'web/barkley/edge-scan/data/summary.json'
+      - 'tests/test_barkley_speed_plot.py'
+      - '.github/workflows/check-barkley-speed-plot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check eight-point scan and theoretical formula
+        run: python -m unittest discover -s tests -p 'test_barkley_speed_plot.py' -v
+      - name: Validate page JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          html = Path('web/barkley/edge-scan/index.html').read_text()
+          source = html.split('<script>\n"use strict";', 1)[1].split('</script>', 1)[0]
+          Path('/tmp/barkley-edge-page.js').write_text('"use strict";\n' + source)
+          PY
+          node --check /tmp/barkley-edge-page.js
