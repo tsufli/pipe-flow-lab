@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Short Puff Statistics · Barkley Front Observatory</title>
+<style>
+:root{--bg:#f1f5f6;--paper:#fff;--ink:#162b42;--muted:#64758a;--line:#d6e3e8;--blue:#2672c1;--teal:#138b81;--orange:#df7846;--purple:#8963bd}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.55 system-ui,sans-serif;color:var(--ink)}
+header{background:#142d40;color:white;padding:24px max(18px,calc((100vw - 1280px)/2));border-bottom:5px solid #63c4bf}
+header small{letter-spacing:.16em;font-weight:800;color:#90dde1}h1{font-size:clamp(27px,4.5vw,42px);line-height:1.14;margin:7px 0}
+header p{color:#bed2da;margin:7px 0 13px;max-width:900px}a{color:#1968b2}header a{color:#b2eff0}
+nav{display:flex;gap:18px;flex-wrap:wrap}nav a{text-decoration:none;border-bottom:1px solid #63808f;padding-bottom:4px;font-size:13px}
+main{max-width:1330px;margin:auto;padding:20px;display:grid;gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);padding:18px;border-radius:12px;box-shadow:0 3px 15px #24374908;min-width:0}
+h2{font-size:21px;margin:0 0 6px}h3{font-size:15px;margin:0 0 9px}
+p{margin:4px 0 14px;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.metric{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:13px}
+.metric strong{font-size:23px;font-variant-numeric:tabular-nums;display:block}
+.metric span{font-size:11px;color:var(--muted)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 0}
+label{font-size:13px;font-weight:700}
+select{border:1px solid #aec1ce;border-radius:6px;padding:8px 10px;background:white;color:var(--ink)}
+canvas{width:100%;height:auto;display:block;border:1px solid #e0eaf1;background:#fbfdff;border-radius:8px}
+.note{background:#f3f8fa;border-left:3px solid #74aeb6;padding:10px 13px;font-size:13px;color:#354c5a}
+.warn{border-left-color:#d58a40;background:#fff9ed}
+.legend{display:flex;gap:13px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:8px}
+.line{display:inline-block;width:17px;border-top:3px solid;vertical-align:middle;margin:0 5px 0 1px}
+.figure{min-width:0}
+table{width:100%;min-width:850px;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid #e5ecf1}th{background:#edf4f9;position:sticky;top:0}th:first-child,td:first-child{text-align:left}
+.scroll{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.inset{padding:9px 14px;background:#eff5f9;border-radius:8px;color:#3e5668;font-size:13px}
+.compact{color:#546578;font-size:12px}
+footer{max-width:1310px;margin:8px auto 35px;padding:0 18px;color:#6d7e8c;font-size:12px}
+#dash[hidden]{display:none}
+@media(max-width:1080px){.metrics{grid-template-columns:repeat(3,1fr)}.split{grid-template-columns:1fr}}
+@media(max-width:600px){main{padding:11px}.card{padding:13px}.metrics{grid-template-columns:repeat(2,1fr)}header{padding:22px 14px}}
+</style></head><body>
+<header><small>R = 0.6 · BARKLEY RESEARCH LABORATORY</small>
+<h1>Short puffs &amp; the decay edge</h1>
+<p>Length-conditioned front drift and diffusion from long, offline stochastic runs, with a low-threshold channel for puff amplitudes below the original q = 0.5 crossing.</p>
+<nav><a href="../">Original 100-run study</a><a href="#coefficient-plots">Inferred coefficients</a><a href="#edge-reference">Decay-edge comparison</a><a href="#trajectories">Tracked trajectories</a><a href="#method">Method and reproducibility</a></nav>
+</header>
+<main>
+<div id="loading" class="card">Loading archived 500-run dataset. If the batch workflow is still running, the plots will become available after GitHub Pages is republished.</div>
+<div id="dash" hidden>
+<div class="metrics">
+<div class="metric"><strong id="runs">—</strong><span>Natural realizations</span></div>
+<div class="metric"><strong id="decays">—</strong><span>Confirmed decays (not missing fronts)</span></div>
+<div class="metric"><strong id="parents">—</strong><span>Independent short-puff parent states</span></div>
+<div class="metric"><strong id="branches">—</strong><span>Branched continuations</span></div>
+<div class="metric"><strong id="edgeheight">—</strong><span>Decay-edge maximum q</span></div>
+<div class="metric"><strong id="runtime">—</strong><span>Compute time on GitHub Actions</span></div>
+</div>
+<section id="coefficient-plots" class="card">
+<h2>Conditional drift and diffusion</h2>
+<p>We keep both front definitions separate. The smaller threshold probes weaker, edge-like profiles; it does <em>not</em> reinterpret the old q = 0.5 measurements. No drift or diffusion functional form is imposed.</p>
+<div class="controls">
+<label for="threshold">Front threshold</label>
+<select id="threshold"><option value="0.15" selected>q = 0.15 · low amplitude</option><option value="0.5">q = 0.5 · original definition</option></select>
+<label for="source">Population</label>
+<select id="source"><option value="natural">500 natural trajectories</option><option value="restarts">Short-puff restarts (distinct population)</option></select>
+<label for="lag">Inference lag</label>
+<select id="lag"><option value="1">0.2</option><option value="2" selected>0.4</option><option value="4">0.8</option><option value="8">1.6</option></select>
+<label for="zoom">Length range</label>
+<select id="zoom"><option value="6" selected>Zoom: 0 to 6</option><option value="15">Full: 0 to 15</option></select>
+</div>
+<div id="pairinfo" class="inset"></div>
+<div class="split" style="margin-top:15px">
+<div class="figure"><h3>Length drift A<sub>ℓ</sub>(ℓ)</h3><canvas id="driftlength" width="780" height="335"></canvas>
+<div class="legend"><span><i class="line" style="border-color:var(--teal)"></i>Selected estimate</span><span><i class="line" style="border-color:#aaa"></i>Other population (when available)</span><span>Vertical intervals: 95% ancestor bootstrap</span></div></div>
+<div class="figure"><h3>Length diffusion D<sub>ℓ</sub>(ℓ)</h3><canvas id="difflength" width="780" height="335"></canvas></div>
+<div class="figure"><h3>Front drifts A<sub>u</sub> and A<sub>d</sub></h3><canvas id="driftfront" width="780" height="335"></canvas>
+<div class="legend"><span><i class="line" style="border-color:var(--blue)"></i>Upstream</span><span><i class="line" style="border-color:var(--orange)"></i>Downstream</span></div></div>
+<div class="figure"><h3>Front covariance D<sub>uu</sub>, D<sub>dd</sub>, D<sub>ud</sub></h3><canvas id="difffront" width="780" height="335"></canvas>
+<div class="legend"><span><i class="line" style="border-color:var(--blue)"></i>D<sub>uu</sub></span><span><i class="line" style="border-color:var(--orange)"></i>D<sub>dd</sub></span><span><i class="line" style="border-color:var(--purple)"></i>D<sub>ud</sub></span></div></div>
+</div>
+<div id="roots" class="note" style="margin-top:15px"></div>
+<h3 style="margin-top:15px">Estimated coefficients and parent-cluster uncertainty</h3>
+<div class="scroll"><table><thead><tr><th>Length range</th><th>Pairs</th><th>Ancestors</th><th>A<sub>u</sub></th><th>A<sub>d</sub></th><th>A<sub>ℓ</sub></th><th>D<sub>uu</sub></th><th>D<sub>dd</sub></th><th>D<sub>ud</sub></th><th>D<sub>ℓ</sub></th><th>95% CI A<sub>ℓ</sub></th></tr></thead><tbody id="coeffrows"></tbody></table></div>
+</section>
+<section id="edge-reference" class="card">
+<h2>Why the edge changes the definition of length</h2>
+<p>Our saved deterministic decay edge at r ≈ 0.5957 has a low peak, unlike the stable puff. The low-threshold crossing can measure its width while q = 0.5 cannot. The edge is a saddle in full field space, not a special fixed value of the scalar length alone.</p>
+<div class="split">
+<div><h3>Deterministic edge q(x) in its own spatial coordinate</h3><canvas id="edgeprofile" width="780" height="340"></canvas>
+<div class="legend"><span><i class="line" style="border-color:var(--purple)"></i>Edge q(x)</span><span><i class="line" style="border-color:var(--teal)"></i>q = 0.15</span><span><i class="line" style="border-color:var(--orange)"></i>q = 0.5</span></div></div>
+<div><h3>Three different reference lengths</h3><div id="edgedetail" class="inset"></div>
+<p style="margin-top:15px">The leading ε → 0 theoretical slow-interior length is not the same observable as the width between threshold crossings. Nor is the decay edge a solution of the scalar drift equation A<sub>ℓ</sub>(ℓ)=0.</p>
+<div class="note warn"><b>Important:</b> The edge profile is from the nearest stored numerical traveling-wave continuation at r ≈ 0.5957, not a freshly converged edge at exactly r = 0.6. Small differences in r, grid and threshold must be kept in mind.</div></div>
+</div>
+</section>
+<section id="trajectories" class="card">
+<h2>Individual trajectories (laboratory frame)</h2>
+<div class="controls"><label for="example">Natural realization</label><select id="example"></select><label for="channel">Shown threshold</label><select id="channel"><option value="low">q = 0.15</option><option value="high">q = 0.5</option></select></div>
+<p>Missing values mean the tracker could not assign unambiguous fronts; they do not by themselves certify decay. Confirmed decay requires persistent low total activity followed by relaxation of the velocity field.</p>
+<div class="split">
+<div><h3>Upstream and downstream positions</h3><canvas id="frontposition" width="780" height="330"></canvas>
+<div class="legend"><span><i class="line" style="border-color:var(--blue)"></i>x<sub>up</sub></span><span><i class="line" style="border-color:var(--orange)"></i>x<sub>down</sub></span></div></div>
+<div><h3>Measured length</h3><canvas id="lengthtrace" width="780" height="330"></canvas></div>
+</div>
+<div id="tracestatus" class="compact" style="margin-top:10px"></div>
+</section>
+<section class="card">
+<h2>Short-puff branching diagnostics</h2>
+<p>Each parent is a complete naturally encountered state (both q(x) and u(x)), not a synthetic short pulse. Independent noise continuations are <em>correlated through their parent</em>; confidence intervals therefore resample parent clusters.</p>
+<div class="controls"><label for="restart">Choose restarted trajectory</label><select id="restart"></select><label for="restartchannel">Threshold</label><select id="restartchannel"><option value="low">0.15</option><option value="high">0.5</option></select></div>
+<canvas id="restarttrace" width="1100" height="290"></canvas>
+<p id="restartinfo" class="compact"></p>
+</section>
+<section id="method" class="card">
+<h2>Model, censoring, and interpretation</h2>
+<div class="split">
+<div>
+<h3>Confirmed decay vs. lost tracking</h3><p id="criteria"></p>
+<h3>Inference</h3>
+<p>A<sub>i</sub>(ℓ) = E[Δx<sub>i</sub> | ℓ]/Δt; &nbsp; D<sub>ij</sub>(ℓ) = Cov(Δx<sub>i</sub>,Δx<sub>j</sub> | ℓ)/(2Δt).</p>
+<p>A<sub>ℓ</sub> = A<sub>d</sub> − A<sub>u</sub>; &nbsp; D<sub>ℓ</sub> = D<sub>dd</sub> + D<sub>uu</sub> − 2D<sub>ud</sub>.</p>
+</div>
+<div>
+<h3>Parameters and conditions</h3><div id="settings" class="compact"></div>
+<div class="note warn"><b>Limitations:</b> Conditional estimates still omit intervals after threshold loss, even before a physical decay is confirmed. This may bias the shortest bins. The low threshold makes weak puffs measurable, but adds sensitivity to spatial noise and multiple components. Branch restarts are a deliberately selected population and cannot be pooled as independent natural runs. These are finite-lag coefficients, not proof of a closed Markovian length diffusion. We have not performed numerical convergence tests.</div>
+</div>
+</div>
+<p class="compact" style="margin-top:12px">Method code: <a href="https://github.com/tsufli/pipe-flow-lab/blob/main/scripts/barkley_shortlength.py">scripts/barkley_shortlength.py</a> · <a href="../data/shortlength_r_0.6.json">Saved full results JSON</a> · <a href="https://github.com/tsufli/pipe-flow-lab/actions/workflows/barkley-short-puffs.yml">Reproducible GitHub Actions workflow</a>. The separate 100-run study is preserved <a href="../">here</a>.</p>
+</section>
+</div>
+</main><footer>Numerical exploratory study, r=0.6. Barkley 1D stochastic model, not 3D pipe DNS.</footer>
+<script>
+'use strict';
+const $=x=>document.getElementById(x);
+const C={teal:'#138b81',blue:'#2672c1',orange:'#df7846',purple:'#8963bd',gray:'#b0b8c5'};
+let d;
+function fmt(n,dig=3){return typeof n==='number'&&Number.isFinite(n)?n.toFixed(dig):'—';}
+function plotting(canvas,spec,opt={}){
+ const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,L=61,R=15,T=18,B=44,w=W-L-R,h=H-T-B;
+ ctx.clearRect(0,0,W,H);ctx.fillStyle='#fbfdff';ctx.fillRect(0,0,W,H);
+ let coords=spec.flatMap(s=>s.points.filter(p=>p[0]!=null&&p[1]!=null&&isFinite(p[0])&&isFinite(p[1])));
+ let xs=coords.map(z=>z[0]),ys=coords.map(z=>z[1]);
+ if(!xs.length){xs=[0,1];ys=[0,1]}
+ let xmin=opt.xmin??Math.min(...xs),xmax=opt.xmax??Math.max(...xs);
+ let ymin=opt.ymin??Math.min(...ys),ymax=opt.ymax??Math.max(...ys);
+ if(ymin===ymax){ymin-=.5;ymax+=.5}if(xmax===xmin)xmax+=1;
+ const px=x=>L+(x-xmin)/(xmax-xmin)*w,py=y=>H-B-(y-ymin)/(ymax-ymin)*h;
+ ctx.strokeStyle='#e5ebef';ctx.fillStyle='#607889';ctx.lineWidth=1;ctx.font='13px system-ui';
+ for(let i=0;i<=5;i++){let x=xmin+(xmax-xmin)*i/5,X=px(x);ctx.beginPath();ctx.moveTo(X,T);ctx.lineTo(X,H-B);ctx.stroke();ctx.fillText(x.toFixed(xmax-xmin<10?1:0),X-10,H-14);
+ let y=ymin+(ymax-ymin)*i/5,Y=py(y);ctx.beginPath();ctx.moveTo(L,Y);ctx.lineTo(W-R,Y);ctx.stroke();ctx.fillText(y.toFixed(ymax-ymin<2?2:1),3,Y+4);}
+ ctx.save();ctx.beginPath();ctx.rect(L,T,w,h);ctx.clip();
+ if(opt.zero&&ymin<0&&ymax>0){ctx.strokeStyle='#8495a6';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(L,py(0));ctx.lineTo(W-R,py(0));ctx.stroke();}
+ for(const s of spec){ctx.strokeStyle=s.color||C.blue;ctx.globalAlpha=s.alpha??1;ctx.lineWidth=s.width||2.5;ctx.beginPath();let live=false;
+ for(const [x,y] of s.points){if(x==null||y==null||!isFinite(x)||!isFinite(y)){live=false;continue}if(live)ctx.lineTo(px(x),py(y));else ctx.moveTo(px(x),py(y));live=true;}ctx.stroke();
+ if(s.ci){ctx.globalAlpha=.5;ctx.lineWidth=2.5;for(let i=0;i<s.points.length;i++){let p=s.points[i],b=s.ci[i];if(!b||p[1]==null)continue;ctx.beginPath();ctx.moveTo(px(p[0]),py(b[0]));ctx.lineTo(px(p[0]),py(b[1]));ctx.stroke();}}
+ }
+ ctx.globalAlpha=1;ctx.restore();ctx.fillStyle='#6a7a8b';ctx.fillText(opt.xlabel||'length ℓ',W/2-25,H-4);
+}
+const line=(data,key)=>data.rows.map(r=>[r.ell,r[key]??null]);
+const good=(data,key)=>data.rows.filter(r=>r[key]!==undefined);
+function selected(){let source=$('source').value,threshold=$('threshold').value,lag=$('lag').value;return d[source]?.[threshold]?.[lag]||null}
+function chartCoefficients(){
+ let result=selected();
+ if(!result){$('pairinfo').textContent='No valid restarted parent set is available for this selection.';return}
+ const thr=$('threshold').value,lag=$('lag').value;
+ const other=d[$('source').value==='natural'?'restarts':'natural']?.[thr]?.[lag];
+ const max=Number($('zoom').value),xs={xmin:0,xmax:max,xlabel:'initial length ℓ'};
+ const seriesFor=(k,color)=>({points:line(result,k),color,ci:result.rows.map(r=>r[k+'_CI95']??null)});
+ const complement=(key)=>other?{points:line(other,key),color:C.gray,width:1.6,alpha:.8}:null;
+ plotting($('driftlength'),[complement('A_l'),seriesFor('A_l',C.teal)].filter(Boolean),{...xs,zero:true});
+ plotting($('difflength'),[complement('D_l'),seriesFor('D_l',C.teal)].filter(Boolean),{...xs,ymin:0});
+ plotting($('driftfront'),[seriesFor('A_u',C.blue),seriesFor('A_d',C.orange)],{...xs,zero:true});
+ plotting($('difffront'),[seriesFor('D_uu',C.blue),seriesFor('D_dd',C.orange),seriesFor('D_ud',C.purple)],{...xs,zero:true});
+ $('pairinfo').textContent='Valid increments: '+result.valid_pairs.toLocaleString()+' · Independent ancestors: '+result.independent_ancestors+' · Bootstrap: '+result.bootstrap_replicates+' entire parent clusters · Lag '+fmt(result.lag);
+ const roots=result.roots.length?result.roots.map(x=>x.stability+' zero at ℓ ≈ '+fmt(x.ell)).join('; '):'No resolved zero within statistically supported bins';
+ $('roots').textContent=roots+'. '+(result.stable_root_bootstrap_CI95?'Stable-root 95% block-bootstrap interval: ['+result.stable_root_bootstrap_CI95.map(x=>fmt(x)).join(', ')+']':'Stable-root uncertainty not resolved.');
+ $('coeffrows').innerHTML=result.rows.map(r=>'<tr><td>'+fmt(r.lo,2)+'–'+fmt(r.hi,2)+'</td><td>'+r.n+'</td><td>'+r.ancestors+'</td>'+['A_u','A_d','A_l','D_uu','D_dd','D_ud','D_l'].map(k=>'<td>'+fmt(r[k])+'</td>').join('')+'<td>'+(r.A_l_CI95?'['+r.A_l_CI95.map(v=>fmt(v)).join(', ')+']':'—')+'</td></tr>').join('');
+}
+function trace(val,step){return val.map((v,i)=>[i*step,v]);}
+function selectTrajectory(){
+ const x=d.natural_examples[Number($('example').value)],th=$('channel').value,
+   item=x[th],dt=d.params.save_dt*5;
+ plotting($('frontposition'),[{points:trace(item.up,dt),color:C.blue},{points:trace(item.down,dt),color:C.orange}],{xmin:0,xmax:d.params.T,xlabel:'time'});
+ plotting($('lengthtrace'),[{points:trace(item.ell,dt),color:C.teal}],{xmin:0,xmax:d.params.T,ymin:0,xlabel:'time'});
+ const event=d.decay_events[x.run-1];
+ $('tracestatus').textContent='Run #'+x.run+'; seed '+x.seed+' · '+(event.decayed?'Confirmed decay; quiet onset t='+fmt(event.onset_t)+', confirmed t='+fmt(event.confirmed_t):'No confirmed decay before T='+d.params.T)+'.';
+}
+function selectRestart(){
+ if(!d.restart_examples.length){$('restartinfo').textContent='No restarting trajectories are available.';return}
+ const z=d.restart_examples[Number($('restart').value)],p=z[$('restartchannel').value],dt=d.params.save_dt*2;
+ plotting($('restarttrace'),[{points:trace(p.ell,dt),color:C.teal}],{xmin:0,xmax:d.T_restart,ymin:0,xlabel:'time after restart'});
+ $('restartinfo').textContent='Parent natural run #'+z.parent+', independent noise branch #'+z.branch+'. Confidence intervals group branches by the same parent.';
+}
+function showEdge(){
+ const e=d.edge,peak=e.profile_q.indexOf(Math.max(...e.profile_q)),x0=e.profile_L/e.profile_q.length;
+ const points=e.profile_q.map((y,i)=>[(i-peak)*x0,y]).filter(z=>z[0]>=-14&&z[0]<=14);
+ const horiz=(q,color)=>({points:[[-14,q],[14,q]],color,width:1.5});
+ plotting($('edgeprofile'),[{points,color:C.purple},horiz(.15,C.teal),horiz(.5,C.orange)],{xmin:-14,xmax:14,ymin:0,ymax:.55,xlabel:'edge-centered position x'});
+ $('edgedetail').innerHTML='<b>Numerical decay-edge reference (r ≈ '+fmt(e.reference_r,6)+')</b><p>Peak q = '+fmt(e.peak)+'; turbulent mass = '+fmt(e.mass)+'. Threshold q = 0.15 width ≈ '+fmt(e.width_at_threshold['0.15'])+'. The edge has <b>no q = 0.5 crossings.</b></p>'+
+ '<b>Stable deterministic puff at r = 0.6</b><p>Peak q = '+fmt(d.deterministic.peak)+'; q = 0.5 width ≈ '+fmt(d.deterministic.threshold_widths['0.5'])+'; q = 0.15 width ≈ '+fmt(d.deterministic.threshold_widths['0.15'])+'.</p>'+
+ '<b>ε → 0 slow-interior theory</b><p>Bulk length ≈ '+fmt(d.asymptotic.bulk_length)+'. This excludes fast-front width corrections.</p>';
+}
+function init(){
+ $('runs').textContent=d.n_runs;
+ $('decays').textContent=d.n_confirmed_decays;
+ $('parents').textContent=d.n_restart_parents;
+ $('branches').textContent=d.n_restarts;
+ $('edgeheight').textContent=fmt(d.edge.peak);
+ $('runtime').textContent=fmt(d.wall_seconds,1)+' s';
+ $('example').innerHTML=d.natural_examples.map((v,i)=>'<option value="'+i+'">Run '+v.run+'</option>').join('');
+ $('restart').innerHTML=d.restart_examples.length?d.restart_examples.map((v,i)=>'<option value="'+i+'">Parent '+v.parent+' · branch '+v.branch+'</option>').join(''):'<option value="0">No branches</option>';
+ ['source','threshold','lag','zoom'].forEach(x=>$(x).addEventListener('change',chartCoefficients));
+ ['example','channel'].forEach(x=>$(x).addEventListener('change',selectTrajectory));
+ ['restart','restartchannel'].forEach(x=>$(x).addEventListener('change',selectRestart));
+ $('criteria').textContent='A decay is confirmed if qmax < '+d.decay_criteria.qmax_below+' and ∫max(q,0) dx < '+d.decay_criteria.integral_positive_q_below+' persist for '+d.decay_criteria.for_time+' model time units, and max|u−U₀| < '+d.decay_criteria.max_u_minus_U0_below_at_confirmation+' at confirmation. Once confirmed, times after the beginning of the quiet episode are censored. A missing threshold crossing is only a lost track.';
+ $('settings').innerHTML='r='+d.params.r+', σ='+d.params.sigma+', ε₁='+d.params.eps1+', ε₂='+d.params.eps2+', δ='+d.params.delta+', D='+d.params.D+', ζ='+d.params.zeta+'<br>Grid: L='+d.params.L+', N='+d.params.N+', Δx='+fmt(d.params.L/d.params.N)+', dt='+d.params.dt+', saved Δt='+d.params.save_dt+'.<br>Natural horizon T='+d.params.T+'; restart horizon T='+d.T_restart+'; noise source σq√(dt/dx)Z (Itô).<br>Detection smooths only the saved q field by '+d.tracker.gaussian_smooth_cells+' grid cells. Multi-component intervals are excluded.';
+ showEdge();chartCoefficients();selectTrajectory();selectRestart();
+ $('loading').hidden=true;$('dash').hidden=false;
+}
+fetch('../data/shortlength_r_0.6.json',{cache:'no-cache'})
+ .then(r=>{if(!r.ok)throw Error('Result file not yet published (HTTP '+r.status+')');return r.json()})
+ .then(x=>{d=x;init()})
+ .catch(e=>{$('loading').textContent='The new short-length study has been installed, but its offline dataset is not yet available: '+e.message+'. Check the workflow linked in the original study.';});
+</script></body></html>
