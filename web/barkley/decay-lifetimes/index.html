@@ -36,6 +36,10 @@ th{color:#a6bdd5}.muted{color:#a6b9d0}code{color:#9ed9ff}.point{cursor:pointer}.
 <div><h3>Dependence on observation horizon · r = 0.62</h3><table><thead><tr><th>H</th><th>Decays / n</th><th>τ estimate</th></tr></thead><tbody id="horizonRows"></tbody></table></div>
 <div><h3>Dependence on parent aging · r = 0.62</h3><table><thead><tr><th>Age</th><th>Accepted parents</th><th>Decays / n</th><th>τ</th></tr></thead><tbody id="ageRows"></tbody></table></div>
 </div><p class="muted">Confidence intervals, parent mass distributions and run metadata are retained in the <a href="data/validation-summary.json">validation JSON</a>. The smaller older-parent trial is noisy; an independent 512-trial cohort gives a rate consistent with younger parents.</p></section>
+<section class="panel"><h2>First lower-noise AMS sweep · σ = 0.4</h2>
+<p>Offline AMS measurements at r=0.62 and 0.64, three independent repetitions each (48 clones), with real stochastic puff parents. These are preliminary coarse-grid (Δx=0.25, Δt=0.01) estimates; the lower-noise results have not yet been grid-converged.</p>
+<div style="overflow:auto"><table><thead><tr><th>r</th><th>σ</th><th>Estimated τ</th><th>Decay probability in H = 100</th><th>AMS replacements K</th><th>Grid</th></tr></thead><tbody id="lowerNoiseRows"></tbody></table></div>
+<p class="muted">The initial 256 direct trials at r=0.62 observed no decay. AMS still sampled rare decay events. These points appear in orange on the logarithmic lifetime plot and can be hidden independently.</p></section>
 <section class="panel"><h2>Earlier exploratory AMS measurements (not validated)</h2><div style="overflow:auto"><table><thead><tr><th>σ</th><th>r</th><th>Estimated τ</th><th>P(decay by H)</th><th>Clones N</th><th>K</th><th>Δx, Δt</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div></section>
 <section class="panel"><h2>Scientific and numerical details</h2><p>Spatial stochastic Barkley model (8.14), Itô term σqη, white in space and time. Physical parameters: ζ=0.8, D=0.5, δ=0.1, ε₁=0.1, ε₂=0.2, U₀=2, Ū=1. The numerical solver uses explicit Euler–Maruyama, periodic boundary conditions, an upwind discretization for q-advection and a conservative Rusanov flux for u-advection. Each AMS run starts from a dynamically evolved, stochastically aged puff.</p>
 <p>AMS repeatedly kills the trajectory with the least progress toward laminar flow and replaces it by branching from the first crossing of its score, with fresh independent noise. The reaction coordinate is the maximum fractional decrease of integrated positive q. Decay is declared when ∫max(q,0)dx ≤ 0.15. The finite-horizon event is decay by time H, not an arbitrary puff-length threshold.</p>
@@ -76,6 +80,16 @@ function draw(){
       diamond.addEventListener('click',show);diamond.addEventListener('keydown',e=>{if(e.key==='Enter')show()});p.append(diamond);
     }
   }
+  if($('showLower')?.checked){
+    const arr=(validation.lower_noise||[]).slice().sort((a,b)=>a.r-b.r);
+    if(arr.length>1){for(let i=1;i<arr.length;i++)line(x(arr[i-1].r),y(arr[i-1].tau),x(arr[i].r),y(arr[i].tau),'#f2a862',2)}
+    for(const v of arr){
+      const xx=x(v.r),yy=y(v.tau);
+      const circ=s('circle',{cx:xx,cy:yy,r:7,fill:'#f2a862',stroke:'#06162b','stroke-width':2,class:'point',tabindex:'0'});
+      const show=()=>{$('detail').innerHTML='<b>Lower noise σ='+v.sigma+', r='+v.r+'</b><p>τ ≈ '+num(v.tau)+'<br>AMS p='+num(v.p_mean)+'<br>Clones: '+v.N+', repetitions: '+v.repetitions+'<br>K values: '+v.K.join(', ')+'<br>Δx='+v.dx+', Δt='+v.dt+'</p><b>Coarse-grid preliminary estimate. No convergence guarantee.</b>'};
+      circ.addEventListener('click',show);circ.addEventListener('keydown',e=>{if(e.key==='Enter')show()});p.append(circ);
+    }
+  }
   if($('showDirect')?.checked){
     for(const v of validation.direct||[]){
       if(v.dx>0.10001 || !v.tau)continue;
@@ -97,9 +111,10 @@ campaigns=(await Promise.all(['0.62','0.64'].map(async r=>{
  catch(_){return null}
 }))).filter(Boolean);
 $('legend').innerHTML='<label><input id="published" type="checkbox" checked> <i class="key" style="background:#efcd7a"></i>Barkley 2016 fit (σ=0.5)</label>';
-$('legend').insertAdjacentHTML('beforeend','<label><input id="showDirect" type="checkbox" checked> <i class="key" style="background:#69dfad"></i>Direct survival · original grid (95% CI)</label><label><input id="showAMS" type="checkbox" checked> <i class="key" style="background:#67b6ff"></i>Repeated AMS · original grid (diamonds)</label><label><input id="showPilots" type="checkbox"> Show unvalidated AMS pilots</label>');
+$('legend').insertAdjacentHTML('beforeend','<label><input id="showDirect" type="checkbox" checked> <i class="key" style="background:#69dfad"></i>Direct survival · original grid (95% CI)</label><label><input id="showLower" type="checkbox" checked> <i class="key" style="background:#f2a862"></i>σ=0.4 AMS (coarse grid)</label><label><input id="showAMS" type="checkbox" checked> <i class="key" style="background:#67b6ff"></i>Repeated AMS · original grid (diamonds)</label><label><input id="showPilots" type="checkbox"> Show unvalidated AMS pilots</label>');
 const vd=$('validationRows');if(vd)vd.replaceChildren();
 for(const item of validation.direct||[]){if(item.dx>0.10001)continue;const tr=document.createElement('tr');tr.innerHTML='<td>'+item.r.toFixed(3)+'</td><td>'+num(Math.exp(Math.exp(4.901*item.r-1.102)))+'</td><td>'+num(item.tau)+'</td><td>'+item.events+' / '+item.n+'</td><td>'+item.p_ci95.map(z=>(z*100).toFixed(2)+'%').join('–')+'</td><td>'+item.n_parents+'</td><td>'+num(campaigns.find(z=>z.parameters?.r===item.r)?.ams?.[0]?.tau)+'</td>';vd.append(tr)}
+for(const z of validation.lower_noise||[]){const tr=document.createElement('tr');tr.innerHTML='<td>'+z.r.toFixed(3)+'</td><td>'+z.sigma+'</td><td>'+num(z.tau)+'</td><td>'+num(z.p_mean)+'</td><td>'+z.K.join(', ')+'</td><td>'+z.dx+', '+z.dt+'</td>';$('lowerNoiseRows').append(tr)}
 for(const z of validation.horizon_checks||[]){const tr=document.createElement('tr');tr.innerHTML='<td>'+z.H+'</td><td>'+z.events+' / '+z.n+'</td><td>'+num(z.tau)+'</td>';$('horizonRows').append(tr)}
 for(const z of validation.parent_age_checks||[]){const tr=document.createElement('tr');tr.innerHTML='<td>'+z.age_range.join('–')+'</td><td>'+z.n_accepted+'</td><td>'+z.events+' / '+z.n+'</td><td>'+num(z.tau)+'</td>';$('ageRows').append(tr)}
 for(const sig of [...new Set(rows.map(v=>v.sigma))].sort((a,b)=>b-a))$('legend').insertAdjacentHTML('beforeend','<label><input id="sigma-'+sig+'" type="checkbox" checked> <i class="key" style="background:'+(palette[String(sig)]||'#eee')+'"></i>AMS σ='+sig+'</label>');
