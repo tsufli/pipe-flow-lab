@@ -74,13 +74,18 @@ def ams(r,sigma,dt,dx,L,H,sample_dt,n,seed,death_mass=.15,max_iterations=5000):
     clock=time.perf_counter()
     qdet,udet=seed_puff(r,dx,dt,L,seed)
     parent=None
-    for retry in range(12):
-        parent=parent_puff(qdet.copy(),udet.copy(),r,sigma,dt,dx,seed+91+retry*517,death_mass=death_mass)
-        if parent is not None:break
-    if parent is None:raise RuntimeError("Could not generate a surviving puff parent")
+    for retry in range(20):
+        candidate=parent_puff(qdet.copy(),udet.copy(),r,sigma,dt,dx,seed+91+retry*517,death_mass=death_mass)
+        if candidate is None:continue
+        pq,pu=candidate
+        pm=float(np.maximum(pq,0).sum()*dx)
+        # Reject decaying remnants and overgrown/multi-puff parents.
+        if 3.0<=pm<=14.0 and pq.max()>=.85:
+            parent=candidate
+            break
+    if parent is None:raise RuntimeError("Could not prepare an active, isolated puff parent")
     qref,uref=parent
     ref_mass=float(np.maximum(qref,0).sum()*dx)
-    if ref_mass<3. or qref.max()<.85:raise RuntimeError("Not a developed puff")
     rng=np.random.default_rng(seed+318)
     replicas=[];peaks=[];first_deaths=0
     for j in range(n):
