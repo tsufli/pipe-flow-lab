@@ -6,7 +6,8 @@
     "All values exploratory pending longer-age, horizon and splitting checks",
     "AMS original-resolution point has one replicate and no AMS confidence interval",
     "95% CIs for direct survival probabilities are Wilson binomial intervals",
-    "Reference curve is Barkley Figure 32 and not a fit to our data"
+    "Reference curve is Barkley Figure 32 and not a fit to our data",
+    "Parent-age pilot suggests possible conditioning dependence; intervals overlap and additional parent ensembles are needed."
   ],
   "reference": {
     "sigma": 0.5,
@@ -146,6 +147,91 @@
         90
       ],
       "tau": 2870.577598496675
+    }
+  ],
+  "horizon_checks": [
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "age_range": [
+        100,
+        220
+      ],
+      "H": 50,
+      "n": 256,
+      "events": 5,
+      "p": 0.01953125,
+      "tau": 2534.9178150939583
+    },
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "age_range": [
+        100,
+        220
+      ],
+      "H": 100,
+      "n": 256,
+      "events": 17,
+      "p": 0.06640625,
+      "tau": 1455.309782225912
+    },
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "age_range": [
+        100,
+        220
+      ],
+      "H": 200,
+      "n": 256,
+      "events": 33,
+      "p": 0.12890625,
+      "tau": 1449.2157867439396
+    }
+  ],
+  "parent_age_checks": [
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "age_range": [
+        100,
+        220
+      ],
+      "n_candidate_parents": 36,
+      "n_accepted": 28,
+      "mass_mean": 7.951267643793254,
+      "H": 100,
+      "n": 256,
+      "events": 17,
+      "p": 0.06640625,
+      "tau": 1455.309782225912
+    },
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "age_range": [
+        350,
+        550
+      ],
+      "n_candidate_parents": 36,
+      "n_accepted": 19,
+      "mass_mean": 8.372410415805986,
+      "H": 100,
+      "n": 256,
+      "events": 12,
+      "p": 0.046875,
+      "tau": 2082.933271874789
     }
   ]
 }
