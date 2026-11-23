@@ -3,8 +3,16 @@ import sys, unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
 import numpy as np
-from barkley_decay_ams import step,evolve
+try:
+    from barkley_decay_ams import step,evolve
+    NUMBA_AVAILABLE=True
+except ModuleNotFoundError as error:
+    if error.name != 'numba':
+        raise
+    NUMBA_AVAILABLE=False
+    step=evolve=None
 
+@unittest.skipUnless(NUMBA_AVAILABLE, "Numba only installed in numerical workflow")
 class TestBarkleyDecayAMS(unittest.TestCase):
     def test_laminar_absorbing(self):
         q=np.zeros(100);u=np.full(100,2.)
