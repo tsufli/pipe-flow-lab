@@ -1,0 +1,44 @@
+name: Barkley short-length ensemble at r=0.6
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/barkley_shortlength.py
+      - tests/test_barkley_shortlength.py
+      - .github/workflows/barkley-short-puffs.yml
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: write
+concurrency:
+  group: barkley-short-puffs
+  cancel-in-progress: false
+jobs:
+  ensemble:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy scipy numba
+      - name: Validate short-puff science and code
+        run: python -m unittest discover -s tests -p 'test_barkley_shortlength.py' -v
+      - name: Simulate 500 natural puffs and up to 160 short-puff branches
+        run: python scripts/barkley_shortlength.py --runs 500 --T 300 --parents 40 --branches 4 --branch-T 60 --sigma 0.5 --seed 20261129
+      - name: Commit reproducible dataset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/barkley/front-tracking/data/shortlength_r_0.6.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: longer 500-run short-puff ensemble and branching at r=0.6"
+            git push
+          fi
+      - name: Publish via established Pages workflow
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: gh workflow run pages.yml --ref main
