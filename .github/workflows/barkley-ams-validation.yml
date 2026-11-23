@@ -1,0 +1,101 @@
+name: Barkley independent-puff AMS validation
+on:
+  push:
+    paths:
+      - .github/workflows/barkley-ams-validation.yml
+  workflow_dispatch:
+    inputs:
+      r_values:
+        description: 'Model Reynolds numbers separated by spaces'
+        default: '0.62 0.64'
+        required: true
+        type: string
+      sigma_values:
+        description: 'Noise amplitudes separated by spaces'
+        default: '0.5'
+        required: true
+        type: string
+      clones:
+        description: 'AMS clones per independent realization'
+        default: '64'
+        required: true
+        type: string
+      repeats:
+        description: 'Independent AMS repetitions'
+        default: '3'
+        required: true
+        type: string
+      direct_trials:
+        description: 'Direct survival trials at each r'
+        default: '256'
+        required: true
+        type: string
+      horizon:
+        description: 'Time horizon in Barkley time units'
+        default: '100'
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: barkley-ams-validation
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      R_VALUES: ${{ inputs.r_values || '0.62 0.64' }}
+      SIGMAS: ${{ inputs.sigma_values || '0.5' }}
+      CLONES: ${{ inputs.clones || '64' }}
+      REPEATS: ${{ inputs.repeats || '3' }}
+      DIRECT: ${{ inputs.direct_trials || '256' }}
+      HORIZON: ${{ inputs.horizon || '100' }}
+      NUMBA_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install scientific dependencies
+        run: pip install 'numpy<2.3' numba
+      - name: Verify Ito solver and sampling
+        run: python -m unittest discover -s tests -p 'test_barkley_decay_validation.py' -v
+      - name: Compute and commit each precomputed validation dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for sigma in $SIGMAS; do
+            for r in $R_VALUES; do
+              out="web/barkley/decay-lifetimes/data/validation_r${r}_sigma${sigma}.json"
+              python scripts/barkley_decay_validation.py \
+                --r "$r" --sigma "$sigma" \
+                --dx 0.1 --dt 0.004 --L 80 --parents 36 \
+                --age-lo 100 --age-hi 220 \
+                --clones "$CLONES" --repeats "$REPEATS" \
+                --H "$HORIZON" --direct "$DIRECT" \
+                --seed 20261127 --output "$out"
+              git add "$out"
+              if ! git diff --cached --quiet; then
+                git commit -m "data: independent-puff decay validation r=$r sigma=$sigma"
+                for attempt in 1 2 3; do
+                  git fetch origin main
+                  git rebase origin/main
+                  if git push origin HEAD:main; then break; fi
+                  if [ "$attempt" = "3" ]; then exit 1; fi
+                done
+              fi
+            done
+          done
+  publish:
+    needs: validate
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
