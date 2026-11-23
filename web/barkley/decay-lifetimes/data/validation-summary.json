@@ -7,7 +7,7 @@
     "AMS original-resolution point has one replicate and no AMS confidence interval",
     "95% CIs for direct survival probabilities are Wilson binomial intervals",
     "Reference curve is Barkley Figure 32 and not a fit to our data",
-    "Parent-age pilot suggests possible conditioning dependence; intervals overlap and additional parent ensembles are needed."
+    "The small older-parent sample gave a lower rate; an independent larger older-parent cohort gave the same point estimate as the younger-parent coarse run. More ensembles are needed to assess age dependence."
   ],
   "reference": {
     "sigma": 0.5,
@@ -232,6 +232,29 @@
       "events": 12,
       "p": 0.046875,
       "tau": 2082.933271874789
+    },
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "age_range": [
+        350,
+        550
+      ],
+      "seed": 20261157,
+      "n_candidate_parents": 80,
+      "n_accepted": 52,
+      "mass_mean": 8.389389544875135,
+      "H": 100,
+      "n": 512,
+      "events": 34,
+      "p": 0.06640625,
+      "p_ci95": [
+        0.04790677886781412,
+        0.09136388096264546
+      ],
+      "tau": 1455.309782225912
     }
   ]
 }
