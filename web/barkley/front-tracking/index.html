@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puff Front Observatory · Stochastic Barkley Model</title>
+<meta name="description" content="Precomputed stochastic Barkley puff trajectories and conditional front drift/diffusion at r=0.6.">
+<style>
+:root{--ink:#162b42;--muted:#617187;--bg:#f1f5f6;--paper:#fff;--line:#d8e2eb;--blue:#2469ba;--teal:#008b83;--coral:#dc7544;--purple:#9366c0;--soft:#ecf3fb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.55 system-ui,-apple-system,sans-serif;color:var(--ink)}
+header{background:#13283f;color:#f5fbff;padding:28px max(22px,calc((100vw - 1250px)/2));border-bottom:5px solid #58bdc4}
+header .eyebrow{font-size:11px;letter-spacing:.17em;font-weight:800;color:#7cdae0}
+header h1{margin:7px 0 4px;font-size:clamp(26px,4vw,43px);line-height:1.13;letter-spacing:-.028em}
+header p{max-width:780px;color:#bfcedb;margin:10px 0 18px}
+nav{display:flex;gap:16px;flex-wrap:wrap}nav a{color:#c5f3ee;font-size:13px;text-decoration:none;border-bottom:1px solid #668b9b;padding:3px 0}
+main{max-width:1310px;margin:auto;padding:22px;display:grid;gap:17px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:20px;min-width:0;box-shadow:0 3px 12px #13283f07}
+h2{font-size:21px;margin:0 0 5px;letter-spacing:-.015em}h3{font-size:15px;margin:0 0 10px}
+p{margin:6px 0 13px;color:var(--muted)}a{color:var(--blue)}.small{font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.stat{padding:16px;background:#f7fafb;border:1px solid var(--line);border-radius:9px}.stat strong{display:block;font-size:25px;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums}.stat span{display:block;color:var(--muted);font-size:12px;margin-top:7px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}.split.narrow{grid-template-columns:1.15fr .85fr}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:11px;margin:10px 0 16px}
+label{font-size:13px;font-weight:650}select,input[type=range]{accent-color:var(--blue)}select{padding:7px 25px 7px 10px;background:white;border:1px solid #aabccc;color:var(--ink);border-radius:7px}
+canvas.plot{display:block;width:100%;height:auto;background:#fbfdfe;border:1px solid #e3ebf1;border-radius:8px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;color:#526175;font-size:12px;margin:10px 0 4px}
+.swatch{display:inline-block;width:17px;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.alert{padding:12px 15px;border-left:3px solid #d29a42;background:#fffbef;border-radius:3px;color:#6a512b;font-size:13px}
+.formula{background:#f5f8fc;padding:13px;border-radius:7px;overflow:auto;font:16px/1.8 Georgia,serif;color:#223a55}
+.tablewrap{max-height:390px;overflow:auto;border:1px solid var(--line);border-radius:7px}
+table{border-collapse:collapse;min-width:850px;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+td,th{padding:8px 10px;text-align:right;border-bottom:1px solid #e7eef4}th{background:#eaf2f6;position:sticky;top:0}td:first-child,th:first-child{text-align:left}
+dl{display:grid;grid-template-columns:140px 1fr;gap:8px 16px;font-size:13px}dt{font-weight:700}dd{margin:0;color:#536478}
+footer{max-width:1310px;margin:12px auto 35px;padding:0 22px;color:#627288;font-size:12px}
+#loading{font-size:14px;color:#8c5416;padding:13px}#report[hidden]{display:none}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(3,1fr)}.split,.split.narrow{grid-template-columns:1fr}}
+@media(max-width:620px){main{padding:12px}.card{padding:14px}.stats{grid-template-columns:repeat(2,1fr)}header{padding:22px 15px}dl{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<header>
+<div class="eyebrow">BARKLEY MODEL · RESEARCH LAB</div>
+<h1>Puff Front Observatory</h1>
+<p>Upstream and downstream front fluctuations, conditional stochastic dynamics, and the effective evolution of puff length. Precomputed ensemble, no simulation runs in your browser.</p>
+<nav><a href="#trajectories">Trajectories</a><a href="#inference">Drift &amp; diffusion</a><a href="#reference">Asymptotic comparison</a><a href="#methods">Methods &amp; limitations</a><a href="../">Original Barkley lab</a><a href="https://github.com/tsufli/pipe-flow-lab/blob/main/scripts/barkley_front_tracking.py">Source code</a></nav>
+</header>
+<main>
+<div id="loading" class="card">Loading the precomputed r = 0.6 ensemble. If the first GitHub Actions run is still executing, this dashboard will populate when the data is published.</div>
+<div id="report" hidden>
+<section class="stats">
+<div class="stat"><strong id="nrun">—</strong><span>noise realizations</span></div>
+<div class="stat"><strong id="root">—</strong><span>stable length-drift zero · lag 0.8</span></div>
+<div class="stat"><strong id="finite">—</strong><span>deterministic threshold width</span></div>
+<div class="stat"><strong id="asym">—</strong><span>leading ε→0 slow-interior length</span></div>
+<div class="stat"><strong id="runtime">—</strong><span>ensemble calculation time</span></div>
+</section>
+
+<section id="trajectories" class="card">
+<h2>Front tracking · individual stochastic realizations</h2>
+<p>Front positions are in the laboratory frame and <b>unwrapped</b> across the periodic boundary. Here x<sub>u</sub> is the left/upstream crossing and x<sub>d</sub> the right/downstream crossing. Gray gaps represent invalid or ambiguous detections, not re-centering.</p>
+<div class="controls"><label for="run">Choose realization</label><select id="run"></select><span id="runinfo" class="small"></span></div>
+<div class="split">
+<div><h3>Two front positions x(t)</h3><canvas class="plot" id="fronts" width="760" height="340"></canvas><div class="legend"><span><i class="swatch" style="border-color:var(--blue)"></i>Upstream</span><span><i class="swatch" style="border-color:var(--coral)"></i>Downstream</span></div></div>
+<div><h3>Puff length ℓ(t) = x<sub>d</sub> − x<sub>u</sub></h3><canvas class="plot" id="single-length" width="760" height="340"></canvas><div class="legend"><span><i class="swatch" style="border-color:var(--teal)"></i>Tracked length</span></div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>What the threshold sees</h2>
+<p>Representative saved q(x) profiles, with the q = 0.5 crossing line, provide a direct check on the downstream interface. These frames are stored from the offline runs; this is not a browser PDE solver.</p>
+<div class="controls"><label for="profile-run">Saved realization</label><select id="profile-run"></select><label for="frame">Saved frame</label><select id="frame"></select></div>
+<canvas class="plot" id="profile" width="1100" height="320"></canvas>
+<div class="legend"><span><i class="swatch" style="border-color:var(--blue)"></i>q(x)</span><span><i class="swatch" style="border-color:var(--coral)"></i>Threshold 0.5</span><span><i class="swatch" style="border-color:var(--teal)"></i>Tracked crossings (where valid)</span></div>
+</section>
+
+<section class="card">
+<h2>All 100 length trajectories</h2>
+<p>Every curve corresponds to one independent seed, initialized from the same relaxed deterministic puff. This view makes decay, fluctuation amplitudes, and missing detections visible instead of hiding them in a stationary histogram.</p>
+<canvas class="plot" id="ensemble" width="1100" height="310"></canvas>
+</section>
+
+<section id="inference" class="card">
+<h2>Length-dependent drift and diffusion</h2>
+<p>Conditional increments are binned by the initial puff length, without imposing an Ornstein–Uhlenbeck functional form. The lag selector tests the finite-time dependence of these inferred coefficients. Estimates use only successive valid, unambiguous tracks and therefore are <b>conditioned on detectable surviving puffs</b>.</p>
+<div class="controls"><label for="lag">Inference lag Δt</label><select id="lag"><option value="1">0.4</option><option value="2" selected>0.8</option><option value="4">1.6</option><option value="8">3.2</option></select><span id="pair-info" class="small"></span></div>
+<div class="split">
+<div><h3>Length drift A<sub>ℓ</sub>(ℓ)</h3><canvas class="plot" id="length-drift" width="760" height="350"></canvas><div class="legend"><span><i class="swatch" style="border-color:var(--teal)"></i>A<sub>ℓ</sub></span><span>Shaded bars: 95% run-bootstrap intervals</span></div></div>
+<div><h3>Front drifts A<sub>u</sub>(ℓ), A<sub>d</sub>(ℓ)</h3><canvas class="plot" id="front-drift" width="760" height="350"></canvas><div class="legend"><span><i class="swatch" style="border-color:var(--blue)"></i>Upstream</span><span><i class="swatch" style="border-color:var(--coral)"></i>Downstream</span></div></div>
+<div><h3>Length diffusion D<sub>ℓ</sub>(ℓ)</h3><canvas class="plot" id="length-diff" width="760" height="350"></canvas><div class="legend"><span><i class="swatch" style="border-color:var(--teal)"></i>D<sub>ℓ</sub> ≥ 0</span></div></div>
+<div><h3>Front diffusion matrix D<sub>ij</sub>(ℓ)</h3><canvas class="plot" id="front-diff" width="760" height="350"></canvas><div class="legend"><span><i class="swatch" style="border-color:var(--blue)"></i>D<sub>uu</sub></span><span><i class="swatch" style="border-color:var(--coral)"></i>D<sub>dd</sub></span><span><i class="swatch" style="border-color:var(--purple)"></i>D<sub>ud</sub></span></div></div>
+</div>
+<div id="roots" class="alert" style="margin:16px 0"></div>
+<h3>Numerical estimates by length bin</h3>
+<div class="tablewrap"><table><thead><tr><th>ℓ bin center</th><th>Intervals</th><th>Runs</th><th>A<sub>u</sub></th><th>A<sub>d</sub></th><th>A<sub>ℓ</sub></th><th>D<sub>uu</sub></th><th>D<sub>dd</sub></th><th>D<sub>ud</sub></th><th>D<sub>ℓ</sub></th></tr></thead><tbody id="coeff-table"></tbody></table></div>
+</section>
+
+<section id="reference" class="card">
+<h2>Drift zeros vs. theoretical and deterministic lengths</h2>
+<div class="split narrow">
+<div><canvas class="plot" id="comparison" width="850" height="320"></canvas><div class="legend"><span><i class="swatch" style="border-color:var(--purple)"></i>Asymptotic slow-interior length</span><span><i class="swatch" style="border-color:var(--coral)"></i>Finite-ε deterministic q=0.5 width</span><span><i class="swatch" style="border-color:var(--teal)"></i>Inferred stable zero</span></div></div>
+<div><h3>What should agree?</h3><p>The analytical construction matches leading-order upstream and downstream front velocities, integrates the <i>slow turbulent interior</i>, and excludes front widths of order unity. Its length is not defined by the q = 0.5 crossings. The deterministic finite-ε threshold width is a more directly comparable reference, though stochastic noise can shift the mean and inferred equilibrium length.</p><div id="reference-detail" class="formula"></div></div>
+</div>
+</section>
+
+<section id="methods" class="card">
+<h2>How the measurements are defined</h2>
+<div class="formula">dq = A(ℓ)dt + B(ℓ)dW;&nbsp;&nbsp; D = BBᵀ/2<br>
+A<sub>i</sub>(ℓ) ≈ E[Δx<sub>i</sub> | ℓ] / Δt,&nbsp;&nbsp; D<sub>ij</sub>(ℓ) ≈ Cov(Δx<sub>i</sub>, Δx<sub>j</sub> | ℓ) / (2Δt)<br>
+A<sub>ℓ</sub> = A<sub>d</sub> − A<sub>u</sub>,&nbsp;&nbsp; D<sub>ℓ</sub> = D<sub>dd</sub> + D<sub>uu</sub> − 2D<sub>ud</sub>.</div>
+<div class="split">
+<div><h3>Solver and run settings</h3><dl id="settings"></dl></div>
+<div><h3>Quality control</h3><dl id="quality"></dl></div>
+</div>
+<div class="alert"><b>Research limitations.</b> A finite-time conditional drift is not proof of a Markovian diffusion or OU process. The Barkley u field is a hidden slow variable. The instantaneous measured front position is affected by q threshold and spatial smoothing; data at large noise can fragment. Binned intervals are temporally correlated, so uncertainty is bootstrapped across whole realizations (not individual frames). The data are at one space-time resolution and 100 realizations only; no ε→0, Δx→0, Δt→0, lag→0, or noise-amplitude convergence is claimed. Censoring on surviving puffs changes the inferred dynamics near collapse.</div>
+<p class="small">Reproduce with <code>python scripts/barkley_front_tracking.py --runs 100 --T 120 --sigma 0.5 --seed 20261123</code>. Public source and data: <a href="https://github.com/tsufli/pipe-flow-lab/tree/main/web/barkley/front-tracking">GitHub repository folder</a>. Analytical baseline: <a href="https://doi.org/10.1103/PhysRevE.105.045108">Frishman &amp; Grafke (2022), section III.C</a>. The physical model is a 1D reduced stochastic Barkley model, not Navier–Stokes DNS.</p>
+</section>
+</div>
+</main><footer>Research-grade exploratory dashboard · Created from archived ensemble results · All plotted curves are from saved calculations.</footer>
+<script>
+'use strict';
+const $ = s => document.getElementById(s), C={blue:'#2469ba',teal:'#008b83',coral:'#dc7544',purple:'#9366c0',gray:'#bbc7d3'};
+let db=null;
+const nice=x=>Number.isFinite(x)?Number(x).toFixed(3):'—';
+function plot(canvas, series, options={}) {
+ const g=canvas.getContext('2d'),W=canvas.width,H=canvas.height,L=61,R=20,T=25,B=44, pw=W-L-R, ph=H-T-B;
+ g.clearRect(0,0,W,H);g.fillStyle='#fbfdfe';g.fillRect(0,0,W,H);
+ const all=series.flatMap(s=>s.points.filter(p=>p[0]!=null&&p[1]!=null&&isFinite(p[0])&&isFinite(p[1])));
+ let xs=all.map(p=>p[0]),ys=all.map(p=>p[1]);
+ if(options.xs)xs.push(...options.xs);
+ if(options.ys)ys.push(...options.ys);
+ let x0=options.xmin??Math.min(...xs,0),x1=options.xmax??Math.max(...xs,1),y0=options.ymin??Math.min(...ys,0),y1=options.ymax??Math.max(...ys,1);
+ if(!isFinite(x0)||!isFinite(x1)){x0=0;x1=1;}if(!isFinite(y0)||!isFinite(y1)){y0=0;y1=1;}
+ if(y0===y1){y0-=1;y1+=1}if(x0===x1)x1+=1;
+ const yp=(y)=>H-B-(y-y0)/(y1-y0)*ph,xp=(x)=>L+(x-x0)/(x1-x0)*pw;
+ g.strokeStyle='#e0e9f0';g.lineWidth=1;g.font='13px system-ui';g.fillStyle='#65778b';
+ for(let i=0;i<=5;i++){let y=y0+(y1-y0)*i/5,py=yp(y);g.beginPath();g.moveTo(L,py);g.lineTo(W-R,py);g.stroke();g.fillText(y.toFixed(Math.abs(y1-y0)<1?2:1),5,py+4);}
+ for(let i=0;i<=5;i++){let x=x0+(x1-x0)*i/5,px=xp(x);g.beginPath();g.moveTo(px,T);g.lineTo(px,H-B);g.stroke();g.fillText(x.toFixed(x1-x0<10?1:0),px-12,H-17);}
+ g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();
+ if(options.zero&&y0<0&&y1>0){g.strokeStyle='#75879a';g.lineWidth=1.5;g.beginPath();g.moveTo(L,yp(0));g.lineTo(W-R,yp(0));g.stroke();}
+ if(options.vlines)for(const ref of options.vlines){g.strokeStyle=ref.color;g.globalAlpha=.8;g.lineWidth=1.7;g.beginPath();g.moveTo(xp(ref.x),T);g.lineTo(xp(ref.x),H-B);g.stroke();}g.globalAlpha=1;
+ for(const s of series){g.strokeStyle=s.color||C.blue;g.lineWidth=s.width||2.7;g.globalAlpha=s.alpha??1;g.beginPath();let connected=false;
+  for(const pt of s.points){let [x,y]=pt;if(x==null||y==null||!isFinite(x)||!isFinite(y)){connected=false;continue}let px=xp(x),py=yp(y);if(connected)g.lineTo(px,py);else g.moveTo(px,py);connected=true;}g.stroke();
+  if(s.errors){g.lineWidth=3;g.globalAlpha=.32;for(let i=0;i<s.points.length;i++){const p=s.points[i],e=s.errors[i];if(!p||!e||p[1]==null)continue;g.beginPath();g.moveTo(xp(p[0]),yp(e[0]));g.lineTo(xp(p[0]),yp(e[1]));g.stroke();}}
+ }g.restore();g.globalAlpha=1;
+ g.fillStyle='#667a8b';g.fillText(options.xlabel||'time / length',W/2-45,H-4);
+}
+const points=(a,step=.4)=>a.map((y,i)=>[i*step,y]);
+function selectRun(){
+ const tr=db.trajectories[Number($('run').value)-1],p=db.params;
+ $('runinfo').textContent='Seed '+tr.seed+' · '+tr.length.filter(x=>x!==null).length+' valid frames';
+ plot($('fronts'),[{points:points(tr.x_up,p.save_dt),color:C.blue},{points:points(tr.x_down,p.save_dt),color:C.coral}],{xmin:0,xmax:p.T,xlabel:'time t'});
+ plot($('single-length'),[{points:points(tr.length,p.save_dt),color:C.teal}],{xmin:0,xmax:p.T,ymin:0,xlabel:'time t'});
+}
+function ensemble(){
+ const s=db.trajectories.map(z=>({points:points(z.length,db.params.save_dt),color:C.teal,alpha:.13,width:1.5}));
+ plot($('ensemble'),s,{xmin:0,xmax:db.params.T,ymin:0,xlabel:'time t'});
+}
+function showProfile(){
+ const run=db.profiles.find(z=>z.run==Number($('profile-run').value)),index=Number($('frame').value),frame=run.frames[index],p=db.params;
+ const dx=p.L/frame.q.length;
+ const pointsQ=frame.q.map((q,j)=>[(j+.5)*dx,q]);
+ let mark=[];
+ const k=Math.min(Math.round(frame.t/p.save_dt),db.trajectories[run.run-1].length.length-1);
+ const t=db.trajectories[run.run-1],left=t.x_up[k],right=t.x_down[k];
+ if(left!==null&&right!==null)mark=[{x:((left%p.L)+p.L)%p.L,color:C.teal},{x:((right%p.L)+p.L)%p.L,color:C.teal}];
+ plot($('profile'),[{points:pointsQ,color:C.blue}],{xmin:0,xmax:p.L,ymin:0,ymax:Math.max(2,...frame.q)*1.05,zero:false,vlines:mark, xlabel:'position x (modulo L)',ys:[p.threshold]});
+ const g=$('profile').getContext('2d'),x0=61,x1=$('profile').width-20,y0=$('profile').height-44,y1=25, ymax=Math.max(2,...frame.q)*1.05;
+ const py=y0-(p.threshold/ymax)*(y0-y1);g.strokeStyle=C.coral;g.lineWidth=1.6;g.beginPath();g.moveTo(x0,py);g.lineTo(x1,py);g.stroke();
+}
+function chosenAnalysis(){return db.lag_analysis[$('lag').value];}
+function inference(){
+ const obj=chosenAnalysis(),rows=obj.rows,base=rows.filter(r=>r.A_l!==undefined);
+ $('pair-info').textContent=obj.valid_pairs.toLocaleString()+' usable time pairs / '+obj.total_pairs.toLocaleString()+' candidates';
+ const trace=k=>base.map(r=>[r.ell,r[k]]),ref=[{x:db.asymptotic.bulk_length,color:C.purple},{x:db.deterministic.threshold_width_smoothed,color:C.coral}];
+ plot($('length-drift'),[{points:trace('A_l'),color:C.teal,errors:base.map(r=>r.A_l_CI95)}],{xmin:2,xmax:14,zero:true,xlabel:'initial length ℓ'});
+ plot($('front-drift'),[{points:trace('A_u'),color:C.blue},{points:trace('A_d'),color:C.coral}],{xmin:2,xmax:14,zero:true,xlabel:'initial length ℓ'});
+ plot($('length-diff'),[{points:trace('D_l'),color:C.teal}],{xmin:2,xmax:14,ymin:0,xlabel:'initial length ℓ'});
+ plot($('front-diff'),[{points:trace('D_uu'),color:C.blue},{points:trace('D_dd'),color:C.coral},{points:trace('D_ud'),color:C.purple}],{xmin:2,xmax:14,zero:true,xlabel:'initial length ℓ'});
+ const roots=obj.roots.length?obj.roots.map(r=>r.stability+' zero at ℓ = '+nice(r.ell)).join('; '):'No resolved drift zero in the supported bins';
+ $('roots').textContent='At lag '+nice(obj.lag)+': '+roots+'. '+(obj.stable_root_bootstrap_CI95?'95% realization-bootstrap interval for stable zero: ['+obj.stable_root_bootstrap_CI95.map(nice).join(', ')+']':'Root uncertainty not resolved by bootstrap')+'.';
+ $('coeff-table').innerHTML=rows.map(r=>'<tr><td>'+nice(r.ell)+'</td><td>'+r.n+'</td><td>'+r.runs+'</td>'+['A_u','A_d','A_l','D_uu','D_dd','D_ud','D_l'].map(k=>'<td>'+nice(r[k])+'</td>').join('')+'</tr>').join('');
+ plot($('comparison'),[{points:trace('A_l'),color:C.teal}],{xmin:2,xmax:14,zero:true,vlines:ref,xlabel:'length ℓ'});
+}
+function render(){
+ const p=db.params,a=db.asymptotic,d=db.deterministic,q=db.quality,st=db.lag_analysis['2'].roots.find(r=>r.stability==='stable');
+ $('nrun').textContent=db.n_runs;
+ $('root').textContent=st?nice(st.ell):'not resolved';
+ $('finite').textContent=nice(d.threshold_width_smoothed);
+ $('asym').textContent=nice(a.bulk_length);
+ $('runtime').textContent=nice(db.wall_seconds)+' s';
+ $('run').innerHTML=db.trajectories.map(t=>'<option value="'+t.run+'">Run '+t.run+'</option>').join('');
+ $('profile-run').innerHTML=db.profiles.map(t=>'<option value="'+t.run+'">Run '+t.run+'</option>').join('');
+ const frames=db.profiles[0].frames;
+ $('frame').innerHTML=frames.map((t,j)=>'<option value="'+j+'">t = '+nice(t.t)+'</option>').join('');
+ $('reference-detail').innerHTML='Asymptotic c ≈ '+nice(a.speed)+', u<sub>down</sub> ≈ '+nice(a.u_down)+', q<sub>down</sub> ≈ '+nice(a.q_down)+'<br>ℓ<sub>bulk</sub> ≈ '+nice(a.bulk_length)+'<br>Finite-ε deterministic threshold width ≈ '+nice(d.threshold_width_smoothed)+' (raw crossings: '+nice(d.threshold_width_raw)+')';
+ const settings=[['Control parameter r',p.r],['Noise strength σ',p.sigma],['ε₁, ε₂',p.eps1+', '+p.eps2],['D, δ, ζ',p.D+', '+p.delta+', '+p.zeta],['U₀, Ū',p.U0+', '+p.Ub],['Domain, grid','L='+p.L+', N='+p.N+', Δx='+nice(p.L/p.N)],['Heun step, saved spacing',p.dt+', '+p.save_dt],['Duration / warm-up',p.T+' / '+p.warmup_T],['q threshold, smoothing',p.threshold+', Gaussian σ='+p.smooth_cells+' grid cells']];
+ $('settings').innerHTML=settings.map(([k,v])=>'<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
+ const quality=[['Valid tracked frames',q.valid_frames+'/'+q.all_frames],['Ambiguous multi-peak frames',q.ambiguous_frames],['Valid last frames',q.valid_at_final+'/'+db.n_runs],['No valid track at all',q.all_invalid_realizations],['Inference selection','valid &amp; unambiguous interval pairs'],['Zero uncertainty','bootstrap over '+db.n_runs+' independent seeds']];
+ $('quality').innerHTML=quality.map(([k,v])=>'<dt>'+k+'</dt><dd>'+v+'</dd>').join('');
+ $('run').addEventListener('change',selectRun);
+ $('lag').addEventListener('change',inference);
+ $('profile-run').addEventListener('change',showProfile);
+ $('frame').addEventListener('change',showProfile);
+ selectRun();showProfile();ensemble();inference();
+ $('loading').hidden=true;$('report').hidden=false;
+}
+fetch('data/r_0.6.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('Result data not published yet (HTTP '+r.status+')');return r.json()}).then(d=>{db=d;render()}).catch(e=>{$('loading').textContent='The front-tracking website is installed, but the ensemble dataset is not available yet: '+e.message+'. See the linked GitHub Actions workflow for progress.'});
+</script>
+</body></html>
