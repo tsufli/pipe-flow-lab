@@ -7,7 +7,8 @@
     "AMS original-resolution point has one replicate and no AMS confidence interval",
     "95% CIs for direct survival probabilities are Wilson binomial intervals",
     "Reference curve is Barkley Figure 32 and not a fit to our data",
-    "The small older-parent sample gave a lower rate; an independent larger older-parent cohort gave the same point estimate as the younger-parent coarse run. More ensembles are needed to assess age dependence."
+    "The small older-parent sample gave a lower rate; an independent larger older-parent cohort gave the same point estimate as the younger-parent coarse run. More ensembles are needed to assess age dependence.",
+    "The lower-noise curve uses dx=0.25 and dt=0.01, unlike the original-resolution Barkley comparison (dx=0.1, dt=0.004)."
   ],
   "reference": {
     "sigma": 0.5,
@@ -255,6 +256,58 @@
         0.09136388096264546
       ],
       "tau": 1455.309782225912
+    }
+  ],
+  "lower_noise": [
+    {
+      "r": 0.62,
+      "sigma": 0.4,
+      "dx": 0.25,
+      "dt": 0.01,
+      "L": 80,
+      "H": 100,
+      "N": 48,
+      "repetitions": 3,
+      "p_mean": 0.0021219078267422135,
+      "tau": 47077.38281044753,
+      "p_each": [
+        0.002230591086612586,
+        0.0012634228219943805,
+        0.0028717095716196744
+      ],
+      "K": [
+        290,
+        317,
+        278
+      ],
+      "n_parents": 48,
+      "direct_n": 256,
+      "direct_decays": 0,
+      "status": "exploratory coarse-grid AMS only"
+    },
+    {
+      "r": 0.64,
+      "sigma": 0.4,
+      "dx": 0.25,
+      "dt": 0.01,
+      "L": 80,
+      "H": 100,
+      "N": 48,
+      "repetitions": 3,
+      "p_mean": 0.0005597704750922839,
+      "tau": 178594.64425636482,
+      "p_each": [
+        0.0005558491161193398,
+        0.00042275912143079563,
+        0.0007007031877267163
+      ],
+      "K": [
+        356,
+        369,
+        345
+      ],
+      "n_parents": 48,
+      "status": "exploratory coarse-grid AMS only"
     }
   ]
 }
