@@ -213,6 +213,16 @@ def slim_track(track,decimation=5):
             "ell":[None if not np.isfinite(z) else round(float(z),3) for z in track[::decimation,2]],
             "ambiguous":[int(z==1) for z in track[::decimation,3]]}
 
+def json_ready(value):
+    """JSON must distinguish an unmeasurable front (null) from a real number."""
+    if isinstance(value,(float,np.floating)):
+        return float(value) if np.isfinite(value) else None
+    if isinstance(value,dict):
+        return {k:json_ready(v) for k,v in value.items()}
+    if isinstance(value,(list,tuple)):
+        return [json_ready(v) for v in value]
+    return value
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs",type=int,default=500)
@@ -366,7 +376,7 @@ def main():
       "natural_examples":viz,"restart_examples":branch_viz,
       "profiles":samples,"quality":quality}
     args.output.parent.mkdir(parents=True,exist_ok=True)
-    args.output.write_text(json.dumps(result,separators=(",",":"),allow_nan=False))
+    args.output.write_text(json.dumps(json_ready(result),separators=(",",":"),allow_nan=False))
     def short(result,label,lag):
         v=result.get(label,{}).get(str(lag),{})
         return {"roots":v.get("roots"),"short":[{k:r.get(k) for k in
