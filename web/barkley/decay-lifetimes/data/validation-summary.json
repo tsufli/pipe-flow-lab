@@ -1,0 +1,151 @@
+{
+  "schema": 2,
+  "generated_utc": "2026-11-23T11:07:00Z",
+  "source": "Independent naturally evolved puff ensemble. Direct survival and offline AMS using Barkley 2016 Eq. 8.14.",
+  "caveats": [
+    "All values exploratory pending longer-age, horizon and splitting checks",
+    "AMS original-resolution point has one replicate and no AMS confidence interval",
+    "95% CIs for direct survival probabilities are Wilson binomial intervals",
+    "Reference curve is Barkley Figure 32 and not a fit to our data"
+  ],
+  "reference": {
+    "sigma": 0.5,
+    "formula": "exp(exp(4.901*r - 1.102))"
+  },
+  "direct": [
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.1,
+      "dt": 0.004,
+      "L": 80,
+      "H": 100,
+      "n": 256,
+      "events": 18,
+      "p": 0.0703125,
+      "p_ci95": [
+        0.04493518002091057,
+        0.10839515661494761
+      ],
+      "tau": 1371.614719615406,
+      "n_parents": 31,
+      "parent_mass_mean": 6.913662519250229,
+      "parent_mass_sd": 1.388
+    },
+    {
+      "r": 0.64,
+      "sigma": 0.5,
+      "dx": 0.1,
+      "dt": 0.004,
+      "L": 80,
+      "H": 100,
+      "n": 256,
+      "events": 10,
+      "p": 0.0390625,
+      "p_ci95": [
+        0.021353804338076477,
+        0.07040055678038956
+      ],
+      "tau": 2509.6679595483306,
+      "n_parents": 33,
+      "parent_mass_mean": 7.509702777050699,
+      "parent_mass_sd": 1.883
+    },
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "L": 80,
+      "H": 100,
+      "n": 256,
+      "events": 17,
+      "p": 0.06640625,
+      "p_ci95": [
+        0.04187037068241467,
+        0.10376296901376947
+      ],
+      "tau": 1455.309782225912,
+      "n_parents": 28,
+      "parent_mass_mean": 7.951267643793254,
+      "parent_mass_sd": 1.622
+    },
+    {
+      "r": 0.64,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "L": 80,
+      "H": 100,
+      "n": 256,
+      "events": 7,
+      "p": 0.02734375,
+      "p_ci95": [
+        0.013306986698200705,
+        0.055356383601243266
+      ],
+      "tau": 3606.911822202469,
+      "n_parents": 32,
+      "parent_mass_mean": 9.698327099655064,
+      "parent_mass_sd": 2.208
+    }
+  ],
+  "ams": [
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.1,
+      "dt": 0.004,
+      "H": 100,
+      "N": 32,
+      "repetitions": 1,
+      "success_probabilities": [
+        0.08404537322446222
+      ],
+      "iterations": [
+        78
+      ],
+      "tau": 1139.1020166067628
+    },
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "H": 100,
+      "N": 32,
+      "repetitions": 3,
+      "success_probabilities": [
+        0.06118302778601863,
+        0.06315667384363213,
+        0.048990624305423155
+      ],
+      "iterations": [
+        88,
+        87,
+        95
+      ],
+      "tau": 1680.3033478611312
+    },
+    {
+      "r": 0.64,
+      "sigma": 0.5,
+      "dx": 0.25,
+      "dt": 0.01,
+      "H": 100,
+      "N": 32,
+      "repetitions": 3,
+      "success_probabilities": [
+        0.025151216734749935,
+        0.020139144048016182,
+        0.05741883759996475
+      ],
+      "iterations": [
+        116,
+        123,
+        90
+      ],
+      "tau": 2870.577598496675
+    }
+  ]
+}
