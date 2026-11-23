@@ -25,6 +25,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy scipy numba
+      - name: Unit checks for front tracking, covariance and asymptotic baseline
+        run: python -m unittest discover -s tests -p 'test_barkley_front_tracking.py' -v
       - name: Generate 100 reproducible realizations and statistics
         run: python scripts/barkley_front_tracking.py --runs 100 --T 120 --sigma 0.5 --seed 20261123
       - name: Commit static ensemble dataset
@@ -38,8 +40,23 @@ jobs:
           fi
   publish:
     needs: ensemble
-    uses: ./.github/workflows/pages.yml
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Build the static Pages website
+        run: python scripts/build_site.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
