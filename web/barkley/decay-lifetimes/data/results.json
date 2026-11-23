@@ -12,6 +12,28 @@
       "type": "ams_fixed_horizon",
       "sigma": 0.5,
       "r": 0.62,
+      "lifetime": 1139.1020166067628,
+      "probability": 0.08404537322446222,
+      "K": 78,
+      "N": 32,
+      "H": 100,
+      "L": 80,
+      "dx": 0.1,
+      "dt": 0.004,
+      "sample_dt": 0.2,
+      "death_mass": 0.15,
+      "reference_mass": 4.939043308482142,
+      "reference_peak": 1.6804680974553374,
+      "wall_s": 51.58052807099989,
+      "first_generation_decays": 2,
+      "status": "original_resolution_single_AMS_unvalidated",
+      "estimator": "p=(1-1/N)^K; lifetime=-H/log(1-p), assuming exponential survival",
+      "note": "Original Barkley 2016 dx=0.1 dt=0.004; single AMS realization, no uncertainty interval."
+    },
+    {
+      "type": "ams_fixed_horizon",
+      "sigma": 0.5,
+      "r": 0.62,
       "lifetime": 1594.1120391035745,
       "probability": 0.060803773772368785,
       "K": 133,
@@ -191,5 +213,6 @@
       "sigma": 0.5,
       "reason": "Aged parent unusually large (mass=19.61), likely not a single isolated puff; excluded from pilot figure"
     }
-  ]
+  ],
+  "updated_utc": "2026-11-23T10:37:00Z"
 }
