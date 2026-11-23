@@ -24,7 +24,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: pip
       - run: pip install numpy scipy numba
       - name: Generate 100 reproducible realizations and statistics
         run: python scripts/barkley_front_tracking.py --runs 100 --T 120 --sigma 0.5 --seed 20261123
