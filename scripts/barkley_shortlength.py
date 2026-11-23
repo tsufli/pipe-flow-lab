@@ -161,6 +161,8 @@ def fit(tracks,lag,p,group_ids=None,bootstrap=150,seed=33820):
             row.update({k:float(v) for k,v in zip(COEFF,values[j])})
         rows.append(row)
     roots=find_roots(rows)
+    stable_base=[z["ell"] for z in roots if z["stability"]=="stable"]
+    stable_target=stable_base[0] if len(stable_base)==1 else None
     rng=np.random.default_rng(seed+lag)
     quantiles=np.full((bootstrap,len(rows),len(COEFF)),np.nan)
     roots_boot=[]
@@ -176,7 +178,9 @@ def fit(tracks,lag,p,group_ids=None,bootstrap=150,seed=33820):
             else:rb.append(dict(rows[j], A_l=None))
         cand=find_roots([r for r in rb if r["A_l"] is not None])
         stable=[z["ell"] for z in cand if z["stability"]=="stable" and 3<z["ell"]<11]
-        if stable:roots_boot.append(min(stable,key=lambda x:abs(x-6.7)))
+        if stable_target is not None and stable:
+            candidate=min(stable,key=lambda x:abs(x-stable_target))
+            if abs(candidate-stable_target)<1.5:roots_boot.append(candidate)
     for j,row in enumerate(rows):
         if "A_l" not in row:continue
         for c,k in enumerate(COEFF):
@@ -186,7 +190,7 @@ def fit(tracks,lag,p,group_ids=None,bootstrap=150,seed=33820):
     ans={"lag":h,"rows":rows,"roots":roots,"valid_pairs":int(total[:,0].sum()),
          "tracked_censoring_or_component_breaks":rejected,
          "independent_ancestors":ng,"bootstrap_replicates":bootstrap}
-    if len(roots_boot)>=bootstrap*.5:
+    if stable_target is not None and len(roots_boot)>=bootstrap*.5:
         ans["stable_root_bootstrap_CI95"]=[float(z) for z in np.quantile(roots_boot,[.025,.975])]
     return ans
 

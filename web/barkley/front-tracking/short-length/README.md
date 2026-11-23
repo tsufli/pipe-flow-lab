@@ -64,7 +64,8 @@ At lags h=.2,.4,.8,1.6 and initial-length bins of width .5 below l=6,
     D_l = D_dd+D_uu-2D_ud.
 
 Bins must contain at least 75 valid increment pairs and 12 independent
-ancestors. Drift zeros are interpolated; 95% intervals use 160
+ancestors. When more than one stable zero exists, a single bootstrap root
+interval would mix different branches, so it is suppressed. Drift zeros are interpolated; 95% intervals use 160
 whole-ancestor bootstrap samples. Finite-lag dependence is shown. No
 Ornstein-Uhlenbeck drift, closed Markovian dynamics, or continuous-time
 diffusion limit is assumed.
@@ -77,7 +78,9 @@ diffusion limit is assumed.
 
 The GitHub Actions workflow .github/workflows/barkley-short-puffs.yml
 performs this experiment, commits web/barkley/front-tracking/data/shortlength_r_0.6.json,
-and triggers the established Pages publisher. Output retains algorithm metadata,
+and saves the result. A fresh GitHub Pages publication can be triggered by
+running the existing pages.yml workflow after an Actions-generated dataset commit;
+ordinary user/app pushes to main trigger pages.yml automatically. Output retains algorithm metadata,
 parent identities, seed schedule, decay confirmation criteria, coefficients,
 and selected trajectories.
 

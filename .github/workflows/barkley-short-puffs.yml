@@ -1,11 +1,5 @@
 name: Barkley short-length ensemble at r=0.6
 on:
-  push:
-    branches: [main]
-    paths:
-      - scripts/barkley_shortlength.py
-      - tests/test_barkley_shortlength.py
-      - .github/workflows/barkley-short-puffs.yml
   workflow_dispatch:
 permissions:
   actions: write
@@ -29,6 +23,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_barkley_shortlength.py' -v
       - name: Simulate 500 natural puffs and up to 320 short-puff branches
         run: python scripts/barkley_shortlength.py --runs 500 --T 300 --parents 40 --edge-parents 40 --branches 4 --branch-T 60 --sigma 0.5 --seed 20261129
+      # Actions-generated commits do not trigger other workflows; run pages.yml
+      # manually after a new dataset is committed (or publish using a regular push).
       - name: Commit reproducible dataset
         run: |
           git config user.name "github-actions[bot]"
