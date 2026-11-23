@@ -3,7 +3,8 @@
 Dedicated site: https://tsufli.github.io/pipe-flow-lab/barkley/front-tracking/short-length/
 
 This experiment extends the first 100-run study with 500 natural realizations, T=300,
-and up to four independent continuations of each of 40 naturally encountered short puffs.
+and up to four independent continuations per naturally encountered short parent,
+with up to 40 short-high-q parents and 40 weak edge-like parents.
 The original 100-run data are preserved as a reference. All simulations run off-browser
 on GitHub Actions.
 
@@ -45,9 +46,10 @@ Decay-event totals are just diagnostics, not a decay-probability estimate.
 All 500 natural paths begin from the same relaxed deterministic puff with
 independent noise seeds. Restart parents are saved at the first time t>12
 when the q=.5 measured width lies in [1.4,3.5] and the raw peak q>.53.
-Save the FULL q(x) and u(x), not just a scalar length. At most one parent
-per natural run is chosen, with up to four fresh-noise branches of T=60
-each. Restarts form a selected population and are NEVER pooled as though
+Save the FULL q(x) and u(x), not just a scalar length.
+We additionally select independent edge-like parent runs with 0.18<=qmax<=0.48
+and a valid q=.15 width in [.55,5.5]. At most one parent per original
+natural run is selected, with up to four fresh-noise branches of T=60 each. Restarts form a selected population and are NEVER pooled as though
 they were independent stationary samples. Confidence intervals use whole
 independent natural-run or restart-ancestor bootstrap clusters.
 
@@ -71,7 +73,7 @@ diffusion limit is assumed.
 
     python -m pip install numpy scipy numba
     python -m unittest discover -s tests -p test_barkley_shortlength.py -v
-    python scripts/barkley_shortlength.py --runs 500 --T 300 --parents 40 --branches 4 --branch-T 60 --sigma .5 --seed 20261129
+    python scripts/barkley_shortlength.py --runs 500 --T 300 --parents 40 --edge-parents 40 --branches 4 --branch-T 60 --sigma .5 --seed 20261129
 
 The GitHub Actions workflow .github/workflows/barkley-short-puffs.yml
 performs this experiment, commits web/barkley/front-tracking/data/shortlength_r_0.6.json,

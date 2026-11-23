@@ -219,6 +219,7 @@ def main():
     parser.add_argument("--T",type=float,default=300.)
     parser.add_argument("--branches",type=int,default=4)
     parser.add_argument("--parents",type=int,default=40)
+    parser.add_argument("--edge-parents",type=int,default=40)
     parser.add_argument("--branch-T",type=float,default=60.)
     parser.add_argument("--sigma",type=float,default=.5)
     parser.add_argument("--seed",type=int,default=20261129)
@@ -243,6 +244,7 @@ def main():
         a=tracked(q[None,:],p,thr)[0]
         det[str(thr)]=float(a[2])
     parent_snaps=[]
+    edge_parent_count=0;short_parent_count=0
     long_high=[];long_low=[];viz=[];samples=[];classification=[]
     peak_short=[]
     for i in range(args.runs):
@@ -260,19 +262,32 @@ def main():
            "computed_until_t":round((len(diag)-1)*p["save_dt"],3),
            "valid_high":int(np.isfinite(high[:,2]).sum()),
            "valid_low":int(np.isfinite(low[:,2]).sum())})
-        # First naturally encountered short-length state per independent parent.
-        if len(parent_snaps)<args.parents:
-            indices=np.where(np.isfinite(high[:,2])&
-                 (high[:,2]>=1.4)&(high[:,2]<=3.5)&
-                 (high[:,3]==0)&(diag[:,0]>.53)&
-                 (np.arange(len(high))*p["save_dt"]>12.)&
-                 ((np.arange(len(high))<onset) if onset>=0 else True))[0]
-            if len(indices)>0:
-                k=int(indices[0])
-                parent_snaps.append({"parent":i+1,"time":k*p["save_dt"],
-                    "q":qhist[k].copy(),"u":uhist[k].copy(),"start_ell_05":float(high[k,2]),
-                    "start_ell_015":float(low[k,2]),
-                    "qmax":float(diag[k,0])})
+        # Two *distinct* selected populations. Keep at most one saved parent
+        # per independent natural run to preserve ancestor bootstrap validity.
+        eligible=(np.arange(len(high))*p["save_dt"]>12.)
+        if onset>=0:eligible &= (np.arange(len(high))<onset)
+        selected=None
+        if edge_parent_count<args.edge_parents:
+            # Low q-peak, approximately edge-height profiles: needed because
+            # q=.5 crossing ceases before the decay-edge amplitude (~.30).
+            hits=np.where(eligible&np.isfinite(low[:,2])&
+                  (low[:,2]>=.55)&(low[:,2]<=5.5)&
+                  (low[:,3]==0)&(diag[:,0]>=.18)&(diag[:,0]<=.48))[0]
+            if len(hits):
+                k=int(hits[0]); selected=("edge-like",k);edge_parent_count+=1
+        if selected is None and short_parent_count<args.parents:
+            hits=np.where(eligible&np.isfinite(high[:,2])&
+                  (high[:,2]>=1.4)&(high[:,2]<=3.5)&
+                  (high[:,3]==0)&(diag[:,0]>.53))[0]
+            if len(hits):
+                k=int(hits[0]);selected=("short-high",k);short_parent_count+=1
+        if selected is not None:
+            kind,k=selected
+            parent_snaps.append({"parent":i+1,"kind":kind,"time":k*p["save_dt"],
+                "q":qhist[k].copy(),"u":uhist[k].copy(),
+                "start_ell_05":float(high[k,2]),
+                "start_ell_015":float(low[k,2]),
+                "qmax":float(diag[k,0])})
         if i<30:
             viz.append({"run":i+1,"seed":seed,"high":slim_track(high),
                         "low":slim_track(low)})
@@ -284,7 +299,7 @@ def main():
               "mass":round(float(diag[k,1]),4)} for k in picks]})
         if (i+1)%50==0:print("natural",i+1,"/",args.runs,
                              "confirmed decays",sum(z["decayed"] for z in classification),
-                             "parents",len(parent_snaps),flush=True)
+                             "parents",len(parent_snaps),"edge-like",edge_parent_count,flush=True)
     # All natural trajectories have been recorded. Their lengths are not
     # assumed to be Markovian and branches are reported separately.
     natural={}
@@ -308,11 +323,11 @@ def main():
             branch_info.append({"parent_run":snap["parent"],"parent_time":round(snap["time"],2),
                 "start_length_05":round(snap["start_ell_05"],3),
                 "start_length_015":round(snap["start_ell_015"],3),
-                "start_qmax":round(snap["qmax"],3),
+                "start_qmax":round(snap["qmax"],3),"kind":snap["kind"],
                 "seed":seed,"decayed":bool(confirmed>=0),
                 "confirmed_t":None if confirmed<0 else round(confirmed*p["save_dt"],2)})
             if i<5 and b<2:
-                branch_viz.append({"parent":snap["parent"],"branch":b+1,"high":slim_track(ht,2),
+                branch_viz.append({"parent":snap["parent"],"kind":snap["kind"],"branch":b+1,"high":slim_track(ht,2),
                                    "low":slim_track(lt,2)})
         if (i+1)%10==0: print("restart ancestors",i+1,"/",len(parent_snaps),flush=True)
     restarts={}
@@ -328,7 +343,8 @@ def main():
     result={"schema":2,"generated_utc":datetime.now(timezone.utc).isoformat(),
       "method":"Barkley Heun/Rusanov/upwind + multiplicative Itô noise as original lab",
       "params":p,"seed_base":args.seed,"n_runs":args.runs,"T_restart":args.branch_T,
-      "n_restart_parents":len(parent_snaps),"branches_per_parent":args.branches,
+      "n_restart_parents":len(parent_snaps),"n_edge_like_parents":edge_parent_count,
+      "n_short_high_parents":short_parent_count,"branches_per_parent":args.branches,
       "n_restarts":len(ancestors),"wall_seconds":time.perf_counter()-start,
       "decay_criteria":{"qmax_below":.05,"integral_positive_q_below":.25,
          "for_time":12.,"max_u_minus_U0_below_at_confirmation":.15,
@@ -344,7 +360,7 @@ def main():
       "deterministic":{"peak":float(q.max()),"threshold_widths":det},
       "decay_events":classification,"n_confirmed_decays":sum(z["decayed"] for z in classification),
       "natural":natural,"restarts":restarts,"restart_parents":[{"parent_run":z["parent"],
-         "t":round(z["time"],2),"length_05":round(z["start_ell_05"],3),
+         "t":round(z["time"],2),"kind":z["kind"],"length_05":round(z["start_ell_05"],3),
          "length_015":round(z["start_ell_015"],3),"qmax":round(z["qmax"],3)} for z in parent_snaps],
       "restart_info":branch_info,
       "natural_examples":viz,"restart_examples":branch_viz,
@@ -356,7 +372,8 @@ def main():
         return {"roots":v.get("roots"),"short":[{k:r.get(k) for k in
             ("ell","n","ancestors","A_l","D_l")} for r in v.get("rows",[]) if r["ell"]<4]}
     print("RESULT",json.dumps({"runs":args.runs,"confirmed_decays":result["n_confirmed_decays"],
-         "restart_parents":len(parent_snaps),"branches":len(ancestors),
+         "restart_parents":len(parent_snaps),"edge_like":edge_parent_count,
+         "short_high":short_parent_count,"branches":len(ancestors),
          "wall_seconds":result["wall_seconds"],
          "edge":ref["peak"],"edge_width_low":ref["width_at_threshold"]["0.15"],
          "natural_low":short(natural,"0.15",2),
