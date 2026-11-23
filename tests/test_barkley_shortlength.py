@@ -2,7 +2,7 @@
 import pathlib,sys,unittest
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]/"scripts"))
 import numpy as np
-from barkley_shortlength import tracked,fit,BINS,compute_coeff,bin_sums,find_roots,edge_reference
+from barkley_shortlength import tracked,fit,BINS,compute_coeff,bin_sums,find_roots,edge_reference,is_genuine_puff_candidate,MIN_RELIABLE_LENGTH
 from barkley_front_tracking import PARAMS
 
 class TestShortLength(unittest.TestCase):
@@ -36,6 +36,32 @@ class TestShortLength(unittest.TestCase):
         for r in vals:
             self.assertAlmostEqual(r["A_l"],r["A_d"]-r["A_u"])
             self.assertAlmostEqual(r["D_l"],r["D_dd"]+r["D_uu"]-2*r["D_ud"])
+    def test_untrusted_length_excluded_everywhere(self):
+        self.assertEqual(BINS[0],2.5)
+        p=dict(PARAMS,save_dt=.2)
+        z=np.zeros((12,5))
+        z[:,2]=2.4
+        z[:,0]=np.arange(12)*.1
+        z[:,1]=z[:,0]+z[:,2]
+        z[:,3]=0
+        sums,_=bin_sums([z],2,p)
+        self.assertEqual(int(sums[:,:,0].sum()),0)
+        z[:,2]=3.2
+        z[5,2]=2.2 # all crossing-lag measurements are also excluded
+        z[:,1]=z[:,0]+z[:,2]
+        sums,_=bin_sums([z],2,p)
+        self.assertEqual(int(sums[:,:,0].sum()),7)
+
+    def test_only_sustained_actual_puff_parent(self):
+        p=dict(PARAMS,save_dt=.2)
+        z=np.zeros((10,5));z[:,2]=4;z[:,3]=0
+        diagnostics=np.tile([1.2,5.0,.3],(10,1))
+        self.assertTrue(is_genuine_puff_candidate(z,diagnostics,9,p))
+        diagnostics[-1,0]=.29
+        self.assertFalse(is_genuine_puff_candidate(z,diagnostics,9,p))
+        diagnostics[-1,0]=1.2;z[-3,2]=np.nan
+        self.assertFalse(is_genuine_puff_candidate(z,diagnostics,9,p))
+
     def test_no_intervening_invalid(self):
         p=dict(PARAMS,save_dt=.2)
         z=np.zeros((1,12,5))

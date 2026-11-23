@@ -2,9 +2,11 @@
 
 Dedicated site: https://tsufli.github.io/pipe-flow-lab/barkley/front-tracking/short-length/
 
-This experiment extends the first 100-run study with 500 natural realizations, T=300,
-and up to four independent continuations per naturally encountered short parent,
-with up to 40 short-high-q parents and 40 weak edge-like parents.
+This experiment extends the first 100-run study with 2000 natural realizations,
+T=300, and up to six independent continuations from each of 100 genuine
+turbulent puff snapshots taken from natural trajectories. There are NO
+low-amplitude edge-like restart parents and NO synthetic/scaled/interpolated
+initial states. The full measured q(x) and u(x) profiles are restarted.
 The original 100-run data are preserved as a reference. All simulations run off-browser
 on GitHub Actions.
 
@@ -44,18 +46,19 @@ Decay-event totals are just diagnostics, not a decay-probability estimate.
 ## Natural and short-restarted populations
 
 All 500 natural paths begin from the same relaxed deterministic puff with
-independent noise seeds. Restart parents are saved at the first time t>12
-when the q=.5 measured width lies in [1.4,3.5] and the raw peak q>.53.
-Save the FULL q(x) and u(x), not just a scalar length.
-We additionally select independent edge-like parent runs with 0.18<=qmax<=0.48
-and a valid q=.15 width in [.55,5.5]. At most one parent per original
-natural run is selected, with up to four fresh-noise branches of T=60 each. Restarts form a selected population and are NEVER pooled as though
-they were independent stationary samples. Confidence intervals use whole
-independent natural-run or restart-ancestor bootstrap clusters.
+independent noise seeds. Restart parents are saved *directly* from natural simulations (no fabricated
+profiles). A parent must have, at t>20, a q=0.5 width between 3 and 5.5,
+qmax>=1, mass>=4, and at least one unit of preceding uninterrupted,
+unambiguous q=0.5 puff tracking with qmax>=0.9 and width>=2.5. Only the
+first qualifying state of each independent run is accepted. Full q(x) and
+u(x) fields are preserved. Up to 100 independent parents receive six fresh
+noise continuations of T=60. The deliberately selected restarts remain
+separate from the unselected 2000 natural trajectories, with confidence
+intervals calculated by resampling independent parent clusters.
 
 ## Conditional inference
 
-At lags h=.2,.4,.8,1.6 and initial-length bins of width .5 below l=6,
+At lags h=.2,.4,.8,1.6 and initial-length bins of width .5 from l=2.5 to l=6,
 1 above l=6, estimate
 
     A_i(l) = E[delta x_i | l]/h
@@ -63,6 +66,9 @@ At lags h=.2,.4,.8,1.6 and initial-length bins of width .5 below l=6,
     A_l = A_down-A_up
     D_l = D_dd+D_uu-2D_ud.
 
+Both endpoints AND all intermediate observations must have measured length >=2.5.
+Measurements below 2.5 are excluded rather than reported. This additional
+censoring can bias conditional increments in the first trustworthy bin.
 Bins must contain at least 75 valid increment pairs and 12 independent
 ancestors. When more than one stable zero exists, a single bootstrap root
 interval would mix different branches, so it is suppressed. Drift zeros are interpolated; 95% intervals use 160
@@ -74,7 +80,7 @@ diffusion limit is assumed.
 
     python -m pip install numpy scipy numba
     python -m unittest discover -s tests -p test_barkley_shortlength.py -v
-    python scripts/barkley_shortlength.py --runs 500 --T 300 --parents 40 --edge-parents 40 --branches 4 --branch-T 60 --sigma .5 --seed 20261129
+    python scripts/barkley_shortlength.py --runs 2000 --T 300 --parents 100 --branches 6 --branch-T 60 --sigma .5 --seed 20261129
 
 The GitHub Actions workflow .github/workflows/barkley-short-puffs.yml
 performs this experiment, commits web/barkley/front-tracking/data/shortlength_r_0.6.json,
@@ -91,3 +97,12 @@ True physical decay and the loss of front measurements are not equivalent.
 Survival selection affects the shortest bins. The two threshold definitions
 are intentionally distinct and are not pooled. Numerical convergence in
 resolution, lag, noise strength and threshold is not established.
+
+## Smoothness and interpretation
+
+Fourfold more natural trajectories reduce independent-sampling uncertainty by
+approximately a factor two where sampling dominates. They cannot cure
+threshold fragmentation, length-history dependence, or censoring bias.
+The website may draw a labeled, optional local-polynomial display trend
+alongside the raw half-unit bins and bootstrap intervals. No smoothing is
+applied to the physics, stored coefficients or zero-finding algorithm.

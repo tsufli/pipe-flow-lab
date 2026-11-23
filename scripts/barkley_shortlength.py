@@ -19,7 +19,8 @@ from barkley_front_tracking import PARAMS, advance, run_steps, regions, analytic
 BASE = Path(__file__).resolve().parents[1]
 OUTPUT = BASE / "web/barkley/front-tracking/data/shortlength_r_0.6.json"
 EDGE_FILE = BASE / "web/barkley/edge-scan/data/r_0.595714.json"
-BINS = np.r_[np.arange(0,6.5,.5),np.arange(7.,16.,1.)]
+MIN_RELIABLE_LENGTH = 2.5
+BINS = np.r_[np.arange(MIN_RELIABLE_LENGTH,6.5,.5),np.arange(7.,16.,1.)]
 LAGS = (1,2,4,8)  # saved frames; h=.2,.4,.8,1.6
 COEFF = ("A_u","A_d","A_l","D_uu","D_dd","D_ud","D_l")
 
@@ -81,6 +82,26 @@ def tracked(qhist,p,threshold,minwidth=.55):
         prev=up;prev_index=k
     return rows
 
+def is_genuine_puff_candidate(high,diagnostics,k,p):
+    """Select an actual turbulent puff along an unmodified trajectory.
+
+    Must have a connected q=.5 turbulent region, a strong peak and mass,
+    and sustained measurable puff fronts over the preceding model-time unit.
+    No synthetic interpolation and no low-amplitude edge-like parents.
+    """
+    last=max(0,k-round(1.0/p["save_dt"]))
+    if k-last < round(1.0/p["save_dt"]): return False
+    recent=high[last:k+1]
+    diag=diagnostics[last:k+1]
+    return bool(
+        3.0<=high[k,2]<=5.5 and
+        np.all(np.isfinite(recent[:,2])) and
+        np.all(recent[:,3]==0) and
+        np.all(recent[:,2]>=MIN_RELIABLE_LENGTH) and
+        np.all(diag[:,0]>=.9) and
+        diagnostics[k,0]>=1.0 and diagnostics[k,1]>=4.0
+    )
+
 def data_until_confirmed(track,onset):
     t=track.copy()
     if onset>=0: t[onset:,:3]=np.nan
@@ -94,7 +115,8 @@ def bin_sums(tracks,lag,p,edges=BINS):
     for i,tr in enumerate(tracks):
         if len(tr)<=lag:continue
         # Require *all intermediate saved states* to be continuously measurable.
-        valid=np.isfinite(tr[:,2])&(tr[:,3]==0)
+        valid=np.isfinite(tr[:,2])&(tr[:,3]==0)&(tr[:,2]>=MIN_RELIABLE_LENGTH)
+        # Reject any lag interval that enters the explicitly untrusted range.
         bad=np.r_[0,np.cumsum(~valid)]
         good=(bad[lag+1:]-bad[:-lag-1])==0
         # Raw left/right crossing positions, not artificially centered.
@@ -212,9 +234,10 @@ def edge_reference(p):
             "profile_dx":subdx,"profile_L":j["L"]}
 
 def slim_track(track,decimation=5):
-    return {"up":[None if not np.isfinite(z) else round(float(z),3) for z in track[::decimation,0]],
-            "down":[None if not np.isfinite(z) else round(float(z),3) for z in track[::decimation,1]],
-            "ell":[None if not np.isfinite(z) else round(float(z),3) for z in track[::decimation,2]],
+    valid=np.isfinite(track[::decimation,2]) & (track[::decimation,2]>=MIN_RELIABLE_LENGTH)
+    return {"up":[round(float(z),3) if valid[i] else None for i,z in enumerate(track[::decimation,0])],
+            "down":[round(float(z),3) if valid[i] else None for i,z in enumerate(track[::decimation,1])],
+            "ell":[round(float(z),3) if valid[i] else None for i,z in enumerate(track[::decimation,2])],
             "ambiguous":[int(z==1) for z in track[::decimation,3]]}
 
 def json_ready(value):
@@ -229,11 +252,10 @@ def json_ready(value):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--runs",type=int,default=500)
+    parser.add_argument("--runs",type=int,default=2000)
     parser.add_argument("--T",type=float,default=300.)
-    parser.add_argument("--branches",type=int,default=4)
-    parser.add_argument("--parents",type=int,default=40)
-    parser.add_argument("--edge-parents",type=int,default=40)
+    parser.add_argument("--branches",type=int,default=6)
+    parser.add_argument("--parents",type=int,default=100)
     parser.add_argument("--branch-T",type=float,default=60.)
     parser.add_argument("--sigma",type=float,default=.5)
     parser.add_argument("--seed",type=int,default=20261129)
@@ -258,9 +280,8 @@ def main():
         a=tracked(q[None,:],p,thr)[0]
         det[str(thr)]=float(a[2])
     parent_snaps=[]
-    edge_parent_count=0;short_parent_count=0
+    short_parent_count=0
     long_high=[];long_low=[];viz=[];samples=[];classification=[]
-    peak_short=[]
     for i in range(args.runs):
         seed=args.seed+1009*i
         qhist,uhist,diag,onset,confirm=evolve_until(q,u,dx,p["dt"],p["sigma"],nsteps,stride,
@@ -276,32 +297,26 @@ def main():
            "computed_until_t":round((len(diag)-1)*p["save_dt"],3),
            "valid_high":int(np.isfinite(high[:,2]).sum()),
            "valid_low":int(np.isfinite(low[:,2]).sum())})
-        # Two *distinct* selected populations. Keep at most one saved parent
-        # per independent natural run to preserve ancestor bootstrap validity.
-        eligible=(np.arange(len(high))*p["save_dt"]>12.)
-        if onset>=0:eligible &= (np.arange(len(high))<onset)
-        selected=None
-        if edge_parent_count<args.edge_parents:
-            # Low q-peak, approximately edge-height profiles: needed because
-            # q=.5 crossing ceases before the decay-edge amplitude (~.30).
-            hits=np.where(eligible&np.isfinite(low[:,2])&
-                  (low[:,2]>=.55)&(low[:,2]<=5.5)&
-                  (low[:,3]==0)&(diag[:,0]>=.18)&(diag[:,0]<=.48))[0]
-            if len(hits):
-                k=int(hits[0]); selected=("edge-like",k);edge_parent_count+=1
-        if selected is None and short_parent_count<args.parents:
-            hits=np.where(eligible&np.isfinite(high[:,2])&
-                  (high[:,2]>=1.4)&(high[:,2]<=3.5)&
-                  (high[:,3]==0)&(diag[:,0]>.53))[0]
-            if len(hits):
-                k=int(hits[0]);selected=("short-high",k);short_parent_count+=1
-        if selected is not None:
-            kind,k=selected
-            parent_snaps.append({"parent":i+1,"kind":kind,"time":k*p["save_dt"],
-                "q":qhist[k].copy(),"u":uhist[k].copy(),
-                "start_ell_05":float(high[k,2]),
-                "start_ell_015":float(low[k,2]),
-                "qmax":float(diag[k,0])})
+        # Only genuinely turbulent, naturally occurring puff snapshots.
+        # These are whole q,u fields from the stochastic PDE at a real time,
+        # preceded by ≥1 unit of consistently measurable turbulent fronts.
+        # At most one parent state per original natural realization.
+        if len(parent_snaps)<args.parents:
+            eligible=np.arange(len(high))*p["save_dt"]>20.
+            if onset>=0: eligible &= np.arange(len(high))<onset
+            poss=np.where(eligible & np.isfinite(high[:,2]) &
+                          (high[:,2]>=3.0)&(high[:,2]<=5.5) &
+                          (high[:,3]==0)&(diag[:,0]>=1.0)&(diag[:,1]>=4.0))[0]
+            for k in poss:
+                if is_genuine_puff_candidate(high,diag,int(k),p):
+                    k=int(k)
+                    parent_snaps.append({"parent":i+1,"kind":"natural-turbulent-puff",
+                        "time":k*p["save_dt"],"q":qhist[k].copy(),
+                        "u":uhist[k].copy(),"start_ell_05":float(high[k,2]),
+                        "start_ell_015":float(low[k,2]),
+                        "qmax":float(diag[k,0]),"mass":float(diag[k,1])})
+                    short_parent_count+=1
+                    break
         if i<30:
             viz.append({"run":i+1,"seed":seed,"high":slim_track(high),
                         "low":slim_track(low)})
@@ -313,7 +328,7 @@ def main():
               "mass":round(float(diag[k,1]),4)} for k in picks]})
         if (i+1)%50==0:print("natural",i+1,"/",args.runs,
                              "confirmed decays",sum(z["decayed"] for z in classification),
-                             "parents",len(parent_snaps),"edge-like",edge_parent_count,flush=True)
+                             "parents",len(parent_snaps),flush=True)
     # All natural trajectories have been recorded. Their lengths are not
     # assumed to be Markovian and branches are reported separately.
     natural={}
@@ -354,17 +369,19 @@ def main():
     for label in ("0.5","0.15"):
         results=natural[label]
         quality[label]={"valid_pairs":{key:val["valid_pairs"] for key,val in results.items()}}
-    result={"schema":2,"generated_utc":datetime.now(timezone.utc).isoformat(),
+    result={"schema":3,"generated_utc":datetime.now(timezone.utc).isoformat(),
       "method":"Barkley Heun/Rusanov/upwind + multiplicative Itô noise as original lab",
       "params":p,"seed_base":args.seed,"n_runs":args.runs,"T_restart":args.branch_T,
-      "n_restart_parents":len(parent_snaps),"n_edge_like_parents":edge_parent_count,
-      "n_short_high_parents":short_parent_count,"branches_per_parent":args.branches,
-      "n_restarts":len(ancestors),"wall_seconds":time.perf_counter()-start,
+      "n_restart_parents":len(parent_snaps),"n_edge_like_parents":0,
+      "n_genuine_puff_parents":short_parent_count,"branches_per_parent":args.branches,
+      "n_restarts":len(ancestors),"parent_definition":"An unmodified observed turbulent puff with >=1 time unit of continuous q=.5 fronts, qmax>=1, mass>=4, initial width 3..5.5",
+      "wall_seconds":time.perf_counter()-start,
       "decay_criteria":{"qmax_below":.05,"integral_positive_q_below":.25,
          "for_time":12.,"max_u_minus_U0_below_at_confirmation":.15,
          "event_time":"start of persistent quiet episode, retrospectively censored",
          "important":"Missing threshold crossing alone is not a confirmed decay"},
-      "tracker":{"thresholds":[.5,.15],"gaussian_smooth_cells":p["smooth_cells"],
+      "tracker":{"thresholds":[.5,.15],"minimum_reliable_length":MIN_RELIABLE_LENGTH,
+        "gaussian_smooth_cells":p["smooth_cells"],
         "minimum_crossing_width":.55,"significant_secondary_width":1.,
         "maximum_crossing_width":.42*p["L"],
         "missing_or_ambiguous_intermediate_frames_excluded":True,
@@ -386,8 +403,8 @@ def main():
         return {"roots":v.get("roots"),"short":[{k:r.get(k) for k in
             ("ell","n","ancestors","A_l","D_l")} for r in v.get("rows",[]) if r["ell"]<4]}
     print("RESULT",json.dumps({"runs":args.runs,"confirmed_decays":result["n_confirmed_decays"],
-         "restart_parents":len(parent_snaps),"edge_like":edge_parent_count,
-         "short_high":short_parent_count,"branches":len(ancestors),
+         "restart_parents":len(parent_snaps),"genuine_puffs":short_parent_count,
+         "branches":len(ancestors),
          "wall_seconds":result["wall_seconds"],
          "edge":ref["peak"],"edge_width_low":ref["width_at_threshold"]["0.15"],
          "natural_low":short(natural,"0.15",2),
