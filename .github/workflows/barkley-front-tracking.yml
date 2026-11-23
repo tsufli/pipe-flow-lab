@@ -1,0 +1,46 @@
+name: Barkley front-tracking ensemble (r=0.6)
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/barkley_front_tracking.py
+      - .github/workflows/barkley-front-tracking.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: barkley-front-tracking
+  cancel-in-progress: false
+jobs:
+  ensemble:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install numpy scipy numba
+      - name: Generate 100 reproducible realizations and statistics
+        run: python scripts/barkley_front_tracking.py --runs 100 --T 120 --sigma 0.5 --seed 20261123
+      - name: Commit static ensemble dataset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/barkley/front-tracking/data/r_0.6.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: 100 front-tracked Barkley puff realizations at r=0.6"
+            git push
+          fi
+  publish:
+    needs: ensemble
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
