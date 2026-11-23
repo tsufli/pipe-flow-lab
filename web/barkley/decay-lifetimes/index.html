@@ -26,6 +26,12 @@ th{color:#a6bdd5}.muted{color:#a6b9d0}code{color:#9ed9ff}.point{cursor:pointer}.
 <aside><div id="detail">Select a point for numerical parameters and AMS statistics.</div>
 <p class="muted">Yellow dashed: Barkley's published decay fit at σ=0.5. Colored points: independent offline AMS estimates. Hollow circles use Barkley’s original Δx=0.1 and Δt=0.004; filled circles are coarse-grid pilots. A dashed fit is never counted as simulated data.</p>
 <p class="muted">Conversion uses τ=−H/log(1−p). This is valid for memoryless exponential survival, which must be checked.</p></aside></div></section>
+<section class="panel"><h2>New five-point experiment · σ = 0.5</h2>
+<p>Twenty-four AMS estimates per Reynolds parameter (3 separately prepared natural-puff ensembles × 8 AMS repetitions, 64 clones each), at Barkley's Δx=0.1 and Δt=0.004. The shaded interval is a hierarchical 95% bootstrap across independently prepared ensembles and repeated AMS estimates. Direct survival checks are performed at r = 0.62, 0.64, and 0.66.</p>
+<p id="fiveStatus" class="muted">Campaign not yet published. Only previous verified measurements appear until its offline computations complete.</p>
+<div style="overflow:auto"><table><thead><tr><th>r</th><th>Barkley τ</th><th>Our AMS τ</th><th>AMS 95% interval</th><th>AMS repeats</th><th>Direct decays</th><th>Direct τ</th></tr></thead><tbody id="fiveRows"></tbody></table></div>
+<p class="muted">Benchmark reference: Barkley (2016), Figure 32 (decays only). Raw simulation batches and output processing code live in <a href="https://github.com/tsufli/pipe-flow-lab/actions/workflows/barkley-ams-five-point.yml">GitHub Actions</a>. Estimates remain exploratory pending horizon, grid and competing-split checks.</p>
+</section>
 <section class="panel"><h2>Validation against Barkley (2016) · direct survival</h2>
 <p>Each original-resolution check uses 256 independent forward realizations, naturally aged puff parents, σ = 0.5, Δx = 0.1, Δt = 0.004 and a 100-time-unit observation window. Error bars on the graph are Wilson 95% probability intervals converted to lifetime intervals.</p>
 <div style="overflow:auto"><table><thead><tr><th>r</th><th>Barkley fit</th><th>Direct τ</th><th>Decays / 256</th><th>95% probability interval</th><th>Accepted parents</th><th>Repeated AMS τ</th></tr></thead><tbody id="validationRows"></tbody></table></div>
@@ -48,7 +54,7 @@ th{color:#a6bdd5}.muted{color:#a6b9d0}code{color:#9ed9ff}.point{cursor:pointer}.
 <script>
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const palette={'0.5':'#5cb9ff','0.4':'#f2a862','0.35':'#83dab6','0.3':'#b8a0ff','0.25':'#e28db5'};
-let rows=[];let validation={direct:[],ams:[]};let campaigns=[];
+let rows=[];let validation={direct:[],ams:[]};let campaigns=[];let fivePoint=null;
 function s(tag,attrs={},txt){const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(txt!=null)e.textContent=txt;return e}
 const num=v=>v==null?'—':Number(v).toExponential(2);
 function draw(){
@@ -90,6 +96,32 @@ function draw(){
       circ.addEventListener('click',show);circ.addEventListener('keydown',e=>{if(e.key==='Enter')show()});p.append(circ);
     }
   }
+  if(fivePoint?.complete && $('showFive')?.checked){
+    const arr=fivePoint.points||[];
+    if(arr.length>1){
+      const coords=arr.filter(v=>Number.isFinite(v.tau_ams)).map(v=>x(v.r)+0+','+y(v.tau_ams));
+      for(let i=1;i<arr.length;i++){
+        const a=arr[i-1],b=arr[i];if(!a.tau_ams||!b.tau_ams)continue;
+        line(x(a.r),y(a.tau_ams),x(b.r),y(b.tau_ams),'#e8f4ff',3);
+      }
+    }
+    for(const z of arr){
+      if(!z.tau_ams)continue;
+      const xx=x(z.r), yy=y(z.tau_ams),cc=z.tau_ams_ci95||[];
+      if(cc.length===2&&cc.every(t=>Number.isFinite(t)&&t>0)){
+        const low=y(cc[0]),high=y(cc[1]);line(xx,low,xx,high,'#e8f4ff',2.5);
+        line(xx-9,low,xx+9,low,'#e8f4ff',2.5);line(xx-9,high,xx+9,high,'#e8f4ff',2.5);
+      }
+      const circle=s('circle',{cx:xx,cy:yy,r:8,fill:'#eef9ff',stroke:'#153757','stroke-width':2,class:'point',tabindex:'0'});
+      const show=()=>{$('detail').textContent='Five-point benchmark at r='+z.r+', σ=0.5 · AMS τ='+num(z.tau_ams)+', 95% interval '+(cc.map(num).join(' – '))+', '+z.n_ams_repeats+' AMS runs / '+z.n_parent_pools+' natural parent pools; '+z.direct.events+' direct decays in '+z.direct.n+' trials. Original Barkley resolution. Preliminary.';
+      };circle.addEventListener('click',show);circle.addEventListener('keydown',ev=>{if(ev.key==='Enter')show()});p.append(circle);
+      if($('showFiveDirect')?.checked&&z.direct.n&&z.direct.tau){
+        const yy2=y(z.direct.tau),dx=11;
+        const sq=s('rect',{x:xx+dx-5,y:yy2-5,width:10,height:10,rx:1,fill:'#f08e9e',stroke:'#07182b','stroke-width':2,class:'point',tabindex:'0'});
+        sq.addEventListener('click',()=>{$('detail').textContent='Independent direct simulations r='+z.r+': '+z.direct.events+' decays in '+z.direct.n+' trials, τ='+num(z.direct.tau)+' at H=100.'});p.append(sq);
+      }
+    }
+  }
   if($('showDirect')?.checked){
     for(const v of validation.direct||[]){
       if(v.dx>0.10001 || !v.tau)continue;
@@ -106,12 +138,22 @@ function draw(){
   }
 }
 async function start(){try{const [j,vj]=await Promise.all([fetch('data/results.json',{cache:'no-store'}).then(x=>x.json()),fetch('data/validation-summary.json',{cache:'no-store'}).then(x=>x.ok?x.json():{direct:[],ams:[]})]);rows=j.rows||[];validation=vj;
+try{const campaignResponse=await fetch('data/five-point_sigma0.5.json',{cache:'no-store'});if(campaignResponse.ok)fivePoint=await campaignResponse.json();}catch(e){fivePoint=null;}
+const body=$('fiveRows');const rr=[.62,.64,.66,.68,.70];
+for(const r of rr){
+ const c=fivePoint?.points?.find(x=>x.r===r);
+ const ref=Math.exp(Math.exp(4.901*r-1.102));
+ const tr=document.createElement('tr');
+ tr.innerHTML='<td>'+r.toFixed(2)+'</td><td>'+num(ref)+'</td><td>'+(c?num(c.tau_ams):'pending')+'</td><td>'+(c?.tau_ams_ci95?.map(num).join(' – ')||'—')+'</td><td>'+(c?.n_ams_repeats||'—')+'</td><td>'+(c?.direct?.n?c.direct.events+' / '+c.direct.n:'—')+'</td><td>'+(c?.direct?.tau?num(c.direct.tau):'—')+'</td>';
+ body.append(tr);
+}
+$('fiveStatus').textContent=fivePoint?.complete?'Full five-point experiment is loaded. Click plotted AMS points to inspect their statistics.':'New campaign not yet published; historical data remain visible.';
 campaigns=(await Promise.all(['0.62','0.64'].map(async r=>{
  try{const resp=await fetch('data/validation_r'+r+'_sigma0.5.json',{cache:'no-store'});return resp.ok?await resp.json():null}
  catch(_){return null}
 }))).filter(Boolean);
 $('legend').innerHTML='<label><input id="published" type="checkbox" checked> <i class="key" style="background:#efcd7a"></i>Barkley 2016 fit (σ=0.5)</label>';
-$('legend').insertAdjacentHTML('beforeend','<label><input id="showDirect" type="checkbox" checked> <i class="key" style="background:#69dfad"></i>Direct survival · original grid (95% CI)</label><label><input id="showLower" type="checkbox" checked> <i class="key" style="background:#f2a862"></i>σ=0.4 AMS (coarse grid)</label><label><input id="showAMS" type="checkbox" checked> <i class="key" style="background:#67b6ff"></i>Repeated AMS · original grid (diamonds)</label><label><input id="showPilots" type="checkbox"> Show unvalidated AMS pilots</label>');
+$('legend').insertAdjacentHTML('beforeend','<label><input id="showDirect" type="checkbox" checked> <i class="key" style="background:#69dfad"></i>Direct survival · original grid (95% CI)</label><label><input id="showFive" type="checkbox" checked> <i class="key" style="background:#eef9ff"></i>New five-point AMS (95% CI)</label><label><input id="showFiveDirect" type="checkbox" checked> <i class="key" style="background:#f08e9e"></i>New direct comparisons</label><label><input id="showLower" type="checkbox" checked> <i class="key" style="background:#f2a862"></i>σ=0.4 AMS (coarse grid)</label><label><input id="showAMS" type="checkbox" checked> <i class="key" style="background:#67b6ff"></i>Repeated AMS · original grid (diamonds)</label><label><input id="showPilots" type="checkbox"> Show unvalidated AMS pilots</label>');
 const vd=$('validationRows');if(vd)vd.replaceChildren();
 for(const item of validation.direct||[]){if(item.dx>0.10001)continue;const tr=document.createElement('tr');tr.innerHTML='<td>'+item.r.toFixed(3)+'</td><td>'+num(Math.exp(Math.exp(4.901*item.r-1.102)))+'</td><td>'+num(item.tau)+'</td><td>'+item.events+' / '+item.n+'</td><td>'+item.p_ci95.map(z=>(z*100).toFixed(2)+'%').join('–')+'</td><td>'+item.n_parents+'</td><td>'+num(campaigns.find(z=>z.parameters?.r===item.r)?.ams?.[0]?.tau)+'</td>';vd.append(tr)}
 for(const z of validation.lower_noise||[]){const tr=document.createElement('tr');tr.innerHTML='<td>'+z.r.toFixed(3)+'</td><td>'+z.sigma+'</td><td>'+num(z.tau)+'</td><td>'+num(z.p_mean)+'</td><td>'+z.K.join(', ')+'</td><td>'+z.dx+', '+z.dt+'</td>';$('lowerNoiseRows').append(tr)}
