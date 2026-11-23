@@ -9,6 +9,18 @@ new-repository creation. It reuses the spatial Barkley equations, parameters and
 stochastic time-stepper from `web/barkley/spatial/index.html` and
 `scripts/barkley_spatial.py`. Simulations run offline, not in the browser.
 
+## Follow-up: short puffs and decay edge
+
+The next experiment runs 500 longer natural realizations at r=0.6, with
+independent branched continuations from naturally encountered short states.
+It preserves the original q=0.5 tracker and adds q=0.15 because the
+numerical decay-edge maximum q≈0.30 is below the original threshold.
+It also confirms decay using persistent low amplitude and mass plus recovery
+of the velocity field, rather than calling absent crossings decay.
+Visit the [short-length analysis](./short-length/) or read
+[`scripts/barkley_shortlength.py`](../../../scripts/barkley_shortlength.py).
+The separate q=0.15 and q=0.5 estimates and branch sampling are **not pooled**.
+
 ## First ensemble
 
 - Control parameter `r=0.6`; parameters `delta=.1, eps1=.1, eps2=.2,
