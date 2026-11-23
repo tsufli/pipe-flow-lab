@@ -24,7 +24,7 @@ th{color:#a6bdd5}.muted{color:#a6b9d0}code{color:#9ed9ff}.point{cursor:pointer}.
 <section class="panel"><h2>Decay lifetime as a function of r</h2>
 <div class="columns"><div><div id="legend"></div><svg id="plot" viewBox="0 0 800 505" role="img" aria-label="Mean lifetime in model time units versus model Reynolds parameter"></svg><p id="status" class="muted">Loading offline results…</p></div>
 <aside><div id="detail">Select a point for numerical parameters and AMS statistics.</div>
-<p class="muted">Yellow dashed: Barkley's published decay fit at σ=0.5. Colored points: independent offline AMS estimates. A dashed fit is never counted as simulated data.</p>
+<p class="muted">Yellow dashed: Barkley's published decay fit at σ=0.5. Colored points: independent offline AMS estimates. Hollow circles use Barkley’s original Δx=0.1 and Δt=0.004; filled circles are coarse-grid pilots. A dashed fit is never counted as simulated data.</p>
 <p class="muted">Conversion uses τ=−H/log(1−p). This is valid for memoryless exponential survival, which must be checked.</p></aside></div></section>
 <section class="panel"><h2>Numerical results</h2><div style="overflow:auto"><table><thead><tr><th>σ</th><th>r</th><th>Estimated τ</th><th>P(decay by H)</th><th>Clones N</th><th>K</th><th>Δx, Δt</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div></section>
 <section class="panel"><h2>Scientific and numerical details</h2><p>Spatial stochastic Barkley model (8.14), Itô term σqη, white in space and time. Physical parameters: ζ=0.8, D=0.5, δ=0.1, ε₁=0.1, ε₂=0.2, U₀=2, Ū=1. The numerical solver uses explicit Euler–Maruyama, periodic boundary conditions, an upwind discretization for q-advection and a conservative Rusanov flux for u-advection. Each AMS run starts from a dynamically evolved, stochastically aged puff.</p>
@@ -52,7 +52,7 @@ function draw(){
   for(const v of rows){
     const tr=document.createElement('tr');tr.innerHTML='<td>'+v.sigma+'</td><td>'+v.r.toFixed(3)+'</td><td>'+num(v.lifetime)+'</td><td>'+num(v.probability)+'</td><td>'+v.N+'</td><td>'+v.K+'</td><td>'+v.dx+', '+v.dt+'</td><td>'+v.status+'</td>';$('rows').append(tr);
     if(!$('sigma-'+v.sigma)?.checked || !v.lifetime)continue;
-    const cir=s('circle',{cx:x(v.r),cy:y(v.lifetime),r:7,fill:palette[String(v.sigma)]||'#eee',stroke:'#09152a','stroke-width':2,class:'point',tabindex:'0'});
+    const hi=v.dx<=0.10001;const color=palette[String(v.sigma)]||'#eee';const cir=s('circle',{cx:x(v.r),cy:y(v.lifetime),r:hi?9:6,fill:hi?'#0e192b':color,stroke:hi?color:'#09152a','stroke-width':hi?3:2,class:'point',tabindex:'0'});
     const select=()=>{$('detail').innerHTML='<b>r='+v.r+', σ='+v.sigma+'</b><p>τ ≈ '+num(v.lifetime)+'<br>p = '+num(v.probability)+'<br>Observation window H = '+v.H+'<br>Clones N = '+v.N+'<br>K = '+v.K+'<br>Δx = '+v.dx+', Δt = '+v.dt+'<br>Reference mass = '+Number(v.reference_mass).toFixed(2)+'<br>Wall time = '+Math.round(v.wall_s)+' s</p><b>Method: '+v.status+'</b>'};
     cir.addEventListener('click',select);cir.addEventListener('keydown',e=>{if(e.key==='Enter')select()});p.append(cir)
   }
