@@ -1,0 +1,106 @@
+name: Barkley 2016 five-point decay benchmark sigma 0.5
+on:
+  push:
+    paths:
+      - .github/workflows/barkley-ams-five-point.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  independent-ensembles:
+    name: r=${{ matrix.r }} / pool-${{ matrix.batch }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        r: ['0.62', '0.64', '0.66', '0.68', '0.70']
+        batch: [0, 1, 2]
+    env:
+      NUMBA_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install physics dependencies
+        run: pip install 'numpy<2.3' numba
+      - name: Check Barkley stochastic solver
+        run: |
+          python -m unittest discover -s tests -p 'test_barkley_decay_validation.py' -v
+          python -m py_compile scripts/aggregate_barkley_five_point.py
+      - name: Simulate 8 independent AMS repeats for this parent pool
+        shell: bash
+        env:
+          R: ${{ matrix.r }}
+          BATCH: ${{ matrix.batch }}
+        run: |
+          set -euo pipefail
+          n_direct=0
+          if [ "$BATCH" = "0" ]; then
+            case "$R" in
+              "0.62"|"0.64") n_direct=1024 ;;
+              "0.66") n_direct=512 ;;
+            esac
+          fi
+          seed=$(python -c 'import os; print(20261201 + round(10000*float(os.environ["R"])) + 100003*int(os.environ["BATCH"]))')
+          mkdir -p batches
+          python -u scripts/barkley_decay_validation.py \
+            --r "$R" --sigma 0.5 --L 80 \
+            --dx 0.1 --dt 0.004 --H 100 \
+            --parents 48 --age-lo 100 --age-hi 220 \
+            --clones 64 --repeats 8 --direct "$n_direct" \
+            --seed "$seed" --output "batches/r_${R}_batch_${BATCH}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ams-five-point-r${{ matrix.r }}-pool${{ matrix.batch }}
+          path: batches/*.json
+          retention-days: 60
+          if-no-files-found: error
+
+  aggregate:
+    name: Publish validated five-point series
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: independent-ensembles
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ams-five-point-*
+          path: _collected
+          merge-multiple: true
+      - name: Aggregate 15 independent ensemble files
+        run: |
+          python scripts/aggregate_barkley_five_point.py \
+            --input-dir _collected \
+            --output web/barkley/decay-lifetimes/data/five-point_sigma0.5.json
+          mkdir -p web/barkley/decay-lifetimes/data/campaign-batches
+          cp _collected/r_*_batch_*.json web/barkley/decay-lifetimes/data/campaign-batches/
+      - name: Commit complete curve to Pages source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/barkley/decay-lifetimes/data/five-point_sigma0.5.json \
+                  web/barkley/decay-lifetimes/data/campaign-batches/
+          git commit -m 'data: five-point Barkley sigma=0.5 AMS benchmark with uncertainties'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            if [ "$attempt" = 5 ]; then exit 1; fi
+          done
