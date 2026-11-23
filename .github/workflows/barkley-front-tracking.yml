@@ -7,6 +7,7 @@ on:
       - .github/workflows/barkley-front-tracking.yml
   workflow_dispatch:
 permissions:
+  actions: write
   contents: write
   pages: write
   id-token: write
@@ -38,25 +39,7 @@ jobs:
             git commit -m "data: 100 front-tracked Barkley puff realizations at r=0.6"
             git push
           fi
-  publish:
-    needs: ensemble
-    runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - name: Build the static Pages website
-        run: python scripts/build_site.py
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Trigger the established GitHub Pages workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main
