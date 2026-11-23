@@ -1,0 +1,382 @@
+{
+  "schema": 1,
+  "created_utc": "2026-11-23T12:27:28.063832+00:00",
+  "title": "Barkley sigma=0.5 five-point AMS decay benchmark",
+  "complete": true,
+  "points": [
+    {
+      "r": 0.62,
+      "sigma": 0.5,
+      "H": 100.0,
+      "dx": 0.1,
+      "dt": 0.004,
+      "L": 80,
+      "n_parent_pools": 3,
+      "n_ams_repeats": 24,
+      "n_ams_clones": 64,
+      "n_parent_states": 95,
+      "p_ams": 0.06656349341261929,
+      "p_ams_ci95": [
+        0.06089590731116707,
+        0.07335126508020583
+      ],
+      "tau_ams": 1451.7510223089291,
+      "tau_ams_ci95": [
+        1312.6682257067944,
+        1591.6229425205254
+      ],
+      "p_ams_by_parent_pool": [
+        0.06562706957121256,
+        0.06612612957944936,
+        0.06793728108719596
+      ],
+      "ams_K_by_pool": [
+        [
+          170,
+          167,
+          186,
+          172,
+          175,
+          179,
+          166,
+          171
+        ],
+        [
+          190,
+          183,
+          159,
+          164,
+          195,
+          149,
+          173,
+          181
+        ],
+        [
+          210,
+          174,
+          173,
+          183,
+          172,
+          165,
+          139,
+          171
+        ]
+      ],
+      "direct": {
+        "n": 1024,
+        "events": 69,
+        "p": 0.0673828125,
+        "p_ci95": [
+          0.0535892404419034,
+          0.08441011500678357
+        ],
+        "tau": 1433.4766809512175,
+        "tau_ci95": [
+          1133.9573482953397,
+          1815.5872631170355
+        ]
+      },
+      "barkley_fit_tau": 1027.8968467859074,
+      "status": "exploratory: 3 independently prepared parent pools; hierarchical bootstrap; no grid convergence"
+    },
+    {
+      "r": 0.64,
+      "sigma": 0.5,
+      "H": 100.0,
+      "dx": 0.1,
+      "dt": 0.004,
+      "L": 80,
+      "n_parent_pools": 3,
+      "n_ams_repeats": 24,
+      "n_ams_clones": 64,
+      "n_parent_states": 122,
+      "p_ams": 0.03205672224549744,
+      "p_ams_ci95": [
+        0.026933028261958456,
+        0.03715594207687725
+      ],
+      "tau_ams": 3069.199009485719,
+      "tau_ams_ci95": [
+        2641.044037925533,
+        3662.6858260394456
+      ],
+      "p_ams_by_parent_pool": [
+        0.027942648470797058,
+        0.03537531538515909,
+        0.032852202880536176
+      ],
+      "ams_K_by_pool": [
+        [
+          244,
+          209,
+          199,
+          272,
+          219,
+          252,
+          238,
+          216
+        ],
+        [
+          201,
+          220,
+          223,
+          224,
+          199,
+          191,
+          256,
+          205
+        ],
+        [
+          225,
+          214,
+          229,
+          227,
+          196,
+          238,
+          194,
+          227
+        ]
+      ],
+      "direct": {
+        "n": 1024,
+        "events": 30,
+        "p": 0.029296875,
+        "p_ci95": [
+          0.02059753451986554,
+          0.041514631002182154
+        ],
+        "tau": 3363.085548660085,
+        "tau_ci95": [
+          2358.4359943340432,
+          4804.7765521863
+        ]
+      },
+      "barkley_fit_tau": 2099.590932144819,
+      "status": "exploratory: 3 independently prepared parent pools; hierarchical bootstrap; no grid convergence"
+    },
+    {
+      "r": 0.66,
+      "sigma": 0.5,
+      "H": 100.0,
+      "dx": 0.1,
+      "dt": 0.004,
+      "L": 80,
+      "n_parent_pools": 3,
+      "n_ams_repeats": 24,
+      "n_ams_clones": 64,
+      "n_parent_states": 127,
+      "p_ams": 0.013968330733330347,
+      "p_ams_ci95": [
+        0.011889930365090664,
+        0.015997429596675675
+      ],
+      "tau_ams": 7108.934342226478,
+      "tau_ams_ci95": [
+        6200.869835962265,
+        8360.378512366302
+      ],
+      "p_ams_by_parent_pool": [
+        0.014067547995237373,
+        0.015005730475256392,
+        0.01283171372949728
+      ],
+      "ams_K_by_pool": [
+        [
+          247,
+          309,
+          276,
+          269,
+          255,
+          272,
+          265,
+          294
+        ],
+        [
+          268,
+          287,
+          254,
+          303,
+          242,
+          262,
+          293,
+          250
+        ],
+        [
+          254,
+          247,
+          340,
+          311,
+          262,
+          293,
+          288,
+          267
+        ]
+      ],
+      "direct": {
+        "n": 512,
+        "events": 5,
+        "p": 0.009765625,
+        "p_ci95": [
+          0.004178301706740387,
+          0.0226544752715544
+        ],
+        "tau": 10189.91821995253,
+        "tau_ci95": [
+          4363.947918573234,
+          23883.133897174437
+        ]
+      },
+      "barkley_fit_tau": 4615.9831308595585,
+      "status": "exploratory: 3 independently prepared parent pools; hierarchical bootstrap; no grid convergence"
+    },
+    {
+      "r": 0.68,
+      "sigma": 0.5,
+      "H": 100.0,
+      "dx": 0.1,
+      "dt": 0.004,
+      "L": 80,
+      "n_parent_pools": 3,
+      "n_ams_repeats": 24,
+      "n_ams_clones": 64,
+      "n_parent_states": 127,
+      "p_ams": 0.005009700385367817,
+      "p_ams_ci95": [
+        0.003912470566861792,
+        0.006093478702044954
+      ],
+      "tau_ams": 19911.23173834004,
+      "tau_ams_ci95": [
+        16360.936104424738,
+        25509.265042130744
+      ],
+      "p_ams_by_parent_pool": [
+        0.00583509251195892,
+        0.004163410672816126,
+        0.005030597971328408
+      ],
+      "ams_K_by_pool": [
+        [
+          293,
+          339,
+          335,
+          355,
+          329,
+          329,
+          325,
+          326
+        ],
+        [
+          362,
+          361,
+          295,
+          358,
+          355,
+          357,
+          382,
+          357
+        ],
+        [
+          313,
+          321,
+          390,
+          326,
+          383,
+          405,
+          317,
+          309
+        ]
+      ],
+      "direct": {
+        "n": 0,
+        "events": 0,
+        "p": null,
+        "p_ci95": null,
+        "tau": null,
+        "tau_ci95": null
+      },
+      "barkley_fit_tau": 11005.959073323162,
+      "status": "exploratory: 3 independently prepared parent pools; hierarchical bootstrap; no grid convergence"
+    },
+    {
+      "r": 0.7,
+      "sigma": 0.5,
+      "H": 100.0,
+      "dx": 0.1,
+      "dt": 0.004,
+      "L": 80,
+      "n_parent_pools": 3,
+      "n_ams_repeats": 24,
+      "n_ams_clones": 64,
+      "n_parent_states": 132,
+      "p_ams": 0.0022023982306575624,
+      "p_ams_ci95": [
+        0.0018083604229846624,
+        0.0025955855675037624
+      ],
+      "tau_ams": 45355.03081690765,
+      "tau_ams_ci95": [
+        38476.930121971585,
+        55248.6956874938
+      ],
+      "p_ams_by_parent_pool": [
+        0.0021365446880777525,
+        0.0021954463055127316,
+        0.0022752036983822036
+      ],
+      "ams_K_by_pool": [
+        [
+          373,
+          427,
+          464,
+          347,
+          379,
+          368,
+          445,
+          406
+        ],
+        [
+          367,
+          387,
+          361,
+          435,
+          378,
+          408,
+          391,
+          416
+        ],
+        [
+          412,
+          357,
+          424,
+          358,
+          383,
+          443,
+          389,
+          375
+        ]
+      ],
+      "direct": {
+        "n": 0,
+        "events": 0,
+        "p": null,
+        "p_ci95": null,
+        "tau": null,
+        "tau_ci95": null
+      },
+      "barkley_fit_tau": 28698.17727499577,
+      "status": "exploratory: 3 independently prepared parent pools; hierarchical bootstrap; no grid convergence"
+    }
+  ],
+  "numerical_method": "Barkley 2016 stochastic It\u00f4 PDE; Euler-Maruyama, q upwind, u Rusanov",
+  "sampling": "3 independent parent ensembles at each r; 8 independent AMS runs per parent ensemble, 64 clones",
+  "event": "total positive q mass <=0.15 within 100 time units",
+  "limitations": [
+    "Fixed H=100 assumes approximately exponential survival and quasi-stationary parent ensemble",
+    "Bootstrap resamples only 3 distinct parent pools and cannot establish full physical error budget",
+    "AMS and direct estimates use the same underlying numerical discretization",
+    "Split detection was used for accepting parent states, not as a competing-risk censor during evolution",
+    "Grid and observation-horizon convergence have not yet been demonstrated",
+    "The published Barkley curve is reference only, not fitted to numerical measurements"
+  ]
+}

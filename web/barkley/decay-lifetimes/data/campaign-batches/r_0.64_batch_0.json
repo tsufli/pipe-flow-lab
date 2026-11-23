@@ -1,0 +1,538 @@
+{
+  "schema": 2,
+  "generated_utc": "2026-11-23T11:42:50.110587+00:00",
+  "parameters": {
+    "r": 0.64,
+    "sigma": 0.5,
+    "dx": 0.1,
+    "dt": 0.004,
+    "L": 80.0,
+    "age_range": [
+      100.0,
+      220.0
+    ]
+  },
+  "parent_samples": [
+    {
+      "candidate": 0,
+      "age": 151.344,
+      "mass": 8.196718286618689,
+      "peak": 1.9551531636801764,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 1,
+      "age": 168.868,
+      "mass": 7.986793786717854,
+      "peak": 2.260200662586606,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 2,
+      "age": 175.644,
+      "mass": 7.7469446732781835,
+      "peak": 1.6350764843759185,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 3,
+      "age": 146.504,
+      "mass": 7.23170463910025,
+      "peak": 1.9877108783240862,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 4,
+      "age": 111.544,
+      "mass": 6.248626650305394,
+      "peak": 2.0994176783081704,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 5,
+      "age": 214.568,
+      "mass": 7.509766449193108,
+      "peak": 1.5496806731018293,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 6,
+      "age": 124.672,
+      "mass": 9.420767713626779,
+      "peak": 2.0137728735741383,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 7,
+      "age": 145.788,
+      "mass": 5.729907772439605,
+      "peak": 1.8342768390166053,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 8,
+      "age": 124.408,
+      "mass": 5.155303397324013,
+      "peak": 1.545073642461951,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 9,
+      "age": 195.12800000000001,
+      "mass": 11.561692859099573,
+      "peak": 2.0272796882718986,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 10,
+      "age": 185.768,
+      "mass": 11.84037147877291,
+      "peak": 2.1659279816646375,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 11,
+      "age": 164.516,
+      "mass": 5.342834649022828,
+      "peak": 2.288712572765008,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 12,
+      "age": 216.012,
+      "mass": 4.714761748899654,
+      "peak": 1.1937920273444924,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 13,
+      "age": 105.36,
+      "mass": 5.52941000125792,
+      "peak": 1.4769184762212628,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 14,
+      "age": 196.208,
+      "mass": 5.569638080465418,
+      "peak": 1.7094117340773511,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 15,
+      "age": 154.116,
+      "mass": 3.5306426394290242,
+      "peak": 1.0049858038609503,
+      "components": 2,
+      "status": "not_isolated"
+    },
+    {
+      "candidate": 16,
+      "age": 128.284,
+      "mass": 5.895718912468536,
+      "peak": 1.18890391038744,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 17,
+      "age": 110.736,
+      "mass": 10.597925611438455,
+      "peak": 2.052014440477771,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 18,
+      "age": 117.38,
+      "mass": 7.106707576173914,
+      "peak": 1.5064399380593905,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 19,
+      "age": 126.572,
+      "mass": 6.344306239261781,
+      "peak": 1.8399307328787173,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 20,
+      "age": 198.312,
+      "mass": 6.994723837187408,
+      "peak": 1.3703831015683088,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 21,
+      "age": 192.016,
+      "status": "decayed"
+    },
+    {
+      "candidate": 22,
+      "age": 163.088,
+      "mass": 6.189803012531085,
+      "peak": 1.8981866850397766,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 23,
+      "age": 158.724,
+      "status": "decayed"
+    },
+    {
+      "candidate": 24,
+      "age": 137.388,
+      "mass": 7.462211280003615,
+      "peak": 1.763107181807047,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 25,
+      "age": 177.66,
+      "mass": 9.419363490906592,
+      "peak": 2.15807566682098,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 26,
+      "age": 150.88,
+      "mass": 6.919242844922858,
+      "peak": 1.577043098107106,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 27,
+      "age": 219.8,
+      "status": "decayed"
+    },
+    {
+      "candidate": 28,
+      "age": 181.38400000000001,
+      "mass": 7.166084136176119,
+      "peak": 1.5988180716362708,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 29,
+      "age": 144.048,
+      "mass": 5.358270635707388,
+      "peak": 1.5496656621126228,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 30,
+      "age": 115.52,
+      "mass": 6.620715613638338,
+      "peak": 1.6660901098403627,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 31,
+      "age": 133.308,
+      "mass": 7.424768739601508,
+      "peak": 1.632469137332824,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 32,
+      "age": 122.432,
+      "mass": 8.501508821295209,
+      "peak": 2.1894104790030386,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 33,
+      "age": 182.844,
+      "mass": 7.856302477906917,
+      "peak": 2.283847827681556,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 34,
+      "age": 131.656,
+      "mass": 4.650131570643764,
+      "peak": 1.4654666461873689,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 35,
+      "age": 120.07600000000001,
+      "status": "decayed"
+    },
+    {
+      "candidate": 36,
+      "age": 122.432,
+      "mass": 3.3959501790471736,
+      "peak": 1.297818834449907,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 37,
+      "age": 187.524,
+      "mass": 7.1822372817407505,
+      "peak": 1.899174238145267,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 38,
+      "age": 154.784,
+      "mass": 6.214446656420819,
+      "peak": 2.5005913997619458,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 39,
+      "age": 130.252,
+      "mass": 7.504380927299621,
+      "peak": 1.427797042673428,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 40,
+      "age": 161.40800000000002,
+      "mass": 6.744354880253773,
+      "peak": 2.14274317430187,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 41,
+      "age": 188.96,
+      "mass": 7.553971865816475,
+      "peak": 1.746245537352959,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 42,
+      "age": 193.668,
+      "mass": 6.568380000373793,
+      "peak": 1.1902131094400294,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 43,
+      "age": 113.492,
+      "mass": 9.887670099168396,
+      "peak": 2.200392681177089,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 44,
+      "age": 194.116,
+      "mass": 12.7898616726304,
+      "peak": 2.16637136443726,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 45,
+      "age": 119.324,
+      "mass": 2.5555619889211063,
+      "peak": 0.7694686307036116,
+      "components": 1,
+      "status": "not_isolated"
+    },
+    {
+      "candidate": 46,
+      "age": 151.584,
+      "mass": 8.073346519853601,
+      "peak": 1.8891993505202715,
+      "components": 1,
+      "status": "accepted"
+    },
+    {
+      "candidate": 47,
+      "age": 163.904,
+      "mass": 4.969500752410301,
+      "peak": 1.34321436719533,
+      "components": 1,
+      "status": "accepted"
+    }
+  ],
+  "accepted_parents": 42,
+  "direct": [
+    {
+      "H": 100.0,
+      "n": 1024,
+      "decays": 30,
+      "p": 0.029296875,
+      "p_ci95": [
+        0.020597402050804018,
+        0.04151489229493953
+      ],
+      "tau": 3363.085548660085,
+      "decay_times": [
+        80.4,
+        76.4,
+        64.2,
+        85.8,
+        42.0,
+        76.0,
+        70.4,
+        36.0,
+        80.2,
+        29.400000000000002,
+        61.4,
+        92.0,
+        44.6,
+        94.8,
+        41.2,
+        26.400000000000002,
+        41.0,
+        32.0,
+        79.4,
+        91.0,
+        28.2,
+        65.0,
+        83.8,
+        69.0,
+        86.8,
+        70.0,
+        92.4,
+        55.800000000000004,
+        99.8,
+        72.2
+      ],
+      "wall_s": 197.92753049900003
+    }
+  ],
+  "ams": [
+    {
+      "H": 100.0,
+      "replicas": 64,
+      "repetitions": 8,
+      "samples": [
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 244,
+          "p": 0.021437809856220378,
+          "tau": 4614.475019710639,
+          "initial_direct_deaths": 1,
+          "seed": 20280958,
+          "wall_s": 80.62758655800002
+        },
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 209,
+          "p": 0.037201484732293184,
+          "tau": 2637.748838152074,
+          "initial_direct_deaths": 1,
+          "seed": 20291435,
+          "wall_s": 67.40533992299993
+        },
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 199,
+          "p": 0.04354662670514323,
+          "tau": 2246.0181103591353,
+          "initial_direct_deaths": 5,
+          "seed": 20301912,
+          "wall_s": 72.54337741300003
+        },
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 272,
+          "p": 0.01379356506326601,
+          "tau": 7199.641625611094,
+          "initial_direct_deaths": 1,
+          "seed": 20312389,
+          "wall_s": 66.54029539600003
+        },
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 219,
+          "p": 0.0317808880044338,
+          "tau": 3096.2760452175667,
+          "initial_direct_deaths": 0,
+          "seed": 20322866,
+          "wall_s": 72.97760428599997
+        },
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 252,
+          "p": 0.018900139878386995,
+          "tau": 5240.807125086879,
+          "initial_direct_deaths": 1,
+          "seed": 20333343,
+          "wall_s": 75.25396556499993
+        },
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 238,
+          "p": 0.023562260968056706,
+          "tau": 4193.876184111917,
+          "initial_direct_deaths": 1,
+          "seed": 20343820,
+          "wall_s": 82.93027960400002
+        },
+        {
+          "H": 100.0,
+          "N": 64,
+          "K": 216,
+          "p": 0.03331841255857616,
+          "tau": 2951.0610921968505,
+          "initial_direct_deaths": 2,
+          "seed": 20354297,
+          "wall_s": 69.65010304000009
+        }
+      ],
+      "p_mean": 0.027942648470797058,
+      "p_ci95": [
+        0.021477790710097866,
+        0.03448346264572077
+      ],
+      "tau": 3528.5226644009604,
+      "tau_ci95": [
+        2849.648364963992,
+        4605.791434447719
+      ]
+    }
+  ],
+  "barkley_fit_tau": 2099.590932144819,
+  "status": "exploratory, not converged",
+  "wall_s": 803.6486707429999
+}
