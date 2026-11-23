@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Barkley · AMS puff decay lifetimes</title>
+<style>
+:root{font:15px/1.55 system-ui,Segoe UI,sans-serif;color:#edf4ff;background:#0b1120}
+*{box-sizing:border-box}body{margin:0}header,main{max-width:1200px;margin:auto;padding:24px}
+header{border-bottom:1px solid #2b3951}h1{font-size:clamp(27px,3vw,42px);line-height:1.2;margin:6px 0 14px}h2{font-size:19px;margin:0 0 12px}
+p{color:#a6bad0}.eyebrow{color:#78c1ec;font-size:12px;font-weight:750;letter-spacing:.1em;text-transform:uppercase}
+a{color:#82ccff}.panel{background:#131e33;border:1px solid #30415b;border-radius:13px;padding:20px;margin:18px 0}
+.columns{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:20px}
+svg{display:block;width:100%;height:auto;background:#0e192b;border-radius:10px}
+label{margin:0 15px 8px 0;display:inline-block;cursor:pointer}
+#detail{padding:12px;border:1px solid #364b67;border-radius:10px;font-size:13px;line-height:1.7}
+#legend{margin-bottom:12px}.key{width:14px;height:4px;display:inline-block;vertical-align:middle;margin-right:7px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:8px;text-align:left;border-bottom:1px solid #2b3b55}
+th{color:#a6bdd5}.muted{color:#a6b9d0}code{color:#9ed9ff}.point{cursor:pointer}.point:hover{stroke:white;stroke-width:4}
+@media(max-width:720px){.columns{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header><div class="eyebrow">Barkley · off-browser AMS experiment</div><h1>Mean lifetime of a turbulent puff before decay</h1>
+<p>Decay only, analogous to Figure 32 in Barkley (2016). Model Reynolds parameter <i>r</i> versus lifetime on a logarithmic axis. No browser-side simulations.</p>
+<p><a href="../">Back to Barkley laboratory</a> · <a href="data/results.json">Precomputed JSON</a> · <a href="https://github.com/tsufli/pipe-flow-lab/blob/main/scripts/barkley_decay_ams.py">Reproducible solver</a></p></header>
+<main>
+<section class="panel"><h2>Decay lifetime as a function of r</h2>
+<div class="columns"><div><div id="legend"></div><svg id="plot" viewBox="0 0 800 505" role="img" aria-label="Mean lifetime in model time units versus model Reynolds parameter"></svg><p id="status" class="muted">Loading offline results…</p></div>
+<aside><div id="detail">Select a point for numerical parameters and AMS statistics.</div>
+<p class="muted">Yellow dashed: Barkley's published decay fit at σ=0.5. Colored points: independent offline AMS estimates. A dashed fit is never counted as simulated data.</p>
+<p class="muted">Conversion uses τ=−H/log(1−p). This is valid for memoryless exponential survival, which must be checked.</p></aside></div></section>
+<section class="panel"><h2>Numerical results</h2><div style="overflow:auto"><table><thead><tr><th>σ</th><th>r</th><th>Estimated τ</th><th>P(decay by H)</th><th>Clones N</th><th>K</th><th>Δx, Δt</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<section class="panel"><h2>Scientific and numerical details</h2><p>Spatial stochastic Barkley model (8.14), Itô term σqη, white in space and time. Physical parameters: ζ=0.8, D=0.5, δ=0.1, ε₁=0.1, ε₂=0.2, U₀=2, Ū=1. The numerical solver uses explicit Euler–Maruyama, periodic boundary conditions, an upwind discretization for q-advection and a conservative Rusanov flux for u-advection. Each AMS run starts from a dynamically evolved, stochastically aged puff.</p>
+<p>AMS repeatedly kills the trajectory with the least progress toward laminar flow and replaces it by branching from the first crossing of its score, with fresh independent noise. The reaction coordinate is the maximum fractional decrease of integrated positive q. Decay is declared when ∫max(q,0)dx ≤ 0.15. The finite-horizon event is decay by time H, not an arbitrary puff-length threshold.</p>
+<p><b>Validation required before quantitative use:</b> repeat AMS with independent seeds and confidence intervals; verify that survival is exponential and that inferred τ is independent of H; compare against ordinary simulation at low r; test Δx/Δt, puff preparation and decay thresholds; control splitting as a competing event. The published Barkley fit is shown for comparison only, not used to calibrate any AMS point.</p></section>
+<footer class="muted" id="meta"></footer></main>
+<script>
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
+const palette={'0.5':'#5cb9ff','0.4':'#f2a862','0.35':'#83dab6','0.3':'#b8a0ff','0.25':'#e28db5'};
+let rows=[];
+function s(tag,attrs={},txt){const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(txt!=null)e.textContent=txt;return e}
+const num=v=>v==null?'—':Number(v).toExponential(2);
+function draw(){
+  const p=$('plot');p.replaceChildren();
+  const left=86,top=24,right=22,bottom=68,W=800,H=505;
+  const x=r=>left+(r-.60)/(.83-.60)*(W-left-right),y=t=>H-bottom-(Math.log10(t)-2.3)/(9-2.3)*(H-top-bottom);
+  const line=(a,b,c,d,color='#31445d',w=1)=>p.append(s('line',{x1:a,y1:b,x2:c,y2:d,stroke:color,'stroke-width':w}));
+  for(let r=.60;r<=.831;r+=.025){line(x(r),top,x(r),H-bottom);p.append(s('text',{x:x(r),y:H-bottom+25,fill:'#aebfd1','font-size':14,'text-anchor':'middle'},r.toFixed(3)))}
+  for(let j=3;j<=9;j++){line(left,y(10**j),W-right,y(10**j));p.append(s('text',{x:left-11,y:y(10**j)+5,fill:'#aebfd1','font-size':14,'text-anchor':'end'},'1e'+j))}
+  line(left,top,left,H-bottom,'#aec5df',1.5);line(left,H-bottom,W-right,H-bottom,'#aec5df',1.5);
+  p.append(s('text',{x:420,y:H-17,fill:'#eef5ff','font-size':18,'text-anchor':'middle'},'Model Reynolds parameter r'));
+  p.append(s('text',{x:20,y:250,fill:'#eef5ff','font-size':18,'text-anchor':'middle',transform:'rotate(-90 20 250)'},'Mean decay lifetime τ'));
+  if($('published')?.checked){const pts=[];for(let i=0;i<=180;i++){const r=.60+(.83-.60)*i/180,t=Math.exp(Math.exp(4.901*r-1.102));if(t>1e9)break;pts.push((pts.length?'L':'M')+x(r).toFixed(2)+','+y(t).toFixed(2))}p.append(s('path',{d:pts.join(' '),fill:'none',stroke:'#efcd7a','stroke-width':3,'stroke-dasharray':'8 6'}))}
+  $('rows').replaceChildren();
+  for(const v of rows){
+    const tr=document.createElement('tr');tr.innerHTML='<td>'+v.sigma+'</td><td>'+v.r.toFixed(3)+'</td><td>'+num(v.lifetime)+'</td><td>'+num(v.probability)+'</td><td>'+v.N+'</td><td>'+v.K+'</td><td>'+v.dx+', '+v.dt+'</td><td>'+v.status+'</td>';$('rows').append(tr);
+    if(!$('sigma-'+v.sigma)?.checked || !v.lifetime)continue;
+    const cir=s('circle',{cx:x(v.r),cy:y(v.lifetime),r:7,fill:palette[String(v.sigma)]||'#eee',stroke:'#09152a','stroke-width':2,class:'point',tabindex:'0'});
+    const select=()=>{$('detail').innerHTML='<b>r='+v.r+', σ='+v.sigma+'</b><p>τ ≈ '+num(v.lifetime)+'<br>p = '+num(v.probability)+'<br>Observation window H = '+v.H+'<br>Clones N = '+v.N+'<br>K = '+v.K+'<br>Δx = '+v.dx+', Δt = '+v.dt+'<br>Reference mass = '+Number(v.reference_mass).toFixed(2)+'<br>Wall time = '+Math.round(v.wall_s)+' s</p><b>Method: '+v.status+'</b>'};
+    cir.addEventListener('click',select);cir.addEventListener('keydown',e=>{if(e.key==='Enter')select()});p.append(cir)
+  }
+}
+async function start(){try{const j=await(await fetch('data/results.json',{cache:'no-store'})).json();rows=j.rows||[];
+$('legend').innerHTML='<label><input id="published" type="checkbox" checked> <i class="key" style="background:#efcd7a"></i>Barkley 2016 fit (σ=0.5)</label>';
+for(const sig of [...new Set(rows.map(v=>v.sigma))].sort((a,b)=>b-a))$('legend').insertAdjacentHTML('beforeend','<label><input id="sigma-'+sig+'" type="checkbox" checked> <i class="key" style="background:'+(palette[String(sig)]||'#eee')+'"></i>AMS σ='+sig+'</label>');
+$('legend').addEventListener('change',draw);
+$('status').textContent='These are preliminary estimates, not yet a converged lifetime study.';
+$('meta').textContent='Dataset: '+(j.generated_utc||'unknown generation date')+' · '+rows.length+' numerical records';
+draw()}catch(e){$('status').textContent='No AMS measurements yet: benchmark reference shown without simulated points.';$('legend').innerHTML='<label><input id="published" type="checkbox" checked> Barkley 2016 fit</label>';$('legend').addEventListener('change',draw);draw()}}
+start();
+</script></body></html>
