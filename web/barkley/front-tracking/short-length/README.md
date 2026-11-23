@@ -106,3 +106,28 @@ threshold fragmentation, length-history dependence, or censoring bias.
 The website may draw a labeled, optional local-polynomial display trend
 alongside the raw half-unit bins and bootstrap intervals. No smoothing is
 applied to the physics, stored coefficients or zero-finding algorithm.
+
+## Completed larger ensemble (2026-11-23)
+
+The completed updated run includes 2000 independent natural realizations
+(T=300), **751** confirmed decays by the stated diagnostic and
+**100 genuine turbulent puff snapshots** with six stochastic continuations
+each (600 restarts). These are all complete snapshots directly from natural
+PDE trajectories. The smallest recorded restart-parent q peak is 1.047 and
+all parent q=0.5 widths are 3.074 to 5.499.
+
+For the q=.15 channel at lag .4, the observed drift A_l in
+[4.5,5.0) is **+0.0632**, parent-bootstrap 95% interval
+[+0.0187,+0.1201]. The q=.15 length-drift zero now resolved in
+the trusted domain is stable at l≈10.359 (and the q=.5 stable zero is
+l≈6.678). The previously apparent unstable root near length 5
+in the uncut 500-run analysis is NOT reproduced under the strict
+l>=2.5 interval filtering. This difference cannot be attributed to
+increased sample size alone, because the selection rule also changed.
+There is genuine right-censoring/survival selection at the cutoff;
+the new positive short-length drift should not be interpreted as proof
+that all short puffs recover. The full-field numerical edge reference
+still has qpeak≈0.299 and q=.15 width≈5.007.
+
+Completed local simulation wall-time: about 442 seconds, excluding workflow
+environment setup and Pages publishing.

@@ -69,6 +69,7 @@ footer{max-width:1310px;margin:8px auto 35px;padding:0 18px;color:#6d7e8c;font-s
 <label for="compare"><input type="checkbox" id="compare"> Overlay other population</label>
 </div>
 <div id="pairinfo" class="inset"></div>
+<div class="note warn" style="margin-top:10px">Scientific caution: excluding intervals that fall below ℓ = 2.5 changes the conditioning of drift estimates. The earlier apparent unstable drift zero near ℓ ≈ 5 in the uncut 500-run analysis is <strong>not reproduced</strong> under this stricter rule. Neither the new smoother curve nor the earlier zero should be identified with the full-field decay edge without additional checks.</div>
 <div class="split" style="margin-top:15px">
 <div class="figure"><h3>Length drift A<sub>ℓ</sub>(ℓ)</h3><canvas id="driftlength" width="780" height="335"></canvas>
 <div class="legend"><span><i class="line" style="border-color:var(--teal)"></i>Optional local linear display trend</span><span><i class="line" style="border-color:#aaa"></i>Raw coefficients and 95% run/ancestor bootstrap intervals</span></div></div>
@@ -221,7 +222,10 @@ function selectRestart(){
  if(!d.restart_examples.length){$('restartinfo').textContent='No restarting trajectories are available.';return}
  const z=d.restart_examples[Number($('restart').value)],p=z[$('restartchannel').value],dt=d.params.save_dt*2;
  plotting($('restarttrace'),[{points:trace(p.ell,dt),color:C.teal}],{xmin:0,xmax:d.T_restart,ymin:0,xlabel:'time after restart'});
- $('restartinfo').textContent='Parent natural run #'+z.parent+', independent noise branch #'+z.branch+'. Confidence intervals group branches by the same parent.';
+ const parent=d.restart_parents.find(r=>r.parent_run===z.parent);
+ $('restartinfo').textContent='Genuine puff from natural run #'+z.parent+', branch #'+z.branch+
+ '. Observed parent qmax='+fmt(parent?.qmax)+', q=0.5 length='+fmt(parent?.length_05)+
+ ', time='+fmt(parent?.t)+'. Full q(x) and u(x) were reused unchanged; branches share the same parent for uncertainty estimation.';
 }
 function showEdge(){
  const e=d.edge,peak=e.profile_q.indexOf(Math.max(...e.profile_q)),x0=e.profile_L/e.profile_q.length;
