@@ -1,0 +1,56 @@
+name: Barkley AMS decay lifetimes (offline)
+on:
+  workflow_dispatch:
+    inputs:
+      r_values:
+        description: 'Space-separated model Reynolds parameters'
+        required: true
+        default: '0.62 0.64 0.66 0.68 0.70'
+        type: string
+      sigma_values:
+        description: 'Space-separated noise amplitudes'
+        required: true
+        default: '0.5'
+        type: string
+      replicas:
+        description: 'AMS clone population'
+        required: true
+        default: '96'
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: barkley-ams-decay
+  cancel-in-progress: false
+jobs:
+  simulate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install solver dependencies
+        run: pip install 'numpy<2.3' numba
+      - name: Run solver smoke tests
+        run: python -m unittest discover -s tests -p 'test_barkley_decay_ams.py' -v
+      - name: Compute original-resolution, precomputed decay estimates
+        run: |
+          python scripts/barkley_decay_ams.py --r ${{ inputs.r_values }} --sigma ${{ inputs.sigma_values }} --replicas ${{ inputs.replicas }} --dx 0.1 --dt 0.004 --H 120 --sample-dt 0.2 --L 80 --output web/barkley/decay-lifetimes/data/results.json
+      - name: Commit offline results
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/barkley/decay-lifetimes/data/results.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'data: offline Barkley AMS decay lifetimes'
+            for i in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then break; fi
+              if [ "$i" -eq 3 ]; then exit 1; fi
+            done
+          fi
