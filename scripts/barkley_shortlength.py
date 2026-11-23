@@ -41,7 +41,8 @@ def evolve_until(q0,u0,dx,dt,sigma,nsteps,stride,seed,common,
     saved=0
     for k in range(nsteps+1):
         if k>0:
-            q,u=advance(q,u,dx,dt,sigma,*common)
+            q,u=advance(q,u,dx,dt,sigma,common[0],common[1],common[2],common[3],
+                        common[4],common[5],common[6],common[7])
         if k%stride!=0: continue
         qhist[saved]=q;uhist[saved]=u
         peak=np.max(q);mass=np.sum(np.maximum(q,0))*dx
